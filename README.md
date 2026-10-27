@@ -107,12 +107,12 @@ Pastki menyuda 5 ta bo'lim bor. **«+»** tugmasi istalgan ekrandan yangi amal q
 
 | Bo'lim | Nima bor |
 |---|---|
-| **Asosiy** | Jami balans va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq. "Bugun sarflash mumkin" kartasi — yo'lkira bir bosishda yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar |
+| **Asosiy** | Jami balans va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq. Ko'z tugmasi summalarni yashiradi, summani bosish yana ochadi. Qulf tugmasi trekerni darhol qulflaydi. "Bugun sarflash mumkin" kartasi — yo'lkira bir bosishda yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar |
 | **Qo'shish (+)** | Chiqim / Kirim / O'tkazma, raqamli klaviatura, kategoriyalar, hisob, sana, izoh. Ko'cha ovqati, kofe/shirinlik va taksi **taqiqlangan**: tanlansa ogohlantirish chiqadi, saqlansa kun "qoida buzilgan" bo'ladi |
-| **Tarix** | Barcha amallar kunlar bo'yicha, qidiruv va filtrlar bilan. Amalni bosib tahrirlash yoki o'chirish mumkin |
+| **Tarix** | **Amallar**: barcha amallar kunlar bo'yicha, qidiruv va filtrlar bilan. Amalni bosib tahrirlash yoki o'chirish mumkin. **Jurnal**: har bir o'zgarish vaqti bilan — amal qo'shildi, o'zgartirildi yoki o'chirildi; qarz ochildi, to'landi yoki yopildi; balans tuzatildi; ish kuni almashtirildi; sozlamalar o'zgardi; import qilindi |
 | **Reja** | Oy kalendari. Kunni tanlab «To'lash» / «Tushdi» / «Qulflash» ni bosasiz. Kunni ish kuni yoki dam olish kuniga almashtirish mumkin |
-| **Qarzlar** | Men qarzdorman / menga qarzdor, muddat, qisman va to'liq to'lash, to'lovlar tarixi |
-| **Hisobot** | Kategoriyalar diagrammasi, kunlik xarajat va limit, reja va haqiqiy balans grafigi, oylik kategoriya limitlari, eng katta xarajatlar. Shu yerda CSV/JSON eksport, boshlang'ich qoldiqlar va zaxira ham bor |
+| **Qarzlar** | Ikki ro'yxat: «Men qarzdorman» va «Menga qarzdor» (faollari tepada, yopilganlari pastda). Qarzni bossangiz oyna ochiladi: «To'liq to'landi / qaytdi» bir bosishda yoziladi, qisman summa ham kiritish mumkin, Karta yoki Naqd tanlanadi. Oynada qarzning to'liq tarixi ko'rinadi |
+| **Hisobot** | Kategoriyalar diagrammasi, kunlik xarajat va limit, reja va haqiqiy balans grafigi, oylik kategoriya limitlari, eng katta xarajatlar. Shu yerda PIN-kod (Xavfsizlik), CSV/JSON eksport, boshlang'ich qoldiqlar va zaxira ham bor |
 
 Hisob-kitob qoidalari:
 
@@ -121,6 +121,7 @@ Hisob-kitob qoidalari:
 - **Rejadan farq** = jami balans − (1 000 000 + bajarilgan reja bandlari).
   Rejadan tashqari har bir xarajat farqni kamaytiradi. Hali belgilanmagan bandlar farqqa ta'sir qilmaydi.
 - **Prognoz** = yakuniy reja + rejadan farq.
+- **PIN-kod**: Hisobot → Xavfsizlik bo'limida o'rnatiladi. Shundan so'ng treker har ochilganda va 1 daqiqadan ko'p fonda turgandan keyin 4 xonali PIN so'raydi. 5 marta xato kiritilsa, 30 soniya kutiladi. PIN unutilsa, xavfsizlik uchun trekerdagi barcha ma'lumotlar o'chiriladi — shuning uchun JSON zaxira saqlab qo'ying.
 - **Balansni tuzatish**: Asosiy ekranda hisobni bosing va haqiqiy qoldiqni kiriting.
   Farq "Balans tuzatish" amali sifatida yoziladi.
 - Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).

@@ -61,7 +61,10 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
   - `debt` — qarz id si.
 - Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
 - Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz = yakuniy reja + farq.
-- Saqlash: hujjatlar `meta`, `debts`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
+- Jurnal (`log`): `{ t, k: add|edit|del|debt|plan|set|import, m, r }`, oxirgi 500 ta yozuv. Har bir o'zgarish
+  `addTx` / `updateTx` / `removeTx` / `logEv` orqali yoziladi — ma'lumotni to'g'ridan-to'g'ri o'zgartirmang.
+- PIN: `meta.pin = { s: salt, h: sha256(salt:pin) }` — ekran qulfi. Zaxira eksportiga kirmaydi.
+- Saqlash: hujjatlar `meta`, `debts`, `log`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
   (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
 - HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
 
