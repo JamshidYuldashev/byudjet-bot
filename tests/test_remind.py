@@ -33,10 +33,11 @@ class BuildMessagesTest(unittest.TestCase):
         self.assertIn("−430 000 — Uzum qarzini yopish", msgs[0])
 
     def test_dec_13_claude_only(self) -> None:
-        msgs = messages("2026-12-13")
-        self.assertEqual(len(msgs), 1)
+        msgs = messages("2026-12-13")  # yakshanba: ertangi to'lov + keyingi hafta
+        self.assertEqual(len(msgs), 2)
         self.assertIn("Claude obunasi", msgs[0])
         self.assertNotIn("Uzum", msgs[0])
+        self.assertTrue(msgs[1].startswith("🗓 Keyingi hafta, 14.12–20.12:"))
 
     def test_mar_20_lock_only(self) -> None:
         msgs = messages("2027-03-20")
@@ -52,6 +53,67 @@ class BuildMessagesTest(unittest.TestCase):
 
     def test_oct_20_before_period_no_lock(self) -> None:
         self.assertEqual(messages("2026-10-20"), [])
+
+    def test_sunday_week_digest(self) -> None:
+        msgs = messages("2026-11-15")
+        self.assertEqual(len(msgs), 1)
+        text = msgs[0]
+        self.assertTrue(text.startswith("🗓 Keyingi hafta, 16.11–22.11:"))
+        self.assertIn("• 20.11 (Ju): +3 325 200 — Asosiy oylik", text)
+        self.assertIn("• 20.11 (Ju): → 2 500 000 — Omonatga qulflash", text)
+        self.assertIn("Yo'lkira: 5 ish kuni × 10 000 = 50 000 so'm.", text)
+
+    def test_sunday_after_period_no_digest(self) -> None:
+        self.assertEqual(messages("2027-03-21"), [])
+
+
+def morning(iso: str) -> list[str]:
+    return remind.build_morning(date.fromisoformat(iso))
+
+
+class MorningTest(unittest.TestCase):
+    def test_workday_transport_only(self) -> None:
+        msgs = morning("2026-11-13")
+        self.assertEqual(len(msgs), 1)
+        self.assertTrue(msgs[0].startswith("☀️ Bugun, 13.11 (Juma) — ish kuni."))
+        self.assertIn("Faqat 10 000 so'm yo'lkira", msgs[0])
+        self.assertNotIn("Bugungi reja", msgs[0])
+
+    def test_weekend_with_payments(self) -> None:
+        msgs = morning("2026-11-14")
+        self.assertEqual(len(msgs), 1)
+        self.assertIn("— dam olish kuni.", msgs[0])
+        self.assertIn("−410 000 — Claude obunasi", msgs[0])
+        self.assertIn("−430 000 — Uzum qarzini yopish", msgs[0])
+
+    def test_plain_weekend_and_holiday_silent(self) -> None:
+        self.assertEqual(morning("2026-11-15"), [])
+        self.assertEqual(morning("2026-12-08"), [])
+
+    def test_outside_period_silent(self) -> None:
+        self.assertEqual(morning("2026-10-26"), [])
+        self.assertEqual(morning("2027-03-22"), [])
+
+    def test_month_start_summary(self) -> None:
+        msgs = morning("2026-12-01")
+        self.assertEqual(len(msgs), 2)
+        text = msgs[1]
+        self.assertTrue(text.startswith("📅 Dekabr rejasi:"))
+        self.assertIn("• Kirim: +3 848 891", text)
+        self.assertIn("• Majburiy to'lovlar: −1 062 000", text)
+        self.assertIn("• Yo'lkira: 22 ish kuni — −220 000", text)
+        self.assertIn("• Omonatga: → 2 500 000", text)
+
+    def test_november_summary_matches_tracker(self) -> None:
+        text = remind.month_summary(2026, 11)
+        self.assertIn("• Kirim: +4 148 891", text)
+        self.assertIn("• Majburiy to'lovlar: −1 492 000", text)
+        self.assertIn("• Yo'lkira: 21 ish kuni — −210 000", text)
+
+    def test_plan_final_balance(self) -> None:
+        # CLAUDE.md dagi yakuniy reja balansi bilan bir xil bo'lishi kerak
+        self.assertEqual(remind.plan_balance(date(2027, 3, 20)), 13_794_455)
+        self.assertEqual(remind.plan_balance(date(2026, 10, 27)), 990_000)
 
 
 class MainTest(unittest.TestCase):
@@ -91,6 +153,12 @@ class MainTest(unittest.TestCase):
         code, out, _ = self.run_main({"TODAY": "2026-11-04"}, ["--dry-run"])
         self.assertEqual(code, 0)
         self.assertIn("Qarz qaytishi", out)
+
+    def test_morning_slot(self) -> None:
+        code, out, _ = self.run_main({"TODAY": "2026-11-14"}, ["--dry-run", "--slot", "morning"])
+        self.assertEqual(code, 0)
+        self.assertIn("morning, xabarlar: 1", out)
+        self.assertIn("Bugungi reja", out)
 
 
 if __name__ == "__main__":
