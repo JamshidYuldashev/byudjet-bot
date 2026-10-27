@@ -1101,11 +1101,6 @@ function alertsCard(C, t) {
     items.push({ lvl: 2, color: 'coral', icon: 'alert', act: 'data-act="tab" data-to="tarix"',
       text: `Bugun qoida buzildi: −${fmt(bad)}`, sub: "Ko'cha ovqati, kofe yoki taksi — prognoz shuncha kamaydi" });
   }
-  const day = DAY_BY_ISO.get(t);
-  if (day && isWorkday(day) && !C.byPlan.has(`${t}:yol`) && !TODAY_OVERRIDE && new Date().getHours() >= 18) {
-    items.push({ lvl: 1, color: 'blue', icon: 'bus', act: 'data-act="quick-yol"',
-      text: "Bugungi yo'lkira hali yozilmagan", sub: "Bosing — Naqddan 10 000 yoziladi" });
-  }
   const streak = streakOf(C, t);
   if (streak >= 7 && streak % 7 === 0) {
     items.push({ lvl: 0, color: 'mint', icon: 'flame', act: '', text: `${streak} kun ketma-ket qoidaga amal qildingiz`, sub: "Zo'r natija — shunday davom eting" });
@@ -1121,35 +1116,27 @@ function alertsCard(C, t) {
         + `${x.act ? `<span class="c-muted" style="display:flex">${ic('right', 16)}</span>` : ''}</${tag}>`;
     }).join('')}</section>`;
 }
+// Yo'lkira Asosiy ekranda eslatilmaydi: pulsiz borilgan kunlar ham bo'ladi, kerak bo'lsa «+» orqali yoziladi
 function todayCard(C, t) {
   const day = DAY_BY_ISO.get(t);
   if (!day) return '';
-  const work = isWorkday(day);
+  const spent = sum(db.tx.filter(x => x.d === t && x.k === 'out' && x.c !== 'tuz'), x => x.a);
   const yol = C.byPlan.get(`${t}:yol`);
   const extra = (C.dayStat[t]?.disc || 0) - (yol ? yol.a : 0);
-  const status = !work ? '<span class="status soft c-soft">Dam olish</span>'
-    : yol ? `<span class="status soft c-in">${ic('check', 14, 2.5)}Sarflandi</span>`
-    : `<button class="status" data-act="quick-yol">${ic('plus', 14, 2.5)}Yozish</button>`;
   const sub = extra > 0
     ? `<span class="small c-bad">Rejadan tashqari: −${fmt(extra)}</span>`
-    : `<span class="small muted">${work ? "Faqat yo'lkira · tushlik uydan" : "Dam olish kuni — xarajat 0 so'm"}</span>`;
-  return `<section class="card rowcard">${iconTile('bus', 'blue')}
-    <div class="body"><span class="lbl">Bugun sarflash mumkin</span><span class="big">${fmt(work ? PLAN.transport.amount : 0)} so'm</span>${sub}</div>${status}</section>`;
+    : `<span class="small muted">${spent ? "Rejadan tashqari xarajat yo'q" : "Hali xarajat yo'q"}</span>`;
+  const status = isWorkday(day) ? '' : '<span class="status soft c-soft">Dam olish</span>';
+  return `<section class="card rowcard">${iconTile('chart', 'blue')}
+    <div class="body"><span class="lbl">Bugungi xarajat</span><span class="big">${fmt(spent)} so'm</span>${sub}</div>${status}</section>`;
 }
 function overdueCard(C, t) {
-  const late = [], yolDays = [];
-  for (const e of C.events.values()) {
-    if (e.iso >= t || !isPending(C, e)) continue;
-    if (e.id === 'yol') yolDays.push(e); else late.push(e);
-  }
-  if (!late.length && !yolDays.length) return '';
-  const yolRow = yolDays.length ? `<div class="ev"><div class="body"><span class="t">${yolDays.length} kunlik yo'lkira yozilmagan</span>`
-    + `<span class="s">${yolDays.length > 1 ? `${dm(yolDays[0].iso)} – ${dm(yolDays[yolDays.length - 1].iso)}` : dm(yolDays[0].iso)} · Naqd</span></div>`
-    + `<span class="num">−${fmt(sum(yolDays, e => e.amount))}</span><button class="act out" data-act="bulk-yol">Yozish</button></div>` : '';
+  const late = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e));
+  if (!late.length) return '';
   return `<section class="card warn-border">
     <div class="spread"><span class="h2 c-warn" style="display:flex;align-items:center;gap:6px">${ic('alert', 18)}Belgilanmagan rejalar</span></div>
-    <div>${late.map(e => eventRow(e, C, true)).join('')}${yolRow}</div>
-    <p class="note" style="padding:0">Bo'lgan bo'lsa — belgilang. Ishga bormagan kunni Reja bo'limida dam olishga o'zgartiring.</p></section>`;
+    <div>${late.map(e => eventRow(e, C, true)).join('')}</div>
+    <p class="note" style="padding:0">Bo'lgan bo'lsa — belgilang.</p></section>`;
 }
 function nextCard(C, t) {
   let day = null, list = [];
@@ -2277,26 +2264,6 @@ const ACT = {
   humo: () => push('humo'),
   'edit-tx': el => openEdit(el.dataset.id),
   plan: el => openFromEvent(el.dataset.key),
-  'quick-yol': () => {
-    const C = calc();
-    const e = C.events.get(`${C.t}:yol`);
-    if (!e || !isPending(C, e)) return;
-    addTx({ ...txFromEvent(e, C.t), tm: nowHM() });
-    haptic.ok();
-    toast("Yo'lkira yozildi");
-    rerender();
-  },
-  'bulk-yol': async () => {
-    const C = calc();
-    const list = [...C.events.values()].filter(e => e.id === 'yol' && e.iso < C.t && isPending(C, e));
-    if (!list.length) return;
-    if (!(await confirmDialog(`${list.length} kunlik yo'lkira (${fmt(sum(list, e => e.amount))} so'm) Naqddan yozilsinmi?`))) return;
-    for (const e of list) addTx(txFromEvent(e, e.iso), { nolog: true });
-    logEv('add', `${list.length} kunlik yo'lkira yozildi: −${fmt(sum(list, e => e.amount))} · Naqd · ${dm(list[0].iso)}–${dm(list[list.length - 1].iso)}`);
-    haptic.ok();
-    toast(`${list.length} kunlik yo'lkira yozildi`);
-    rerender();
-  },
   adjust: el => {
     const acc = el.dataset.acc;
     const C = calc();

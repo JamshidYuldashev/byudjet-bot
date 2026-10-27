@@ -109,7 +109,7 @@ Pastki menyuda 5 ta bo'lim bor. **«+»** tugmasi istalgan ekrandan yangi amal q
 
 | Bo'lim | Nima bor |
 |---|---|
-| **Asosiy** | Jami balans va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq. Ko'z tugmasi summalarni yashiradi, summani bosish yana ochadi. Qulf tugmasi trekerni darhol qulflaydi. "Bugun sarflash mumkin" kartasi — yo'lkira bir bosishda yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar |
+| **Asosiy** | Jami balans va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq. Ko'z tugmasi summalarni yashiradi, summani bosish yana ochadi. Qulf tugmasi trekerni darhol qulflaydi. "Bugungi xarajat" kartasi — bugun qancha sarflangani va rejadan tashqari qismi. Yo'lkira bu yerda eslatilmaydi (pulsiz borilgan kunlar ham bo'ladi): kerak bo'lsa «+» yoki Reja → «To'lash» orqali yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar |
 | **Qo'shish (+)** | Chiqim / Kirim / O'tkazma, raqamli klaviatura, kategoriyalar, hisob, sana, izoh. Ko'cha ovqati, kofe/shirinlik va taksi **taqiqlangan**: tanlansa ogohlantirish chiqadi, saqlansa kun "qoida buzilgan" bo'ladi |
 | **Tarix** | **Amallar**: barcha amallar kunlar bo'yicha, qidiruv va filtrlar bilan. Har amal tagida shu amaldan keyingi jami balans ko'rinadi (ko'z tugmasi yopiq bo'lsa — yashirin). Amalni bosib tahrirlash yoki o'chirish mumkin. **Jurnal**: har bir o'zgarish vaqti bilan — amal qo'shildi, o'zgartirildi yoki o'chirildi; qarz ochildi, to'landi yoki yopildi; balans tuzatildi; ish kuni almashtirildi; sozlamalar o'zgardi; import qilindi |
 | **Reja** | Oy kalendari. Kunni tanlab «To'lash» / «Tushdi» / «Qulflash» ni bosasiz. Kunni ish kuni yoki dam olish kuniga almashtirish mumkin |
@@ -191,7 +191,6 @@ U yerda ko'rinadi:
 - muddati 3 kun ichida bo'lgan yoki o'tib ketgan qarzlar;
 - 80% ga yetgan yoki oshgan oylik limitlar;
 - bugun qoida buzilgani;
-- soat 18:00 dan keyin bugungi yo'lkira yozilmagani;
 - har 7 kunlik seriya.
 
 ---
