@@ -3,8 +3,11 @@
 5 oylik shaxsiy byudjet rejasi (2026-10-27 — 2027-03-20) uchun **serversiz** Telegram Mini App
 va eslatma bot. Hammasi bepul: sahifa GitHub Pages'da, eslatmalar GitHub Actions'da ishlaydi.
 
-- **`index.html`** — Mini App (treker): har kunlik to'lovlarni belgilash, rejadan tashqari
-  xarajatni yozish, jami / naqd / qulflangan balans, maqsad sari progress.
+- **`index.html`** — Mini App (treker) quyidagilarni qiladi:
+  - hisoblarni yuritadi: Karta, Naqd, Omonat;
+  - har bir kirim va xarajatni kategoriya bilan yozadi;
+  - reja kalendari, qarzlar va hisobotlarni ko'rsatadi;
+  - HUMO xabarlaridan import qiladi.
 - **`remind.py`** — har kuni soat 20:00 da (Toshkent) ertangi to'lovlar haqida xabar yuboradi,
   20-sanada esa 2 500 000 so'm qulflanganini so'raydi.
 - **`.github/workflows/remind.yml`** — har kuni 15:00 UTC (20:00 Toshkent) da `remind.py` ni ishga tushiradi.
@@ -100,23 +103,63 @@ kechikishi mumkin — bu normal holat.
 
 ### Treker (Mini App)
 
-- **Jami balans** = boshlang'ich 1 000 000 + belgilangan kirimlar − belgilangan chiqimlar − barcha rejadan tashqari xarajatlar.
-- **Qo'ldagi naqd** = jami − qulflangan. **Qulflangan** = belgilangan "Omonatga qulflash" (har 20-sana, 2 500 000).
-  Qulflash jami balansni o'zgartirmaydi, faqat pulni naqddan omonatga ko'chiradi.
-- **Bugun kechgacha reja** — reja bo'yicha bugun kechqurun bo'lishi kerak bo'lgan balans.
-- **Qoida buzilgan kunlar** — rejadan tashqari xarajat yozilgan kunlar soni. Bunday kun qizil bo'ladi.
-- Har bir kunda **"Ish kuni" / "Dam olish"** tugmasi bor: almashtirsangiz, o'sha kunning 10 000 so'mlik
-  yo'lkirasi rejaga qo'shiladi yoki olib tashlanadi. Masalan, Ramazon hayiti sanasi e'lon qilinganda
-  o'sha kunni "Dam olish" ga o'tkazing.
+Pastki menyuda 5 ta bo'lim bor. **«+»** tugmasi istalgan ekrandan yangi amal qo'shadi.
+
+| Bo'lim | Nima bor |
+|---|---|
+| **Asosiy** | Jami balans va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq. "Bugun sarflash mumkin" kartasi — yo'lkira bir bosishda yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar |
+| **Qo'shish (+)** | Chiqim / Kirim / O'tkazma, raqamli klaviatura, kategoriyalar, hisob, sana, izoh. Ko'cha ovqati, kofe/shirinlik va taksi **taqiqlangan**: tanlansa ogohlantirish chiqadi, saqlansa kun "qoida buzilgan" bo'ladi |
+| **Tarix** | Barcha amallar kunlar bo'yicha, qidiruv va filtrlar bilan. Amalni bosib tahrirlash yoki o'chirish mumkin |
+| **Reja** | Oy kalendari. Kunni tanlab «To'lash» / «Tushdi» / «Qulflash» ni bosasiz. Kunni ish kuni yoki dam olish kuniga almashtirish mumkin |
+| **Qarzlar** | Men qarzdorman / menga qarzdor, muddat, qisman va to'liq to'lash, to'lovlar tarixi |
+| **Hisobot** | Kategoriyalar diagrammasi, kunlik xarajat va limit, reja va haqiqiy balans grafigi, oylik kategoriya limitlari, eng katta xarajatlar. Shu yerda CSV/JSON eksport, boshlang'ich qoldiqlar va zaxira ham bor |
+
+Hisob-kitob qoidalari:
+
+- **Jami balans** = boshlang'ich qoldiqlar + barcha kirimlar − barcha chiqimlar.
+  O'tkazma (masalan, Karta → Omonat) jami balansni o'zgartirmaydi, faqat pulni bir hisobdan boshqasiga ko'chiradi.
+- **Rejadan farq** = jami balans − (1 000 000 + bajarilgan reja bandlari).
+  Rejadan tashqari har bir xarajat farqni kamaytiradi. Hali belgilanmagan bandlar farqqa ta'sir qilmaydi.
+- **Prognoz** = yakuniy reja + rejadan farq.
+- **Balansni tuzatish**: Asosiy ekranda hisobni bosing va haqiqiy qoldiqni kiriting.
+  Farq "Balans tuzatish" amali sifatida yoziladi.
+- Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).
+- Ishga bormagan kunni (masalan, Ramazon hayiti) Reja'da "Dam olish" ga o'tkazing.
+  O'sha kunning 10 000 so'mlik yo'lkirasi rejadan olib tashlanadi.
+
+### HUMO'dan import
+
+Telegram botlarga boshqa bot bilan bo'lgan chatni o'qishga ruxsat bermaydi. Shuning uchun @HUMOcardbot
+xabarlari nusxalab joylanadi:
+
+1. @HUMOcardbot chatida xabarni bosib turing va kerakli xabarlarni belgilang, keyin **Nusxa olish** ni bosing.
+2. Trekerda **HUMO import** → matnni joylang (yoki **Buferdan joylash** ni bosing).
+3. Ilova har bir xabardan summa, joy, sana va qoldiqni ajratadi va quyidagilarni qiladi:
+   - kategoriyani joy nomidan aniqlaydi (PAYNET → Aloqa, KORZINKA → Oziq-ovqat va h.k.);
+   - reja bandiga mos kelsa (summa ±5%, sana ±3 kun), amalni o'sha bandga bog'laydi;
+   - avval import qilingan xabarni qayta qo'shmaydi;
+   - P2P o'tkazmada turini so'raydi: Omonatga, Qarz berdim yoki Xarajat;
+   - naqd pul yechishni Karta → Naqd o'tkazmasi sifatida yozadi.
+4. Oxirida trekerdagi Karta qoldig'ini HUMO'dagi oxirgi qoldiq bilan solishtiradi.
+   Farq bo'lsa, uni "Balans tuzatish" sifatida yozishni taklif qiladi.
+
+Matn faqat telefoningizda tahlil qilinadi va hech qayerga yuborilmaydi.
 
 ### Ma'lumotlar qayerda saqlanadi
 
-- Telegram ichida (versiya 6.9+) — **Telegram CloudStorage**'da, har oy alohida kalitda (`m_2026-11` va h.k.).
-  Telefon va kompyuterdagi Telegram'da bir xil ma'lumot ko'rinadi.
-- Oddiy brauzerda — o'sha brauzerning `localStorage`'ida.
-- Bu ikki joy bir-biridan alohida. Ma'lumotni ko'chirish yoki zaxiralash uchun sahifa pastidagi
-  **Zaxira nusxa** bo'limidan foydalaning: *Eksport* → *Nusxalash* → xavfsiz joyga saqlang;
-  tiklash uchun JSON ni joylab *Import qilish* ni bosing.
+- **Telegram ichida (versiya 6.9+)** — Telegram CloudStorage'da. Telefon va kompyuterdagi Telegram'da bir xil
+  ma'lumot ko'rinadi.
+  - Kalitlar: `meta` (sozlamalar), `debts` (qarzlar) va har oy uchun alohida `t_2026-11` (amallar).
+  - Har bir hujjat 3 500 belgilik bo'laklarga bo'lib saqlanadi (`t_2026-11_0`, `t_2026-11_1`, …),
+    chunki CloudStorage'da bitta qiymat 4 096 belgidan oshmasligi kerak.
+- **Oddiy brauzerda** — shu brauzerning `localStorage`'ida (`byudjet:` prefiksi bilan).
+- Birinchi versiyada belgilangan to'lovlar (`m_2026-11`) birinchi ochilishda avtomatik ko'chiriladi.
+- Telegram va brauzer ma'lumotlari bir-biridan alohida. Ko'chirish yoki zaxiralash uchun **Hisobot → Zaxira nusxa**
+  bo'limidan foydalaning:
+  - zaxiralash: *Eksport* → *Nusxalash* → xavfsiz joyga saqlang;
+  - tiklash: JSON ni joylab, *Import qilish* ni bosing.
+- Telegram mobil ilovasida «CSV» va «JSON zaxira» tugmalari ulashish oynasini ochadi; u bo'lmasa, matn buferga
+  nusxalanadi. CSV'ni Excel yoki Google Sheets'ga joylasangiz, u ustunlarga bo'linadi.
 
 ### Eslatmalar
 
@@ -152,7 +195,8 @@ Remove-Item Env:TODAY
 ```
 
 `--dry-run` xabarlarni yubormaydi, faqat ekranga chiqaradi va secretlarni talab qilmaydi.
-Mini App'ni sinash uchun `index.html` ni brauzerda ochish kifoya.
+Mini App'ni sinash uchun `index.html` ni brauzerda ochish kifoya. Boshqa sanadagi holatni ko'rish uchun
+manzil oxiriga `?today=2026-11-13` qo'shing.
 
 ## Rejani o'zgartirish
 
