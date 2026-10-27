@@ -1,0 +1,47 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Egasini belgilash (CHAT_ID dan hash)
+        env:
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          python3 - <<'EOF'
+          import hashlib, os, pathlib, sys
+          chat_id = os.environ.get("CHAT_ID", "").strip()
+          if not chat_id:
+              sys.exit("Xato: CHAT_ID secret topilmadi")
+          src = pathlib.Path("index.html").read_text(encoding="utf-8")
+          if src.count("__OWNER_HASH__") != 1:
+              sys.exit("Xato: index.html da __OWNER_HASH__ bitta bo'lishi kerak")
+          owner = hashlib.sha256(f"byudjet-bot:{chat_id}".encode()).hexdigest()
+          site = pathlib.Path("_site")
+          site.mkdir()
+          (site / "index.html").write_text(src.replace("__OWNER_HASH__", owner), encoding="utf-8")
+          EOF
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

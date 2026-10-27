@@ -71,6 +71,10 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 - Saqlash: hujjatlar `meta`, `debts`, `log`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
   (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
 - HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
+- Egasi tekshiruvi: `OWNER_HASH` = sha256(`byudjet-bot:` + CHAT_ID). Uni `.github/workflows/pages.yml` deploy paytida
+  `__OWNER_HASH__` o'rniga joylaydi (bu satr `index.html` da aynan bir marta bo'lishi shart). Pages manbasi — GitHub Actions.
+  Begona akkaunt yoki Telegram'siz brauzerda `load()` chaqirilmaydi, faqat «Bu shaxsiy ilova» chiqadi.
+  `file:` va localhost — tekshiruvsiz (testlar uchun).
 
 ## Tekshirish
 

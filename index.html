@@ -2217,6 +2217,30 @@ async function forgotPin() {
   logEv('set', "PIN-kod unutildi — ma'lumotlar tozalandi");
   finishLock();
 }
+// ===== Egasi tekshiruvi: treker faqat bot egasining Telegram akkauntida ochiladi =====
+// OWNER_HASH ni pages workflow'i joylaydi: sha256("byudjet-bot:" + CHAT_ID secret). ID kodda turmaydi.
+// Lokal fayl va localhost — tekshirish uchun ochiq.
+const OWNER_HASH = '__OWNER_HASH__';
+const DEV_HOST = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+async function ownerMatch(id, hash) {
+  if (!id || !/^[0-9a-f]{64}$/.test(hash) || !window.crypto?.subtle) return false;
+  const data = new TextEncoder().encode(`byudjet-bot:${id}`);
+  return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', data))) === hash;
+}
+async function isOwner() {
+  return DEV_HOST || ownerMatch(inTelegram && WA.initDataUnsafe?.user?.id, OWNER_HASH);
+}
+function showPrivate() {
+  $('loading').hidden = true;
+  $('lock').hidden = false;
+  $('lock').innerHTML = `<div class="lockbox" role="alert">
+    <span class="tile lg soft" style="--c:var(--coral)">${ic('lock', 24)}</span>
+    <h1 class="h2" style="font-size:18px">Bu shaxsiy ilova</h1>
+    <p class="muted">Treker faqat egasining Telegram akkauntida ishlaydi.</p>
+    ${inTelegram ? '<button class="btn primary" onclick="Telegram.WebApp.close()">Yopish</button>' : ''}
+  </div>`;
+}
+
 let hiddenAt = 0;
 function lockIfAway() {
   if (db?.pin && $('lock').hidden && !$('view').hidden && hiddenAt && Date.now() - hiddenAt > 60000) showLock('unlock', null);
@@ -2527,6 +2551,8 @@ async function start() {
     matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
   }
   applyTheme();
+  // Begona akkauntda ma'lumot yuklanmaydi ham, yozilmaydi ham.
+  if (!(await isOwner())) { showPrivate(); return; }
   try {
     await load();
   } catch (e) {
