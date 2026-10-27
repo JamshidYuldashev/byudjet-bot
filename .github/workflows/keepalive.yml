@@ -1,0 +1,26 @@
+name: keepalive
+
+# GitHub ochiq repoda 60 kun faollik bo'lmasa cron workflowlarni o'chirib qo'yadi.
+# Bu job har oy ikkala workflowni (o'zini ham) qayta yoqadi.
+on:
+  schedule:
+    - cron: "0 3 1 * *" # har oyning 1-sanasi
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Workflowlarni yoqish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          for wf in remind.yml keepalive.yml; do
+            gh api -X PUT "repos/$REPO/actions/workflows/$wf/enable"
+            echo "$wf: yoqildi"
+          done

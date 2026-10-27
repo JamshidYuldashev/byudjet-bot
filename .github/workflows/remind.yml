@@ -1,0 +1,32 @@
+name: remind
+
+on:
+  schedule:
+    - cron: "0 15 * * *" # har kuni 20:00 (Asia/Tashkent, UTC+5)
+  workflow_dispatch:
+    inputs:
+      today:
+        description: "Sinov sanasi (YYYY-MM-DD). Bo'sh qoldirilsa — bugun."
+        required: false
+        default: ""
+      dry_run:
+        description: "Yubormasdan faqat logga chiqarish"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Eslatma yuborish
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          WEBAPP_URL: ${{ secrets.WEBAPP_URL }}
+          TODAY: ${{ inputs.today }}
+        run: python3 remind.py ${{ inputs.dry_run && '--dry-run' || '' }}
