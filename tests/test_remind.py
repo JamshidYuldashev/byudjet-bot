@@ -12,7 +12,7 @@ ENV = {"BOT_TOKEN": "123:abc", "CHAT_ID": "42", "WEBAPP_URL": "https://example.g
 
 
 def messages(iso: str) -> list[str]:
-    return remind.build_messages(date.fromisoformat(iso))
+    return [m.text for m in remind.build_messages(date.fromisoformat(iso))]
 
 
 class BuildMessagesTest(unittest.TestCase):
@@ -68,7 +68,39 @@ class BuildMessagesTest(unittest.TestCase):
 
 
 def morning(iso: str) -> list[str]:
-    return remind.build_morning(date.fromisoformat(iso))
+    return [m.text for m in remind.build_morning(date.fromisoformat(iso))]
+
+
+def plan_keys(msg: remind.Message) -> list[str]:
+    return [f"{d.isoformat()}:{e.id}" for d, e in msg.plan]
+
+
+class ButtonsTest(unittest.TestCase):
+    def test_evening_buttons_for_tomorrow(self) -> None:
+        msg = remind.build_messages(date(2026, 11, 13))[0]
+        self.assertEqual(plan_keys(msg), ["2026-11-14:claude", "2026-11-14:uzum"])
+
+    def test_lock_button_on_20th(self) -> None:
+        msgs = remind.build_messages(date(2027, 3, 20))
+        self.assertEqual(plan_keys(msgs[-1]), ["2027-03-20:lock"])
+
+    def test_digest_and_summary_without_buttons(self) -> None:
+        self.assertEqual(remind.build_messages(date(2026, 11, 15))[0].plan, [])
+        self.assertEqual(remind.build_morning(date(2026, 12, 1))[1].plan, [])
+
+    def test_morning_buttons(self) -> None:
+        self.assertEqual(plan_keys(remind.build_morning(date(2026, 11, 14))[0]), ["2026-11-14:claude", "2026-11-14:uzum"])
+        self.assertEqual(remind.build_morning(date(2026, 11, 13))[0].plan, [])
+
+    def test_keyboard(self) -> None:
+        msg = remind.build_messages(date(2026, 11, 19))[0]
+        rows = remind.keyboard(msg, "https://x.github.io/b/")["inline_keyboard"]
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(rows[0][0], {"text": "💰 Tushdi: Asosiy oylik", "web_app": {"url": "https://x.github.io/b/?plan=2026-11-20%3Aoylik"}})
+        self.assertEqual(rows[1][0]["text"], "✅ To'ladim: Telefon")
+        self.assertEqual(rows[2][0]["text"], "🔒 Qulfladim: Omonatga qulflash")
+        self.assertEqual(rows[3][0], {"text": "Trekerni ochish", "web_app": {"url": "https://x.github.io/b/"}})
+        self.assertTrue(remind.plan_url("https://x.io/?a=1", date(2026, 11, 5), remind.PLAN["monthly"][5][0]).endswith("?a=1&plan=2026-11-05%3Aavans"))
 
 
 class MorningTest(unittest.TestCase):
@@ -137,8 +169,9 @@ class MainTest(unittest.TestCase):
         self.assertEqual(code, 0)
         payload = json.loads(urlopen.call_args.args[0].data)
         self.assertEqual(payload["chat_id"], "42")
-        button = payload["reply_markup"]["inline_keyboard"][0][0]
-        self.assertEqual(button, {"text": "Trekerni ochish", "web_app": {"url": ENV["WEBAPP_URL"]}})
+        rows = payload["reply_markup"]["inline_keyboard"]
+        self.assertEqual(rows[0][0]["web_app"]["url"], ENV["WEBAPP_URL"] + "?plan=2026-11-14%3Aclaude")
+        self.assertEqual(rows[-1][0], {"text": "Trekerni ochish", "web_app": {"url": ENV["WEBAPP_URL"]}})
 
     def test_api_error_exits_nonzero_without_leaking_token(self) -> None:
         resp = mock.MagicMock()

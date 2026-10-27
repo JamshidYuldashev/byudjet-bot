@@ -410,6 +410,15 @@ input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
 .st-act .btn { border-color: rgba(255, 255, 255, .35); color: #FFFFFF; }
 .st-act .btn.primary { background: #FFFFFF; color: #10204A; }
 .st-img { width: 100%; max-height: 52vh; object-fit: contain; border-radius: 16px; }
+/* Kalkulyator klaviaturasi */
+.keys.calc { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.keys button.op { color: var(--accent); font-size: 26px; }
+.calc-expr { color: var(--soft); font-weight: 700; }
+/* Xohishlar ro'yxati */
+.wrow { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.wrow .acts { display: flex; gap: 6px; flex: none; }
+.wrow .acts .act { min-width: 0; padding: 0 12px; }
+.chipline { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 8px; }
 .dmap.st-map { grid-template-rows: repeat(7, 26px); grid-auto-columns: 26px; gap: 5px; justify-content: start; }
 .dmap.st-map > * { aspect-ratio: auto; border-radius: 6px; }
 .dmap.st-map .g { background: #6CF0B0; } .dmap.st-map .b { background: #FF8A7A; } .dmap.st-map > button, .dmap.st-map > span { background: rgba(255, 255, 255, .15); }
@@ -506,6 +515,7 @@ const ICON = {
   edit: 'M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4l-10.5 10.5v4 M13.5 6.5l4 4',
   eye: 'M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0 M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6',
   eyeOff: 'M10.585 10.587a2 2 0 0 0 2.829 2.828 M16.681 16.673a8.717 8.717 0 0 1-4.681 1.327c-3.6 0-6.6-2-9-6c1.272-2.12 2.712-3.678 4.32-4.674m2.86-1.146a9.055 9.055 0 0 1 1.82-.18c3.6 0 6.6 2 9 6c-.666 1.11-1.379 2.067-2.138 2.87 M3 3l18 18',
+  hourglass: 'M6.5 7h11 M6.5 17h11 M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1z M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0-1-1h-10a1 1 0 0 0-1 1z',
   bulb: 'M3 12h1m8-9v1m8 8h1m-15.4-6.4l.7.7m12.1-.7l-.7.7 M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0-1 3a2 2 0 0 1-4 0a3.5 3.5 0 0 0-1-3 M9.7 17l4.6 0',
   up: 'M6 15l6-6l6 6',
   down: 'M6 9l6 6l6-6',
@@ -565,6 +575,11 @@ const TODAY_OVERRIDE = (() => {
   const q = new URLSearchParams(location.search).get('today');
   return validISO(q) ? q : '';
 })();
+// ?plan=YYYY-MM-DD:id — bot xabaridagi «To'ladim» tugmasi: treker shu reja bandi bilan ochiladi
+let deepPlan = (() => {
+  const q = new URLSearchParams(location.search).get('plan') || '';
+  return /^\d{4}-\d{2}-\d{2}:[a-z]{2,12}$/.test(q) ? q : '';
+})();
 function today() {
   if (TODAY_OVERRIDE) return TODAY_OVERRIDE;
   const n = new Date();
@@ -597,13 +612,14 @@ const clampMonth = m => (m < MONTHS[0] ? MONTHS[0] : m > MONTHS[MONTHS.length - 
 
 // ===== Holat =====
 // db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt }
-// db.log: { t: "YYYY-MM-DD HH:MM", k: add|edit|del|debt|plan|set|import, m: matn, r: qarz yoki amal id }
+// db.log: { t: "YYYY-MM-DD HH:MM", k: add|edit|del|debt|plan|set|import|wish, m: matn, r: qarz yoki amal id }
+// db.wish: { id, ts (ms), a, c, n, acc, st: w (kutilmoqda) | b (sotib olindi) | s (voz kechildi), rd: hal qilingan sana }
 let db = null;
 let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null, bio: {}, home: { order: [], off: [] }, imp: null,
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], pin: null, bio: {}, home: { order: [], off: [] }, imp: null,
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -749,7 +765,7 @@ function applyTheme() {
 // ===== Saqlash: CloudStorage (6.9+) yoki localStorage; hujjatlar 3500 belgilik bo'laklarga bo'linadi =====
 // Kalitlar: meta_N, debts_N, log_N, t_YYYY-MM_N. Birinchi bo'lak "bo'laklar_soni|" bilan boshlanadi.
 const CHUNK = 3500; // CloudStorage qiymati 4096 belgigacha
-const DOC_RE = /^(meta|debts|log|t_\d{4}-\d{2})_(\d{1,3})$/;
+const DOC_RE = /^(meta|debts|log|wish|t_\d{4}-\d{2})_(\d{1,3})$/;
 const V1_RE = /^m_(\d{4}-\d{2})$/;
 function createStore() {
   if (tgAtLeast('6.9') && WA.CloudStorage) {
@@ -800,6 +816,7 @@ function serialize(doc) {
   if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
+  if (doc === 'wish') return JSON.stringify(db.wish.map(w => [w.id, w.ts, w.a, w.c, w.n, w.acc, w.st, w.rd]));
   const m = doc.slice(2);
   return JSON.stringify(db.tx.filter(t => t.d.startsWith(m)).map(packTx));
 }
@@ -913,7 +930,17 @@ function cleanMeta(o) {
   const imp = isObj(o.imp) && typeof o.imp.t === 'string' ? { t: o.imp.t.slice(0, 16), tx: ids(o.imp.tx), debts: ids(o.imp.debts), h: ids(o.imp.h) } : null;
   return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio, home, imp };
 }
-const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import'];
+const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import', 'wish'];
+function cleanWish(o) {
+  if (Array.isArray(o)) o = { id: o[0], ts: o[1], a: o[2], c: o[3], n: o[4], acc: o[5], st: o[6], rd: o[7] };
+  if (!isObj(o)) throw new Error('xohish obyekt emas');
+  const w = { id: o.id, ts: o.ts, a: o.a, c: o.c, n: o.n || '', acc: o.acc, st: o.st, rd: o.rd || '' };
+  if (typeof w.id !== 'string' || !/^w[0-9a-z]{1,10}$/.test(w.id)) throw new Error('xohish: noto\'g\'ri id');
+  if (!Number.isInteger(w.ts) || w.ts <= 0 || !isAmt(w.a) || !isStr(w.n, 80)) throw new Error(`xohish ${w.id}: noto'g'ri`);
+  if (CATS[w.c]?.k !== 'out' || CATS[w.c].hidden || !['card', 'cash'].includes(w.acc)) throw new Error(`xohish ${w.id}: noto'g'ri kategoriya`);
+  if (!['w', 'b', 's'].includes(w.st) || (w.rd && !validISO(w.rd))) throw new Error(`xohish ${w.id}: noto'g'ri holat`);
+  return w;
+}
 function cleanLog(list) {
   if (!Array.isArray(list)) return [];
   return list.map(e => (Array.isArray(e) ? { t: e[0], k: e[1], m: e[2], r: e[3] || '' } : e)).filter(e => isObj(e)
@@ -924,7 +951,7 @@ function finishDb(meta, debts, tx, log = meta.log) {
   const ids = new Set();
   const uniq = list => list.filter(x => (ids.has(x.id) ? false : ids.add(x.id)));
   const out = { ...meta, debts: uniq(debts), tx: uniq(tx), log: cleanLog(log) };
-  out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), 0);
+  out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), ...(out.wish || []).map(w => idNum(w.id)), 0);
   return out;
 }
 
@@ -984,7 +1011,7 @@ async function load() {
     try { meta = cleanMeta(docs.meta); } catch { broken.push('meta'); }
   }
   if (meta) {
-    db = { ...meta, debts: [], tx: [], log: [] };
+    db = { ...meta, debts: [], tx: [], log: [], wish: [] };
   } else {
     db = blankDb();
     db.mig = v1Keys.length ? 0 : 1;
@@ -995,6 +1022,11 @@ async function load() {
     db.debts = [];
     for (const a of docs.debts) {
       try { db.debts.push(cleanDebt({ id: a[0], dir: a[1], who: a[2], a: a[3], due: a[4], d: a[5] })); } catch { skipped++; }
+    }
+  }
+  if (Array.isArray(docs.wish)) {
+    for (const a of docs.wish) {
+      try { db.wish.push(cleanWish(a)); } catch { skipped++; }
     }
   }
   for (const [doc, list] of Object.entries(docs)) {
@@ -1269,7 +1301,7 @@ function sparkHTML(C, t) {
 // Asosiy ekran kartalari: tartib va ko'rinishi Hisobot → Ko'rinish'da sozlanadi
 const HOME_CARDS = [
   ['wrap', 'Oy yakuni', wrapBanner], ['alerts', 'Diqqat', alertsCard], ['score', 'Moliyaviy salomatlik', scoreCard],
-  ['today', 'Bugungi xarajat', todayCard], ['insights', 'Xulosalar', insightsCard], ['overdue', 'Belgilanmagan rejalar', overdueCard],
+  ['today', 'Bugungi xarajat', todayCard], ['wish', 'Xohishlar', wishCard], ['insights', 'Xulosalar', insightsCard], ['overdue', 'Belgilanmagan rejalar', overdueCard],
   ['next', "Keyingi to'lov", nextCard], ['goal', 'Yakuniy maqsad', goalCard], ['stats', 'Seriya va qoida', statCards],
   ['debts', 'Qarzlar', debtSummary], ['recent', 'Oxirgi amallar', recentCard],
 ];
@@ -1366,6 +1398,10 @@ function alertsCard(C, t) {
     items.push({ lvl: 2, color: 'coral', icon: 'alert', act: 'data-act="tab" data-to="tarix"',
       text: `Bugun qoida buzildi: −${fmt(bad)}`, sub: "Ko'cha ovqati, kofe yoki taksi — prognoz shuncha kamaydi" });
   }
+  for (const w of db.wish.filter(wishReady)) {
+    items.push({ lvl: 1, color: 'purple', icon: 'hourglass', act: `data-act="wish-ask" data-id="${w.id}"`,
+      text: `${esc(w.n || CATS[w.c].name)} — ${fmt(w.a)}: hali ham kerakmi?`, sub: '24 soat o\'tdi. Bosing — sotib oldim yoki voz kechdim' });
+  }
   const streak = streakOf(C, t);
   if (streak >= 7 && streak % 7 === 0) {
     items.push({ lvl: 0, color: 'mint', icon: 'flame', act: '', text: `${streak} kun ketma-ket qoidaga amal qildingiz`, sub: "Zo'r natija — shunday davom eting" });
@@ -1438,7 +1474,8 @@ function goalCard(C) {
     <span class="big">${fmt(C.final)} so'm</span>
     <div class="bar lg"><i style="width:${pct}%"></i></div>
     <span class="lbl" style="line-height:1.45">Prognoz: shu tezlikda ${longDate(PLAN.end)}da <b style="color:var(--text)">${fmt(prog)}</b> bo'ladi — ${tail}</span>
-    <button class="btn sm" data-act="sim">${ic('chart', 16)}«Agar…» — har kuni ko'proq sarflasam yoki tejasam?</button></section>`;
+    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="sim">${ic('chart', 16)}«Agar…»</button>
+      <button class="btn sm" data-act="afford">${ic('calendar', 16)}Qachon olaman?</button></div></section>`;
 }
 function streakOf(C, t) {
   let n = 0;
@@ -1493,13 +1530,13 @@ function recentCard(C) {
 let form = null;
 const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
 function openAdd(pre = {}) {
-  form = { ...blankForm(), ...pre, catSet: !!pre.c };
+  form = { ...blankForm(), ...pre, catSet: !!pre.c, expr: pre.a || '' };
   push('add');
 }
 function openEdit(id) {
   const t = db.tx.find(x => x.id === id);
   if (!t) return;
-  form = { ...blankForm(), ...t, a: String(t.a), unlinked: false };
+  form = { ...blankForm(), ...t, a: String(t.a), expr: String(t.a), unlinked: false };
   push('add');
 }
 function openFromEvent(key) {
@@ -1537,7 +1574,8 @@ function viewAdd() {
   }
   const planChip = ev ? `<div class="linkchip">${ic('calendar', 18)}<span class="body"><span>Reja: <b>${esc(ev.title)}</b></span><span class="muted">· ${dm(ev.iso)}</span></span>`
     + `<button class="round sm" data-act="f-unplan" aria-label="Rejadan ajratish">${ic('x', 16)}</button></div>` : '';
-  const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', 'back'];
+  const keys = ['1', '2', '3', '+', '4', '5', '6', '−', '7', '8', '9', '×', '000', '0', 'back', '÷'];
+  const hasOp = /[+−×÷]/.test(f.expr || '');
   const yest = addDays(t, -1);
   const quick = `<div class="chips quick">${yest >= PLAN.start ? `<button class="chip sm" data-act="f-yday" aria-pressed="${f.d === yest}">${ic('calendar', 14)}Kecha</button>` : ''}`
     + `${QUICK_AMOUNTS.map(v => `<button class="chip sm" data-act="f-quick" data-v="${v}">${fmt(v)}</button>`).join('')}</div>`;
@@ -1551,11 +1589,28 @@ function viewAdd() {
     ${f.id ? '' : `<label class="qline">${ic('edit', 18)}<span class="sr">Tez yozish</span><input id="qline" data-change="qline" placeholder="Tez yozish: 30k non karta" autocomplete="off" enterkeyhint="done">`
       + `<button class="round sm" data-act="qline" aria-label="Ajratish">${ic('check', 18)}</button></label>`}
     <div class="seg">${types.map(([k, label]) => `<button data-act="f-type" data-k="${k}" aria-pressed="${f.k === k}">${label}</button>`).join('')}</div>
-    <div class="amount"><span class="lbl">${amountLabel}</span><b class="${amtColor}${String(amount).length > 7 ? ' long' : ''}">${fmt(amount)} <small>so'm</small></b></div>
+    <div class="amount"><span class="lbl">${hasOp ? `<span class="calc-expr">${exprText(f.expr)} =</span>` : amountLabel}</span><b class="${amtColor}${String(amount).length > 7 ? ' long' : ''}">${fmt(amount)} <small>so'm</small></b></div>
     ${quick}${middle}${planChip}
     <label class="notefield">Izoh<input data-input="f-note" value="${esc(f.n)}" maxlength="120" placeholder="masalan: non, sim karta" autocomplete="off"></label>
-    <div class="keys">${keys.map(k => `<button data-act="key" data-k="${k}" aria-label="${k === 'back' ? "O'chirish" : k}">${k === 'back' ? ic('backspace', 24) : k}</button>`).join('')}</div>
+    <div class="keys calc">${keys.map(k => `<button data-act="key" data-k="${k}"${OPS.includes(k) ? ` class="op soft" aria-label="${OP_NAMES[k]}"` : ` aria-label="${k === 'back' ? "O'chirish" : k}"`}>${k === 'back' ? ic('backspace', 24) : k}</button>`).join('')}</div>
     ${addSaveHTML(f)}`;
+}
+// ===== Klaviaturadagi kalkulyator: «25 000 + 12 000», «120 000 ÷ 3» =====
+const OPS = '+−×÷';
+const OP_NAMES = { '+': "Qo'shish", '−': 'Ayirish', '×': "Ko'paytirish", '÷': "Bo'lish" };
+const exprText = e => (e.match(/\d+|[+−×÷]/g) || []).map(x => (OPS.includes(x) ? ` ${x} ` : fmt(Number(x)))).join('');
+function evalExpr(e) {
+  const tk = e.match(/\d+|[+−×÷]/g) || [];
+  while (tk.length && OPS.includes(tk[tk.length - 1])) tk.pop();
+  if (!tk.length) return 0;
+  let total = 0, sign = 1, term = Number(tk[0]);
+  for (let i = 1; i < tk.length; i += 2) {
+    const op = tk[i], n = Number(tk[i + 1]);
+    if (op === '×') term *= n;
+    else if (op === '÷') term = n ? term / n : term;
+    else { total += sign * term; sign = op === '+' ? 1 : -1; term = n; }
+  }
+  return Math.max(0, Math.min(999999999, Math.round(total + sign * term)));
 }
 const QUICK_AMOUNTS = [5000, 10000, 20000, 50000, 100000];
 // Kategoriya bloki va «Saqlash» — izohdan kategoriya tanlanganda shu ikkisi qayta chiziladi
@@ -1583,7 +1638,10 @@ function addSaveHTML(f) {
   const forbidden = f.k === 'out' && CATS[f.c]?.bad;
   const needCat = !isTr && !catOk(f.c, f.k);
   const label = !amount ? 'Summani kiriting' : needCat ? 'Kategoriyani tanlang' : forbidden ? 'Baribir saqlash' : 'Saqlash';
-  return `<button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button>`;
+  // «24 soat qoidasi»: taqiqlangan yoki katta (30 000+) rejadan tashqari xarid — avval xohishlar ro'yxatiga
+  const wish = !f.id && f.k === 'out' && !f.debt && !f.p && amount && !needCat && !CATS[f.c].hidden && (forbidden || amount >= 30000);
+  return `<div id="f-actions" class="col" style="gap:8px"><button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button>`
+    + `${wish ? `<button class="btn sm" data-act="f-wish" style="color:var(--accent)">${ic('hourglass', 16)}24 soat kutaman — xohishlar ro'yxatiga</button>` : ''}</div>`;
 }
 
 // ===== Izohdan kategoriya: oldingi amallaringizdan o'rganadi + tayyor kalit so'zlar =====
@@ -1622,8 +1680,17 @@ function noteCat(text, k) {
   return best;
 }
 function pressKey(k) {
-  const a = k === 'back' ? form.a.slice(0, -1) : (form.a + k).replace(/^0+/, '').slice(0, 9);
-  form.a = a;
+  let e = form.expr ?? form.a;
+  if (k === 'back') e = e.slice(0, -1);
+  else if (OPS.includes(k)) {
+    if (!e) return;
+    e = OPS.includes(e[e.length - 1]) ? e.slice(0, -1) + k : e + k;
+  } else {
+    const cur = e.match(/\d*$/)[0];
+    e = e.slice(0, e.length - cur.length) + (cur + k).replace(/^0+/, '').slice(0, 9);
+  }
+  form.expr = e.slice(0, 60);
+  form.a = String(evalExpr(form.expr) || '');
   rerender();
 }
 function saveForm() {
@@ -1647,7 +1714,7 @@ function saveForm() {
 
 // ===== Tarix =====
 const hist = { q: '', f: 'all', mode: 'tx', day: '' };
-const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'] };
+const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'], wish: ['hourglass', 'purple'] };
 const histHTML = () => (hist.mode === 'log' ? logList() : histList(calc()));
 function viewTarix() {
   const C = calc();
@@ -2122,7 +2189,7 @@ function dataCard() {
 // ===== Zaxira, CSV =====
 const exportText = () => JSON.stringify({
   v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq,
-  debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log,
+  debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log, wish: db.wish,
 });
 function parseBackup(text) {
   if (!text) throw new Error('Avval zaxira JSON matnini joylang.');
@@ -2137,7 +2204,8 @@ function parseBackup(text) {
   }
   if (data.v !== 2 || !Array.isArray(data.tx) || !Array.isArray(data.debts)) throw new Error('Format noto\'g\'ri: {"v": 2, "tx": [...], "debts": [...]} kutilgan.');
   const meta = cleanMeta({ ...data, mig: 1 });
-  return finishDb(meta, data.debts.map(cleanDebt), data.tx.map(cleanTx), data.log || []);
+  const wish = Array.isArray(data.wish) ? data.wish.map(cleanWish) : [];
+  return finishDb({ ...meta, wish }, data.debts.map(cleanDebt), data.tx.map(cleanTx), data.log || []);
 }
 // sep=';' — fayl (Excel), sep='\t' — buferga (Excel/Sheets'ga joylanganda ustunlarga bo'linadi)
 function csvText(sep) {
@@ -2946,6 +3014,134 @@ function openSim() {
     <button class="btn sm" data-act="modal-close">Yopish</button>`);
 }
 
+// ===== «24 soat qoidasi»: xohishlar ro'yxati =====
+// Rejadan tashqari xarid darrov yozilmaydi — 24 soatdan keyin «hali ham kerakmi?» deb so'raladi.
+const WISH_MS = 24 * 3600 * 1000;
+const wishReady = w => w.st === 'w' && Date.now() - w.ts >= WISH_MS;
+const wishLabel = w => `${w.n || CATS[w.c]?.name || 'Xarid'} ${fmt(w.a)}`;
+const wishSaved = () => db.wish.filter(w => w.st === 's');
+function addWish(t) {
+  const w = { id: nextId('w'), ts: Date.now(), a: t.a, c: catOk(t.c, 'out') && !CATS[t.c].hidden ? t.c : 'boshqa', n: (t.n || '').trim().slice(0, 80), acc: t.acc === 'cash' ? 'cash' : 'card', st: 'w', rd: '' };
+  db.wish.push(w);
+  touch('meta', 'wish');
+  logEv('wish', `Xohishlar ro'yxatiga: ${wishLabel(w)} — 24 soat kutiladi`, w.id);
+  return w;
+}
+function resolveWish(id, how) {
+  const w = db.wish.find(x => x.id === id);
+  if (!w || w.st !== 'w') return;
+  closeModal();
+  if (how === 'later') {
+    w.ts = Date.now();
+    touch('wish');
+    logEv('wish', `Yana 24 soat kutiladi: ${wishLabel(w)}`, w.id);
+    toast("Mayli, ertaga yana so'rayman");
+    rerender();
+    return;
+  }
+  w.st = how === 'buy' ? 'b' : 's';
+  w.rd = clampDate(today());
+  touch('wish');
+  if (how === 'buy') {
+    const t = { d: w.rd, tm: nowHM(), k: 'out', a: w.a, acc: w.acc, c: w.c, n: w.n };
+    t.p = autoLink(t);
+    addTx(t, { prefix: 'Xohishdan sotib olindi' });
+    logEv('wish', `Sotib olindi: ${wishLabel(w)}`, w.id);
+    haptic.ok();
+    toast(`Yozildi: −${fmt(w.a)}`);
+  } else {
+    logEv('wish', `Voz kechildi: ${wishLabel(w)} — tejaldi`, w.id);
+    toast(`👏 ${fmt(w.a)} so'm tejaldi!`);
+    confetti();
+  }
+  rerender();
+}
+function removeWish(id) {
+  const w = db.wish.find(x => x.id === id);
+  if (!w) return;
+  db.wish.splice(db.wish.indexOf(w), 1);
+  touch('wish');
+  logEv('wish', `Ro'yxatdan o'chirildi: ${wishLabel(w)}`, w.id);
+  rerender();
+}
+function wishAsk(id) {
+  const w = db.wish.find(x => x.id === id);
+  if (!w) return;
+  const h = Math.floor((Date.now() - w.ts) / 3600000);
+  openModal(`<div class="col" style="align-items:center;gap:8px;text-align:center">${iconTile(CATS[w.c].icon, CATS[w.c].color)}
+      <h2 class="h2" style="font-size:19px">${esc(w.n || CATS[w.c].name)} — ${fmt(w.a)} so'm</h2>
+      <p class="small muted" style="line-height:1.5">${h >= 24 ? `${h} soat o'tdi.` : `${24 - h} soat kutish qoldi.`} Hali ham kerakmi? Voz kechsangiz, summa «Tejalgan» hisobiga qo'shiladi.</p></div>
+    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="wish-buy" data-id="${w.id}">Ha, sotib oldim</button>
+      <button class="btn sm fill-warn" data-act="wish-skip" data-id="${w.id}" style="background:var(--mint)">Kerak emas 👏</button></div>
+    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="wish-later" data-id="${w.id}">Yana 24 soat</button>
+      <button class="btn sm danger" data-act="wish-del" data-id="${w.id}">Ro'yxatdan o'chirish</button></div>`);
+}
+function wishCard(C, t) {
+  const wait = db.wish.filter(w => w.st === 'w').sort((a, b) => a.ts - b.ts);
+  const saved = wishSaved();
+  if (!wait.length && !saved.length) return '';
+  const rows = wait.map(w => {
+    const ready = wishReady(w);
+    const left = Math.max(1, Math.ceil((w.ts + WISH_MS - Date.now()) / 3600000));
+    const af = whenAfford(C, w.a);
+    const when = af.now ? 'hozir olsa bo\'ladi' : af.iso ? `${dm(af.iso)} dan olsa bo'ladi` : "davr oxirigacha imkon yo'q";
+    return `<button class="wrow" data-act="wish-ask" data-id="${w.id}" style="width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:var(--text)">
+      <span class="tile soft" style="--c:var(--${CATS[w.c].color})">${ic(CATS[w.c].icon, 18)}</span>
+      <span class="body"><span style="font-weight:700;font-size:14px">${esc(w.n || CATS[w.c].name)}</span>
+        <span class="small ${ready ? 'c-acc' : 'muted'}" style="font-weight:${ready ? 800 : 600}">${ready ? '24 soat o\'tdi — hali ham kerakmi?' : `${left} soatdan keyin so'rayman`} · ${when}</span></span>
+      <span class="num">${fmt(w.a)}</span></button>`;
+  }).join('');
+  return `<section class="card list">
+    <div class="spread"><span class="h2" style="display:flex;align-items:center;gap:6px">${ic('hourglass', 18)}Xohishlar</span>
+      <button class="link-btn" data-act="afford">Qachon olaman?</button></div>
+    ${rows || '<p class="small muted" style="padding:8px 0">Kutayotgan xarid yo\'q.</p>'}
+    ${saved.length ? `<div class="msg soft c-in" style="margin:6px 0 8px">${ic('check', 16, 2.5)}Voz kechib tejalgan: ${fmt(sum(saved, w => w.a))} so'm (${saved.length} ta)</div>` : ''}</section>`;
+}
+
+// ===== «Qachon sotib ola olaman?»: rejani buzmasdan qaysi kundan pul yetadi =====
+// Karta + naqd (omonatga tegilmaydi) kunma-kun reja bandlari bo'yicha: xariddan keyin hech qaysi kunda manfiyga tushmasligi kerak.
+function affordPath(C) {
+  const t = C.t;
+  let s = C.bal.card + C.bal.cash;
+  const step = e => (e.kind === 'lock' ? -e.amount : delta(e));
+  for (const e of C.events.values()) if (e.iso < t && e.id !== 'yol' && isPending(C, e)) s += step(e); // muddati o'tgan bandlar
+  const path = [];
+  for (const d of DAYS) {
+    if (d.iso < t) continue;
+    for (const e of C.byIso[d.iso]) if (isPending(C, e)) s += step(e);
+    path.push({ iso: d.iso, s });
+  }
+  if (!path.length) path.push({ iso: t, s });
+  for (let i = path.length - 1, m = Infinity; i >= 0; i--) { m = Math.min(m, path[i].s); path[i].min = m; }
+  return path;
+}
+function whenAfford(C, price) {
+  const p = affordPath(C);
+  const i = p.findIndex(x => x.min >= price);
+  const low = p.find(x => x.s - price < 0);
+  return { now: i === 0, iso: i < 0 ? '' : p[i].iso, max: Math.max(0, p[0].min), low };
+}
+function affordResultHTML(price) {
+  const C = calc();
+  if (!price) return '<p class="small muted" style="text-align:center">Narxni kiriting</p>';
+  const r = whenAfford(C, price);
+  const prog = C.final + C.dev;
+  const main = r.now ? `<div class="msg soft c-in">${ic('check', 18, 2.5)}Hozir olsangiz ham bo'ladi — rejadagi to'lovlarga pul yetadi.</div>`
+    : r.iso ? `<div class="msg soft c-warn">${ic('calendar', 18)}<span><b>${longDate(r.iso)}</b> dan keyin oling. Hozir olsangiz, ${dm(r.low.iso)} da ${fmt(price - r.low.s)} so'm yetmay qoladi.</span></div>`
+    : `<div class="msg soft c-bad">${ic('alert', 18)}<span>Davr oxirigacha rejani buzmasdan olib bo'lmaydi. Hozir rejaga zarar qilmasdan sarflash mumkin bo'lgani: <b>${fmt(r.max)}</b> so'm.</span></div>`;
+  return `${main}<div class="spread small" style="padding:0 4px"><span class="muted">Yakuniy prognoz</span><b>${fmt(prog)} → ${fmt(prog - price)}</b></div>`;
+}
+function openAfford() {
+  openModal(`<h2 class="h2">Qachon sotib ola olaman?</h2>
+    <p class="small muted" style="line-height:1.5">Narxni yozing — rejadagi to'lovlar va omonatga tegmasdan qaysi kundan pul yetishini hisoblayman.</p>
+    <input class="field" id="aff-n" maxlength="80" placeholder="Nima? (masalan: telefon)" autocomplete="off">
+    <input class="field r big-in" id="aff-a" data-input="aff-a" data-change="fmt-num" inputmode="numeric" placeholder="Narxi, so'm" autocomplete="off">
+    <select class="field" id="aff-c" aria-label="Kategoriya">${Object.entries(CATS).filter(([, c]) => c.k === 'out' && !c.hidden).map(([id, c]) => `<option value="${id}"${id === 'boshqa' ? ' selected' : ''}>${c.name}</option>`).join('')}</select>
+    <div id="aff-res" class="col" style="gap:8px">${affordResultHTML(0)}</div>
+    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="modal-close">Yopish</button>
+      <button class="btn sm" data-act="aff-wish" style="color:var(--accent)">${ic('hourglass', 16)}Xohishlarga qo'shish</button></div>`, 'aff-n');
+}
+
 // ===== 145 kunlik intizom xaritasi =====
 function mapHTML(C, t, days, cls = '') {
   const lead = (days[0].dow + 6) % 7; // dushanbadan
@@ -2988,7 +3184,8 @@ function applyLine(s) {
   const k = r.k || (form.k === 'in' ? 'in' : 'out');
   const note = r.note ? r.note[0].toUpperCase() + r.note.slice(1) : '';
   const c = noteCat(note, k);
-  Object.assign(form, { k, a: String(Math.min(r.a, 999999999)), acc: r.acc || (form.acc === 'save' ? 'card' : form.acc), to: '', n: note || form.n, debt: '', p: '' });
+  form.expr = String(Math.min(r.a, 999999999));
+  Object.assign(form, { k, a: form.expr, acc: r.acc || (form.acc === 'save' ? 'card' : form.acc), to: '', n: note || form.n, debt: '', p: '' });
   if (r.y) form.d = clampDate(addDays(today(), -1));
   if (c) { form.c = c; form.catSet = false; } else if (!catOk(form.c, k)) form.c = '';
   haptic.ok();
@@ -3238,7 +3435,7 @@ const ACT = {
     copyTxToday(t);
     rerender();
   },
-  'f-quick': el => { form.a = el.dataset.v; haptic.light(); rerender(); },
+  'f-quick': el => { form.a = form.expr = el.dataset.v; haptic.light(); rerender(); },
   'f-yday': () => {
     const t = today(), y = addDays(t, -1);
     form.d = clampDate(form.d === y ? t : y);
@@ -3267,6 +3464,29 @@ const ACT = {
   'st-save': () => saveWrapImage(),
   'map-day': el => { const iso = el.dataset.iso; reja.m = iso.slice(0, 7); reja.sel = iso; go('reja'); },
   qline: () => applyLine($('qline').value),
+  'f-wish': () => {
+    const a = digits(form.a);
+    if (!a || !catOk(form.c, 'out')) return;
+    const w = addWish({ a, c: form.c, n: form.n, acc: form.acc });
+    haptic.ok();
+    back();
+    toast(`⏳ «${w.n || CATS[w.c].name}» ro'yxatga qo'shildi — 24 soatdan keyin so'rayman`);
+  },
+  'wish-ask': el => wishAsk(el.dataset.id),
+  'wish-buy': el => resolveWish(el.dataset.id, 'buy'),
+  'wish-skip': el => resolveWish(el.dataset.id, 'skip'),
+  'wish-later': el => resolveWish(el.dataset.id, 'later'),
+  'wish-del': el => { closeModal(); removeWish(el.dataset.id); },
+  afford: () => openAfford(),
+  'aff-wish': () => {
+    const a = digits($('aff-a').value);
+    if (!a) { toast('Narxni kiriting'); haptic.error(); return; }
+    const w = addWish({ a, c: $('aff-c').value, n: $('aff-n').value, acc: 'card' });
+    closeModal();
+    haptic.ok();
+    toast(`⏳ «${w.n || CATS[w.c].name}» xohishlar ro'yxatiga qo'shildi`);
+    rerender();
+  },
   key: el => pressKey(el.dataset.k),
   save: () => saveForm(),
   // Tarix
@@ -3372,7 +3592,7 @@ const ACT = {
     next.home = db.home;
     db = next;
     logEv('import', `Zaxira import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz`);
-    touch('meta', 'debts', 'log', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
+    touch('meta', 'debts', 'log', 'wish', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
     await flush();
     rerender();
     setBackupMsg(`Import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz.`, false);
@@ -3398,6 +3618,7 @@ function setBackupMsg(text, isError) {
 }
 let huTimer;
 const INPUT = {
+  'aff-a': el => { $('aff-res').innerHTML = affordResultHTML(digits(el.value)); },
   'sim-daily': el => { simUI.daily = Number(el.value); $('sim-dv').textContent = `${fmt(simUI.daily)} so'm`; $('sim-res').innerHTML = simResultHTML(); },
   'sim-monthly': el => { simUI.monthly = Number(el.value); $('sim-mv').textContent = `${fmt(simUI.monthly)} so'm`; $('sim-res').innerHTML = simResultHTML(); },
   'f-note': el => {
@@ -3408,7 +3629,7 @@ const INPUT = {
     if (!c || c === form.c) return;
     form.c = c;
     $('f-cats').innerHTML = addCatsHTML(form, null);
-    $('f-save').outerHTML = addSaveHTML(form);
+    $('f-actions').outerHTML = addSaveHTML(form);
     $('view').querySelector('.amount b')?.classList.toggle('c-bad', !!CATS[c].bad && form.k === 'out');
   },
   'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histHTML(); },
@@ -3517,8 +3738,9 @@ document.addEventListener('keydown', ev => {
     }
     return;
   }
-  if (route !== 'add' || ev.target.closest('input, textarea, select')) return;
+  if (route !== 'add' || ev.target.closest?.('input, textarea, select')) return;
   if (/^\d$/.test(ev.key)) pressKey(ev.key);
+  else if (ev.key.length === 1 && '+-*/'.includes(ev.key)) pressKey({ '+': '+', '-': '−', '*': '×', '/': '÷' }[ev.key]);
   else if (ev.key === 'Backspace') pressKey('back');
   else if (ev.key === 'Enter') saveForm();
   else if (ev.key === 'Escape') back();
@@ -3561,6 +3783,16 @@ function showApp() {
   $('view').hidden = false;
   $('nav').hidden = false;
   render(0);
+  openDeepPlan();
+}
+function openDeepPlan() {
+  const key = deepPlan;
+  deepPlan = '';
+  if (!key) return;
+  const C = calc();
+  if (!C.events.has(key)) { toast('Bu reja bandi topilmadi'); return; }
+  if (C.byPlan.has(key)) toast("Bu band allaqachon yozilgan — kerak bo'lsa tahrirlang");
+  openFromEvent(key);
 }
 start();
 </script>

@@ -6,6 +6,9 @@ TODAY=YYYY-MM-DD bilan sanani almashtirish mumkin (sinov uchun).
 --slot morning  — 08:00: bugungi kun (ish kuni / to'lovlar), oyning 1-sanasida oy rejasi.
 --slot evening  — 20:00: ertangi to'lovlar, 20-sanada qulflash, yakshanba — keyingi hafta.
 --dry-run xabarlarni yubormasdan chop etadi.
+
+Reja bandi bor xabarlarda har band uchun «✅ To'ladim» tugmasi bo'ladi: u trekerni
+WEBAPP_URL?plan=YYYY-MM-DD:id bilan ochadi va shu to'lov tayyor holda chiqadi.
 """
 import argparse
 import json
@@ -13,7 +16,8 @@ import os
 import sys
 import urllib.error
 import urllib.request
-from dataclasses import dataclass
+from urllib.parse import quote
+from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 
 TZ = timezone(timedelta(hours=5))  # Asia/Tashkent
@@ -64,7 +68,14 @@ PLAN = {
     },
 }
 
+@dataclass
+class Message:
+    text: str
+    plan: list[tuple[date, Event]] = field(default_factory=list)  # «To'ladim» tugmalari
+
+
 SIGNS = {"in": "+", "out": "−", "lock": "→ "}
+ACTIONS = {"in": "💰 Tushdi", "out": "✅ To'ladim", "lock": "🔒 Qulfladim"}
 WEEKDAYS = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"]
 WD_SHORT = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"]
 MONTHS = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust",
@@ -157,11 +168,11 @@ def week_digest(sunday: date) -> str | None:
     return "\n".join(lines)
 
 
-def build_morning(today: date) -> list[str]:
+def build_morning(today: date) -> list[Message]:
     """08:00 xabarlari: ish kuni eslatmasi va bugungi reja; 1-sanada oy rejasi."""
     if not in_period(today):
         return []
-    messages: list[str] = []
+    messages: list[Message] = []
     events = events_on(today)
     work = is_workday(today)
     if work or events:
@@ -177,15 +188,15 @@ def build_morning(today: date) -> list[str]:
             lines = [f"{head} — dam olish kuni{f' ({holiday})' if holiday else ''}."]
         if events:
             lines += ["", "📌 Bugungi reja:"] + [event_line(e) for e in events]
-            lines.append("Bajarilgach, trekerda belgilang: Reja → «To'lash» / «Tushdi» / «Qulflash».")
-        messages.append("\n".join(lines))
+            lines.append("Bajarilgach, pastdagi tugmani bosing — treker shu to'lov bilan ochiladi.")
+        messages.append(Message("\n".join(lines), [(today, e) for e in events]))
     if today.day == 1:
-        messages.append(month_summary(today.year, today.month))
+        messages.append(Message(month_summary(today.year, today.month)))
     return messages
 
 
-def build_messages(today: date) -> list[str]:
-    messages: list[str] = []
+def build_messages(today: date) -> list[Message]:
+    messages: list[Message] = []
     tomorrow = today + timedelta(days=1)
     events = events_on(tomorrow)
     if events:
@@ -196,19 +207,33 @@ def build_messages(today: date) -> list[str]:
             "Bu pul ertangi reja uchun ajratilgan — unga tegmang. "
             "Ko'chada ovqat, kofe, shirinlik, taksi — 0 so'm.",
         ]
-        messages.append("\n".join(lines))
+        messages.append(Message("\n".join(lines), [(tomorrow, e) for e in events]))
     if today.day == 20 and in_period(today):
-        messages.append(
+        lock = [e for e in events_on(today) if e.kind == "lock"]
+        messages.append(Message(
             f"🔒 Bugun 20-sana. {fmt(LOCK)} so'm omonatga "
             "(yoki valyutaga) o'tkazildimi?\n\n"
-            "Hali bo'lmasa — hoziroq o'tkazing va trekerda belgilang. "
-            "Qulflangan pulga umuman tegilmaydi."
-        )
+            "Hali bo'lmasa — hoziroq o'tkazing va tugmani bosib belgilang. "
+            "Qulflangan pulga umuman tegilmaydi.",
+            [(today, e) for e in lock],
+        ))
     if today.weekday() == 6:
         digest = week_digest(today)
         if digest:
-            messages.append(digest)
+            messages.append(Message(digest))
     return messages
+
+
+def plan_url(webapp_url: str, d: date, e: Event) -> str:
+    """Trekerni shu reja bandi bilan ochadigan manzil (kalit index.html dagi bilan bir xil: ISO:id)."""
+    sep = "&" if "?" in webapp_url else "?"
+    return f"{webapp_url}{sep}plan={quote(f'{d.isoformat()}:{e.id}', safe='')}"
+
+
+def keyboard(msg: Message, webapp_url: str) -> dict:
+    rows = [[{"text": f"{ACTIONS[e.kind]}: {e.title}", "web_app": {"url": plan_url(webapp_url, d, e)}}] for d, e in msg.plan]
+    rows.append([{"text": BUTTON_TEXT, "web_app": {"url": webapp_url}}])
+    return {"inline_keyboard": rows}
 
 
 def get_today() -> date:
@@ -221,14 +246,8 @@ def get_today() -> date:
         raise SystemExit(f"Xato: TODAY noto'g'ri formatda: {raw!r} (kerak: YYYY-MM-DD)")
 
 
-def send(token: str, chat_id: str, text: str, webapp_url: str) -> None:
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "reply_markup": {
-            "inline_keyboard": [[{"text": BUTTON_TEXT, "web_app": {"url": webapp_url}}]]
-        },
-    }
+def send(token: str, chat_id: str, msg: Message, webapp_url: str) -> None:
+    payload = {"chat_id": chat_id, "text": msg.text, "reply_markup": keyboard(msg, webapp_url)}
     req = urllib.request.Request(
         API_URL.format(token=token),
         data=json.dumps(payload).encode(),
@@ -266,10 +285,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run:
         url = os.environ.get("WEBAPP_URL") or "<WEBAPP_URL>"
         print(f"[dry-run] Bugun: {today:%d.%m.%Y}, {args.slot}, xabarlar: {len(messages)}")
-        for text in messages:
+        for msg in messages:
             print("-" * 40)
-            print(text)
-            print(f"[{BUTTON_TEXT}] -> {url}")
+            print(msg.text)
+            for row in keyboard(msg, url)["inline_keyboard"]:
+                print(f"[{row[0]['text']}] -> {row[0]['web_app']['url']}")
         return 0
 
     env = {k: os.environ.get(k, "").strip() for k in ("BOT_TOKEN", "CHAT_ID", "WEBAPP_URL")}
@@ -282,9 +302,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{today:%d.%m.%Y}: bugun eslatma yo'q.")
         return 0
 
-    for text in messages:
+    for msg in messages:
         try:
-            send(env["BOT_TOKEN"], env["CHAT_ID"], text, env["WEBAPP_URL"])
+            send(env["BOT_TOKEN"], env["CHAT_ID"], msg, env["WEBAPP_URL"])
         except RuntimeError as e:
             print(f"Xato: {e}", file=sys.stderr)
             return 1

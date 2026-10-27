@@ -46,6 +46,8 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 - `remind.py` ikki slotda ishlaydi: `--slot morning` (08:00 — bugungi kun, 1-sanada oy rejasi) va
   `--slot evening` (20:00 — ertangi to'lovlar, 20-sanada qulflash, yakshanba — keyingi hafta).
   Bot CloudStorage'ni o'qiy olmaydi, shuning uchun faqat reja asosida yozadi.
+  Reja bandi bor xabarlarda har band uchun tugma: `WEBAPP_URL?plan=YYYY-MM-DD:id` — kalit index.html dagi
+  `${iso}:${e.id}` bilan bir xil (Event id lari ikkala faylda bir xil bo'lishi shart). Treker shu bandni ochadi.
 - Foydalanuvchiga ko'rinadigan barcha matn (UI, bot xabarlari, README) — o'zbek tilida, lotin yozuvida.
 - Secretlar (BOT_TOKEN, CHAT_ID, WEBAPP_URL) faqat GitHub Secrets / env orqali. Kodda hech qachon.
 - `index.html`: vanilla HTML/CSS/JS, build yo'q. CDN: faqat telegram.org va jsdelivr
@@ -65,7 +67,8 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
   - `debt` — qarz id si.
 - Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
 - Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz = yakuniy reja + farq.
-- Jurnal (`log`): `{ t, k: add|edit|del|debt|plan|set|import, m, r }`, oxirgi 500 ta yozuv. Har bir o'zgarish
+- Xohishlar (`wish` hujjati): `{ id: w…, ts, a, c, n, acc, st: w|b|s, rd }` — «24 soat qoidasi». Zaxira eksportiga kiradi.
+- Jurnal (`log`): `{ t, k: add|edit|del|debt|plan|set|import|wish, m, r }`, oxirgi 500 ta yozuv. Har bir o'zgarish
   `addTx` / `updateTx` / `removeTx` / `logEv` orqali yoziladi — ma'lumotni to'g'ridan-to'g'ri o'zgartirmang.
 - PIN: `meta.pin = { s: salt, h: sha256(salt:pin) }` — ekran qulfi. Zaxira eksportiga kirmaydi.
 - `meta.home = { order, off }` — Asosiy ekran kartalari tartibi/yashirilganlari (`HOME_CARDS` id lari).
@@ -76,7 +79,7 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 - «Balans tuzatish» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Hisobot), lekin qoldiqqa kiradi.
 - Biometrik ochish (BiometricManager, 7.2+): tasodifiy token qurilmaning xavfsiz xotirasida, bulutda faqat
   `meta.bio = { [deviceId]: sha256(token) }`. PIN bo'lmasa `bio` bo'sh. Zaxira eksportiga kirmaydi.
-- Saqlash: hujjatlar `meta`, `debts`, `log`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
+- Saqlash: hujjatlar `meta`, `debts`, `log`, `wish`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
   (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
 - HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
 - Egasi tekshiruvi: `OWNER_HASH` = sha256(`byudjet-bot:` + CHAT_ID). Uni `.github/workflows/pages.yml` deploy paytida
