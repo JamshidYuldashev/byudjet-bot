@@ -117,6 +117,26 @@ kalendar tugmasidan ochiladi (Telegram «Orqaga» tugmasi Asosiy'ga qaytaradi).
 | **Qarzlar** | Ikki ro'yxat: «Men qarzdorman» va «Menga qarzdor» (faollari tepada, yopilganlari pastda). Qarzni bossangiz oyna ochiladi: «To'liq to'landi / qaytdi» bir bosishda yoziladi, qisman summa ham kiritish mumkin, Karta yoki Naqd tanlanadi. Oynada qarzning to'liq tarixi ko'rinadi |
 | **Hisobot** | Kategoriyalar diagrammasi, kunlik xarajat va limit, reja va haqiqiy balans grafigi, oylik kategoriya limitlari, eng katta xarajatlar. Shu yerda Ko'rinish (mavzu: Telegram / Yorug' / Qorong'i; Asosiy ekran kartalari), PIN-kod va barmoq izi (Xavfsizlik), CSV/JSON eksport, boshlang'ich qoldiqlar va zaxira ham bor. Balans tuzatishlar kirim/chiqim hisobiga kirmaydi |
 
+Qo'shimcha imkoniyatlar:
+
+- **Oy yakuni («Wrapped»)** — oy oxirgi kuni va keyingi oyning 1–5-sanalarida Asosiy ekranda 🎬 banner chiqadi
+  (istalgan oyni Hisobot → «… yakunini ko'rish» dan ochish mumkin). Story kabi to'liq ekranli kartalar: pul oqimi,
+  eng ko'p xarajat, eng katta xarajat, intizom xaritasi, jamg'arma, salomatlik bali. Oxirida konfetti va
+  «Rasm sifatida saqlash» (1080×1350 PNG).
+- **Moliyaviy salomatlik (0–100)** — intizom (40), rejaga muvofiqlik (30), reja bandlari (15), qarzlar (15).
+  Kartani bossangiz — har qism alohida va 9 ta nishon («7 kun taqiqsiz», «Qarzsiz», «Reja ustasi» …).
+  Yangi nishon olinganda tabrik va konfetti.
+- **Xulosalar** — o'tgan hafta bilan solishtirish, rejadan tashqari xarajatsiz kunlar, limit sur'ati,
+  eng ko'p sarflanadigan hafta kuni va joy (HUMO bo'yicha).
+- **«Agar…» simulyatori** — Yakuniy maqsad kartasida: «har kuni +X sarflasam / har oylikdan +Y tejasam»
+  slayderlari, mart oxiridagi balans darhol qayta hisoblanadi.
+- **Intizom xaritasi** — Hisobot'da 145 kunlik kvadratchalar: yashil — qoida bajarilgan, qizil — buzilgan.
+  Kvadratni bossangiz, o'sha kun Reja'da ochiladi.
+- **Tez yozish** — «+» oynasining tepasida bir qatorda yozing: `30k non karta`, `kecha 12 000 taksi naqd`,
+  `+3.3m oylik`. Summa, kategoriya, hisob va sana o'zi ajratiladi, keyin «Saqlash» ni bosasiz.
+- **Jonli animatsiyalar** — balans raqami sanab o'zgaradi, kartalar silliq paydo bo'ladi, oylik tushganda yoki
+  qarz yopilganda konfetti. Telefonda «harakatni kamaytirish» yoqilgan bo'lsa — animatsiyasiz.
+
 Hisob-kitob qoidalari:
 
 - **Jami balans** = boshlang'ich qoldiqlar + barcha kirimlar − barcha chiqimlar.
