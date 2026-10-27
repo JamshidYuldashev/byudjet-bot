@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Byudjet treker</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/manrope@5.2.8/index.min.css">
@@ -264,6 +264,24 @@ textarea.field { padding: 12px; min-height: 150px; resize: vertical; font: 11.5p
 .catsel { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
 .catsel select { min-height: 36px; border-radius: 18px; border: 1px solid var(--line); background: var(--field); color: var(--text); padding: 0 10px; font-size: 12px; font-weight: 800; }
 
+/* Balansni yashirish */
+.eye { width: 40px; height: 40px; margin: -10px 0; border-radius: 20px; border: 0; padding: 0; background: rgba(255, 255, 255, .08);
+  color: var(--hero-muted); display: flex; align-items: center; justify-content: center; }
+button.hero-total { background: none; border: 0; padding: 0; color: #FFFFFF; text-align: left; font-size: 38px; font-weight: 800; letter-spacing: .04em; }
+
+/* PIN-kod */
+#lock { position: fixed; inset: 0; z-index: 70; background: var(--bg); display: flex; align-items: center; justify-content: center;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; }
+.lockbox { width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
+.lockbox .keys { width: 100%; }
+.pindots { display: flex; gap: 14px; margin: 4px 0; }
+.pindots i { width: 14px; height: 14px; border-radius: 7px; border: 2px solid var(--muted); }
+.pindots i.on { background: var(--accent); border-color: var(--accent); }
+.pindots.shake { animation: shake .35s; }
+@keyframes shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@media (prefers-reduced-motion: reduce) { .pindots.shake { animation: none; } }
+.keys button.ghost { background: transparent; color: var(--accent); font-size: 14px; font-weight: 800; }
+
 /* Navigatsiya */
 #nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--nav); border-top: 1px solid var(--nav-line);
   padding: 0 4px env(safe-area-inset-bottom); }
@@ -282,7 +300,18 @@ body.sub #toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 #modal { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55); display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
 #modal .sheet { width: 100%; max-width: 480px; background: var(--surface); border-radius: 20px; padding: 18px 16px 16px;
   margin-bottom: env(safe-area-inset-bottom); display: flex; flex-direction: column; gap: 12px; }
-#modal .field { font-size: 20px; font-weight: 800; min-height: 52px; }
+#modal .sheet { max-height: calc(var(--tg-viewport-stable-height, 100vh) - 32px); overflow-y: auto; }
+#modal .field.big-in { font-size: 20px; font-weight: 800; min-height: 52px; }
+.row.closed { opacity: .6; }
+.row .s.c-bad { color: var(--coral); } .row .s.c-warn { color: var(--amber); } .row .s.c-in { color: var(--mint); }
+.bar.thin { display: block; height: 4px; border-radius: 2px; margin-top: 4px; }
+.logline { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+.logline > span:first-child { color: var(--soft); font-weight: 600; }
+.logline > span:last-child { color: var(--muted); white-space: nowrap; }
+.logrow { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.group > .logrow:first-child { border-top: 0; }
+.logrow .tile { width: 34px; height: 34px; border-radius: 11px; }
+.logrow .m { font-size: 13px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -291,6 +320,7 @@ body.sub #toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 <button id="fab" data-act="add" aria-label="Yangi amal qo'shish" hidden></button>
 <nav id="nav" aria-label="Bo'limlar" hidden><div class="in"></div></nav>
 <div id="modal" hidden></div>
+<div id="lock" hidden></div>
 <div id="toast" role="status"></div>
 <script>
 'use strict';
@@ -373,6 +403,8 @@ const ICON = {
   copy: 'M8 8m0 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2z M16 8v-2a2 2 0 0 0-2-2h-8a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2',
   trash: 'M4 7l16 0 M10 11l0 6 M14 11l0 6 M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12 M9 7v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3',
   edit: 'M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4l-10.5 10.5v4 M13.5 6.5l4 4',
+  eye: 'M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0 M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6',
+  eyeOff: 'M10.585 10.587a2 2 0 0 0 2.829 2.828 M16.681 16.673a8.717 8.717 0 0 1-4.681 1.327c-3.6 0-6.6-2-9-6c1.272-2.12 2.712-3.678 4.32-4.674m2.86-1.146a9.055 9.055 0 0 1 1.82-.18c3.6 0 6.6 2 9 6c-.666 1.11-1.379 2.067-2.138 2.87 M3 3l18 18',
 };
 const ic = (name, size = 20, sw) => `<svg class="i" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"${sw ? ` stroke-width="${sw}"` : ''}><path d="${ICON[name]}"/></svg>`;
 
@@ -459,12 +491,13 @@ const clampMonth = m => (m < MONTHS[0] ? MONTHS[0] : m > MONTHS[MONTHS.length - 
 
 // ===== Holat =====
 // db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt }
+// db.log: { t: "YYYY-MM-DD HH:MM", k: add|edit|del|debt|plan|set|import, m: matn, r: qarz yoki amal id }
 let db = null;
 let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })),
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null,
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -573,9 +606,9 @@ function applyTheme() {
 }
 
 // ===== Saqlash: CloudStorage (6.9+) yoki localStorage; hujjatlar 3500 belgilik bo'laklarga bo'linadi =====
-// Kalitlar: meta_N, debts_N, t_YYYY-MM_N. Birinchi bo'lak "bo'laklar_soni|" bilan boshlanadi.
+// Kalitlar: meta_N, debts_N, log_N, t_YYYY-MM_N. Birinchi bo'lak "bo'laklar_soni|" bilan boshlanadi.
 const CHUNK = 3500; // CloudStorage qiymati 4096 belgigacha
-const DOC_RE = /^(meta|debts|t_\d{4}-\d{2})_(\d{1,3})$/;
+const DOC_RE = /^(meta|debts|log|t_\d{4}-\d{2})_(\d{1,3})$/;
 const V1_RE = /^m_(\d{4}-\d{2})$/;
 function createStore() {
   if (tgAtLeast('6.9') && WA.CloudStorage) {
@@ -623,8 +656,9 @@ const unpackTx = (a, m) => {
   return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt };
 };
 function serialize(doc) {
-  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig });
+  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
+  if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
   const m = doc.slice(2);
   return JSON.stringify(db.tx.filter(t => t.d.startsWith(m)).map(packTx));
 }
@@ -661,7 +695,9 @@ function flush() {
   });
   return flushing;
 }
-document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); flush(); } else lockIfAway();
+});
 window.addEventListener('pagehide', () => flush());
 
 // ===== Tekshiruv (yuklash va zaxira importi uchun) =====
@@ -724,12 +760,20 @@ function cleanMeta(o) {
     if (v > 0) lim[k] = v;
   }
   const seq = Number.isInteger(o.seq) && o.seq >= 0 ? o.seq : 0;
-  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0 };
+  const pin = isObj(o.pin) && /^[0-9a-f]{32}$/.test(o.pin.s) && /^[0-9a-f]{64}$/.test(o.pin.h) ? { s: o.pin.s, h: o.pin.h } : null;
+  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin };
 }
-function finishDb(meta, debts, tx) {
+const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import'];
+function cleanLog(list) {
+  if (!Array.isArray(list)) return [];
+  return list.map(e => (Array.isArray(e) ? { t: e[0], k: e[1], m: e[2], r: e[3] || '' } : e)).filter(e => isObj(e)
+    && typeof e.t === 'string' && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(e.t) && LOG_KINDS.includes(e.k)
+    && isStr(e.m, 240) && isStr(e.r || '', 16)).map(e => ({ t: e.t, k: e.k, m: e.m, r: e.r || '' })).slice(-LOG_MAX);
+}
+function finishDb(meta, debts, tx, log = meta.log) {
   const ids = new Set();
   const uniq = list => list.filter(x => (ids.has(x.id) ? false : ids.add(x.id)));
-  const out = { ...meta, debts: uniq(debts), tx: uniq(tx) };
+  const out = { ...meta, debts: uniq(debts), tx: uniq(tx), log: cleanLog(log) };
   out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), 0);
   return out;
 }
@@ -747,12 +791,12 @@ function migrateV1(shards) {
       const [dd, id] = key.split(':');
       const day = DAY_BY_ISO.get(`${m}-${dd}`);
       const e = day && eventsOn(day).find(x => x.id === id);
-      if (e) addTx(txFromEvent(e, e.iso), false);
+      if (e) addTx(txFromEvent(e, e.iso), { quiet: true });
     }
     for (const [dd, v] of Object.entries(isObj(s.x) ? s.x : {})) {
       const iso = `${m}-${dd}`;
       if (DAY_BY_ISO.has(iso) && isAmt(v)) {
-        addTx({ d: iso, tm: '', k: 'out', a: v, acc: 'cash', to: '', c: 'boshqa', n: 'Rejadan tashqari (v1)', p: '', h: '', debt: '' }, false);
+        addTx({ d: iso, tm: '', k: 'out', a: v, acc: 'cash', to: '', c: 'boshqa', n: 'Rejadan tashqari (v1)', p: '', h: '', debt: '' }, { quiet: true });
       }
     }
   }
@@ -790,7 +834,7 @@ async function load() {
     try { meta = cleanMeta(docs.meta); } catch { broken.push('meta'); }
   }
   if (meta) {
-    db = { ...meta, debts: [], tx: [] };
+    db = { ...meta, debts: [], tx: [], log: [] };
   } else {
     db = blankDb();
     db.mig = v1Keys.length ? 0 : 1;
@@ -809,7 +853,7 @@ async function load() {
       try { db.tx.push(cleanTx(Array.isArray(a) ? unpackTx(a, doc.slice(2)) : a)); } catch { skipped++; }
     }
   }
-  Object.assign(db, finishDb(db, db.debts, db.tx));
+  Object.assign(db, finishDb(db, db.debts, db.tx, docs.log || []));
   if (!db.mig && v1Keys.length) {
     const shards = {};
     for (const k of v1Keys) {
@@ -817,6 +861,7 @@ async function load() {
     }
     migrateV1(shards);
     db.mig = 1;
+    logEv('import', `1-versiyadagi belgilar ko'chirildi: ${db.tx.length} ta amal`);
     touch('meta', 'debts', ...new Set(db.tx.map(t => tdoc(t.d))));
     toast("Eski versiyadagi belgilar ko'chirildi");
   }
@@ -826,20 +871,54 @@ async function load() {
 
 // ===== O'zgartirishlar =====
 function nextId(prefix) { db.seq++; return prefix + db.seq.toString(36); }
-function addTx(t, save = true) {
+
+// ===== Jurnal: har bir o'zgarish vaqti bilan yoziladi =====
+const LOG_MAX = 500;
+function logEv(k, m, r = '') {
+  db.log.push({ t: `${today()} ${nowHM()}`, k, m: m.slice(0, 240), r });
+  if (db.log.length > LOG_MAX) db.log.splice(0, db.log.length - LOG_MAX);
+  touch('log');
+}
+const sgn = t => (t.k === 'in' ? `+${fmt(t.a)}` : t.k === 'out' ? `−${fmt(t.a)}` : fmt(t.a));
+function txLabel(t) {
+  return `${txTitle(t, calc())} ${sgn(t)}${t.k === 'tr' ? '' : ` · ${ACC[t.acc].name}`} · ${dm(t.d)}${t.n ? ` · ${t.n}` : ''}`;
+}
+// Qarz amali yozilganda qarzning yangi holati qo'shiladi
+function debtNote(t) {
+  const d = t.debt && debtById(t.debt);
+  if (!d || t.k !== repayKind(d)) return '';
+  const s = debtState(calc(), d);
+  return s.closed ? ' · qarz yopildi' : ` · ${fmt(s.left)} qoldi`;
+}
+function addTx(t, how = {}) {
   const tx = { id: nextId('t'), tm: '', to: '', c: '', n: '', p: '', h: '', debt: '', ...t };
   db.tx.push(tx);
-  if (save) touch('meta', tdoc(tx.d)); else ver++;
+  if (how.quiet) { ver++; return tx; }
+  touch('meta', tdoc(tx.d));
+  const d = tx.debt && debtById(tx.debt);
+  if (!how.nolog) logEv('add', `${how.prefix || (d ? debtFlow(tx, d) : "Qo'shildi")}: ${txLabel(tx)}${debtNote(tx)}`, tx.debt || tx.id);
   return tx;
 }
 function updateTx(tx, patch) {
-  const before = tdoc(tx.d);
+  const before = { ...tx };
   Object.assign(tx, patch);
-  touch(before, tdoc(tx.d));
+  touch(tdoc(before.d), tdoc(tx.d));
+  const ch = [];
+  if (before.k !== tx.k) ch.push('tur');
+  if (before.a !== tx.a) ch.push(`summa ${fmt(before.a)} → ${fmt(tx.a)}`);
+  if (before.d !== tx.d) ch.push(`sana ${dm(before.d)} → ${dm(tx.d)}`);
+  if (before.acc !== tx.acc || before.to !== tx.to) ch.push(`hisob ${ACC[before.acc].name} → ${ACC[tx.acc].name}`);
+  if (before.c !== tx.c && tx.c) ch.push(`kategoriya ${CATS[before.c]?.name || '—'} → ${CATS[tx.c].name}`);
+  if (before.n !== tx.n) ch.push('izoh');
+  if (before.p !== tx.p) ch.push(tx.p ? "rejaga bog'landi" : 'rejadan ajratildi');
+  if (before.debt !== tx.debt) ch.push(tx.debt ? "qarzga bog'landi" : 'qarzdan ajratildi');
+  if (ch.length) logEv('edit', `O'zgartirildi: ${txTitle(tx, calc())} ${sgn(tx)} — ${ch.join(', ')}${debtNote(tx)}`, tx.debt || before.debt || tx.id);
 }
 function removeTx(tx) {
+  const label = txLabel(tx);
   db.tx.splice(db.tx.indexOf(tx), 1);
   touch(tdoc(tx.d));
+  logEv('del', `O'chirildi: ${label}${debtNote(tx)}`, tx.debt || tx.id);
 }
 function txFromEvent(e, d) {
   const base = { d, tm: '', n: '', p: e.key, h: '' };
@@ -864,6 +943,7 @@ function setWorkday(iso, work) {
   // Dam olishga o'tgan kunning yo'lkirasi rejadan chiqadi — yozilgan amal oddiy xarajat bo'lib qoladi
   if (!work) for (const t of db.tx) if (t.p === `${iso}:yol`) { t.p = ''; touch(tdoc(t.d)); }
   touch('meta');
+  logEv('plan', `${dm(iso)} (${WEEKDAYS[day.dow]}) ${work ? 'ish kuni' : 'dam olish kuni'} qilindi`);
 }
 
 // ===== Navigatsiya =====
@@ -962,18 +1042,24 @@ function viewMain() {
   const C = calc(), t = C.t;
   const day = DAY_BY_ISO.get(t);
   const chip = t < PLAN.start ? `Reja ${dm(PLAN.start)} dan` : t > PLAN.end ? 'Reja yakunlandi' : `Rejaning ${DAYS.indexOf(day) + 1}-kuni / ${DAYS.length}`;
+  const hide = ui.hide;
+  const show = v => (hide ? '•••••' : v);
   return `<header class="top">
       <div class="col"><span class="kicker">${WEEKDAYS[dowOf(t)]}, ${longDate(t)}</span><h1 class="h1">Byudjet</h1></div>
-      <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO import</button>
+      <div style="display:flex;gap:8px"><button class="round" data-act="pin-lock" aria-label="${db.pin ? 'Hozir qulflash' : "PIN-kod o'rnatish"}">${ic('lock', 18)}</button>
+        <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO import</button></div>
     </header>
     <section class="hero">
-      <div class="spread"><span class="lbl">Jami balans</span><span class="hero-chip">${chip}</span></div>
-      <div class="hero-total">${fmt(C.total)} <small>so'm</small></div>
-      <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="adjust" data-acc="${a}" aria-label="${ACC[a].name}: ${fmt(C.bal[a])} so'm, qoldiqni tuzatish">`
-        + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}</span><b>${fmt(C.bal[a])}</b></button>`).join('')}</div>
+      <div class="spread"><span class="lbl" style="display:flex;align-items:center;gap:8px">Jami balans
+        <button class="eye" data-act="eye" aria-pressed="${hide}" aria-label="${hide ? "Summalarni ko'rsatish" : 'Summalarni yashirish'}">${ic(hide ? 'eyeOff' : 'eye', 18)}</button></span>
+        <span class="hero-chip">${chip}</span></div>
+      ${hide ? `<button class="hero-total" data-act="eye" aria-label="Summalarni ko'rsatish">•••••• <small>so'm</small></button>`
+        : `<div class="hero-total">${fmt(C.total)} <small>so'm</small></div>`}
+      <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="${hide ? 'eye' : 'adjust'}" data-acc="${a}" aria-label="${hide ? `${ACC[a].name}: summani ko'rsatish` : `${ACC[a].name}: ${fmt(C.bal[a])} so'm, qoldiqni tuzatish`}">`
+        + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}</span><b>${show(fmt(C.bal[a]))}</b></button>`).join('')}</div>
       <hr>
-      <div class="hero-row"><span>Reja bo'yicha hozir: <b>${fmt(C.expected)}</b></span>`
-      + `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" title="Rejadan farq">${C.dev ? signed(C.dev) : '±0'}</span></div>
+      <div class="hero-row"><span>Reja bo'yicha hozir: <b>${show(fmt(C.expected))}</b></span>`
+      + `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" title="Rejadan farq">${show(C.dev ? signed(C.dev) : '±0')}</span></div>
     </section>
     ${todayCard(C, t)}${overdueCard(C, t)}${nextCard(C, t)}${goalCard(C)}${statCards(C, t)}${debtSummary(C, t)}${recentCard(C)}`;
 }
@@ -1193,7 +1279,9 @@ function saveForm() {
 }
 
 // ===== Tarix =====
-const hist = { q: '', f: 'all' };
+const hist = { q: '', f: 'all', mode: 'tx' };
+const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'] };
+const histHTML = () => (hist.mode === 'log' ? logList() : histList(calc()));
 function viewTarix() {
   const C = calc();
   const m = clampMonth(C.t.slice(0, 7));
@@ -1202,15 +1290,34 @@ function viewTarix() {
   const outs = sum(inM.filter(t => t.k === 'out'), t => t.a);
   const bads = sum(inM.filter(t => t.k === 'out' && CATS[t.c]?.bad), t => t.a);
   const F = [['all', 'Hammasi'], ['out', 'Chiqim'], ['in', 'Kirim'], ['tr', "O'tkazma"], ['bad', 'Taqiq'], ['humo', 'HUMO']];
+  const isLog = hist.mode === 'log';
   return `<header class="top"><h1 class="h1">Tarix</h1><button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO import</button></header>
-    <label class="search">${ic('search', 18)}<span class="sr">Qidiruv</span><input data-input="h-q" value="${esc(hist.q)}" placeholder="Izoh, joy yoki summa bo'yicha qidirish" autocomplete="off"></label>
-    <div class="chips">${F.map(([id, label]) => `<button class="chip" data-act="h-f" data-f="${id}" aria-pressed="${hist.f === id}">${label}</button>`).join('')}</div>
+    <div class="seg"><button data-act="h-mode" data-m="tx" aria-pressed="${!isLog}">Amallar</button><button data-act="h-mode" data-m="log" aria-pressed="${isLog}">Jurnal (${db.log.length})</button></div>
+    <label class="search">${ic('search', 18)}<span class="sr">Qidiruv</span><input data-input="h-q" value="${esc(hist.q)}" placeholder="${isLog ? "Jurnaldan qidirish" : "Izoh, joy yoki summa bo'yicha qidirish"}" autocomplete="off"></label>
+    ${isLog ? `<div id="h-list" style="display:flex;flex-direction:column;gap:12px">${logList()}</div>` : `<div class="chips">${F.map(([id, label]) => `<button class="chip" data-act="h-f" data-f="${id}" aria-pressed="${hist.f === id}">${label}</button>`).join('')}</div>
     <section class="card" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:14px 16px">
       <div class="col"><span class="small muted" style="font-weight:600">${monthName(m)} kirim</span><span class="num c-in">+${fmt(ins)}</span></div>
       <div class="col"><span class="small muted" style="font-weight:600">Chiqim</span><span class="num">−${fmt(outs)}</span></div>
       <div class="col"><span class="small muted" style="font-weight:600">Taqiqlangan</span><span class="num${bads ? ' c-bad' : ''}">${bads ? '−' : ''}${fmt(bads)}</span></div>
     </section>
-    <div id="h-list" style="display:flex;flex-direction:column;gap:12px">${histList(C)}</div>`;
+    <div id="h-list" style="display:flex;flex-direction:column;gap:12px">${histList(C)}</div>`}`;
+}
+// Jurnal: har bir o'zgarish vaqti bilan, eng yangisi tepada
+function logList() {
+  const q = hist.q.trim().toLowerCase();
+  const list = db.log.filter(e => !q || e.m.toLowerCase().includes(q)).reverse();
+  if (!list.length) return `<p class="empty">${db.log.length ? "Bu qidiruv bo'yicha yozuv yo'q" : "Jurnal bo'sh. Har bir o'zgarish shu yerda vaqti bilan ko'rinadi."}</p>`;
+  const groups = [];
+  for (const e of list) {
+    const d = e.t.slice(0, 10);
+    if (!groups.length || groups[groups.length - 1].d !== d) groups.push({ d, items: [] });
+    groups[groups.length - 1].items.push(e);
+  }
+  const t = today();
+  return groups.map(g => `<section style="display:flex;flex-direction:column;gap:6px">
+      <div class="dayhead"><span>${g.d === t ? 'Bugun, ' : g.d === addDays(t, -1) ? 'Kecha, ' : ''}${longDate(g.d)} <span class="wd">· ${WEEKDAYS[dowOf(g.d)]}</span></span><span class="c-soft">${g.items.length} ta</span></div>
+      <div class="group">${g.items.map(e => `<div class="logrow"><span class="tile soft" style="--c:var(--${LOG_LOOK[e.k][1]})">${ic(LOG_LOOK[e.k][0], 16)}</span>`
+        + `<span class="body"><span class="m">${esc(e.m)}</span><span class="small muted">${e.t.slice(11)}</span></span></div>`).join('')}</div></section>`).join('');
 }
 function histList(C) {
   const q = hist.q.trim().toLowerCase();
@@ -1318,77 +1425,115 @@ function rejaDay(C, iso) {
 }
 
 // ===== Qarzlar =====
-const debtUI = { tab: 'active', form: null };
+// Ikki ro'yxat: "Men qarzdorman" va "Menga qarzdor". Qarz bosilganda oyna ochiladi — to'lov bir bosishda yoziladi.
+const debtUI = { form: null, open: '', acc: 'card' };
 const blankDebtForm = () => ({ id: '', dir: 'owe', who: '', a: '', due: '', flow: true });
 function viewQarz() {
   const C = calc(), t = C.t;
-  if (!debtUI.form) debtUI.form = blankDebtForm();
   const s = debtTotals(C, t);
-  const all = db.debts.map(d => ({ d, s: debtState(C, d) }));
-  const active = all.filter(x => !x.s.closed).sort((a, b) => (a.d.due || '9').localeCompare(b.d.due || '9'));
-  const closed = all.filter(x => x.s.closed);
-  const list = debtUI.tab === 'active' ? active : closed;
+  const section = (dir, title, total, cls) => {
+    const list = db.debts.filter(d => d.dir === dir).map(d => ({ d, s: debtState(C, d) }))
+      .sort((a, b) => Number(a.s.closed) - Number(b.s.closed) || (a.d.due || '9').localeCompare(b.d.due || '9') || a.d.who.localeCompare(b.d.who));
+    const active = list.filter(x => !x.s.closed).length;
+    const closed = list.length - active;
+    return `<section class="card list">
+      <div class="spread"><span class="col"><span class="h2">${title}</span>
+        <span class="small muted">${active ? `${active} ta faol` : "faol qarz yo'q"}${closed ? ` · ${closed} ta yopilgan` : ''}</span></span>
+        <span class="num ${total ? cls : 'c-muted'}" style="font-size:18px">${fmt(total)}</span></div>
+      ${list.length ? list.map(x => debtRow(C, x.d, x.s, t)).join('') : '<p class="empty" style="padding:16px 0">Hali yo\'q</p>'}
+    </section>`;
+  };
+  return `<header class="top"><h1 class="h1">Qarzlar</h1><button class="pill-btn primary" data-act="d-new">${ic('plus', 16, 2.5)}Yangi qarz</button></header>
+    ${section('owe', 'Men qarzdorman', s.owe, 'c-bad')}
+    ${section('lent', 'Menga qarzdor', s.lent, 'c-in')}
+    <p class="note">Qarzni bosing — to'langanini yoki qaytganini bir bosishda belgilang. Har bir to'lov Tarixga yoziladi, muddati yaqin qarz Asosiy ekranda ko'rinadi.</p>`;
+}
+function debtInfo(C, d, s, t) {
+  const owe = d.dir === 'owe';
+  const txs = db.tx.filter(x => x.debt === d.id).sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id));
+  const lastPay = txs.filter(x => x.k === repayKind(d)).pop();
+  const overdue = !s.closed && !!d.due && d.due < t;
+  const soon = !s.closed && !!d.due && !overdue && d.due <= addDays(t, 3);
+  const due = s.closed ? `${owe ? "To'landi" : 'Qaytdi'}${lastPay ? ` · ${dm(lastPay.d)}` : ''}`
+    : d.due ? (overdue ? `Muddati o'tdi · ${dm(d.due)}` : `Muddat ${dm(d.due)} · ${relDay(d.due, t)}`) : 'Muddatsiz';
+  return {
+    owe, txs, due, color: owe ? 'coral' : 'mint',
+    dueCls: s.closed ? 'c-in' : overdue ? 'c-bad' : soon ? 'c-warn' : 'muted',
+    pct: Math.min(100, Math.round((s.paid / d.a) * 100)),
+  };
+}
+function debtRow(C, d, s, t) {
+  const x = debtInfo(C, d, s, t);
+  const paid = !s.closed && s.paid ? `${x.owe ? "To'langan" : 'Qaytgan'} ${fmt(s.paid)} / ${fmt(d.a)} · ` : '';
+  return `<button class="row${s.closed ? ' closed' : ''}" data-act="d-open" data-id="${d.id}">
+    <span class="tile soft" style="--c:var(--${s.closed ? 'gray' : x.color})">${ic(s.closed ? 'check' : /bank/i.test(d.who) ? 'bank' : 'user')}</span>
+    <span class="body"><span class="t"><span>${esc(d.who)}</span></span><span class="s ${x.dueCls}">${paid}${x.due}</span>
+      ${paid ? `<span class="bar thin"><i style="width:${x.pct}%;--c:var(--${x.color})"></i></span>` : ''}</span>
+    <span class="num ${s.closed ? 'c-muted' : x.owe ? 'c-bad' : 'c-in'}">${fmt(s.closed ? d.a : s.left)}</span>
+    <span class="c-muted" style="display:flex">${ic('right', 16)}</span></button>`;
+}
+function debtSheet(id) {
+  const C = calc(), t = C.t;
+  const d = C.debtMap.get(id);
+  const s = debtState(C, d);
+  const x = debtInfo(C, d, s, t);
+  const dirText = s.closed ? (x.owe ? 'Men qarzdor edim' : 'Menga qarzdor edi') : x.owe ? 'Men qarzdorman' : 'Menga qarzdor';
+  // Qarz tarixi: rejadagi to'lov, keyin jurnal (eng yangisi tepada)
+  const line = (text, when) => `<div class="logline"><span>${text}</span><span>${when}</span></div>`;
+  const own = db.log.filter(e => e.r === d.id);
+  const lines = [...C.events.values()].filter(e => e.debt === d.id && isPending(C, e))
+    .map(e => line(`Rejada: ${esc(e.title)} ${e.kind === 'in' ? '+' : '−'}${fmt(e.amount)}`, longDate(e.iso)));
+  lines.push(...own.slice().reverse().map(e => line(esc(e.m), `${dm(e.t.slice(0, 10))}, ${e.t.slice(11)}`)));
+  // Jurnaldan oldin yozilgan to'lovlar
+  if (!own.some(e => e.k !== 'debt')) {
+    lines.push(...x.txs.slice().reverse().map(z => line(`${debtFlow(z, d)}: ${sgn(z)} · ${ACC[z.acc].name}`, dm(z.d))));
+  }
+  if (!own.some(e => e.k === 'debt' && e.m.startsWith('Yangi qarz'))) lines.push(line(`Qarz boshlandi: ${fmt(d.a)}`, dm(d.d)));
+  const hist = lines.length ? `<span class="small muted" style="font-weight:800;margin-top:4px">Tarix</span>${lines.join('')}` : '';
+  const actions = s.closed ? `<div class="msg soft c-in">${ic('check', 16, 2.5)}Qarz yopilgan</div>` : `
+    <div class="grid2" style="gap:8px">${['card', 'cash'].map(a => `<button class="opt" data-act="d-acc" data-acc="${a}" aria-pressed="${debtUI.acc === a}">${ic(ACC[a].icon, 16)}${x.owe ? ACC[a].from : ACC[a].to}</button>`).join('')}</div>
+    <button class="btn primary" data-act="d-full" data-id="${d.id}">${ic('check', 18, 2.5)}${x.owe ? "To'liq to'landi" : "To'liq qaytdi"} · ${fmt(s.left)}</button>
+    <div style="display:flex;gap:8px"><input class="field r" id="d-part" data-change="fmt-num" inputmode="numeric" placeholder="Qisman summa" autocomplete="off" aria-label="Qisman summa">
+      <button class="btn sm" data-act="d-part" data-id="${d.id}" style="flex:none">${x.owe ? "Qisman to'lash" : 'Qisman qaytdi'}</button></div>`;
+  return `<div class="spread" style="align-items:flex-start"><div class="col"><span class="h2" style="font-size:18px">${esc(d.who)}</span>
+      <span class="small ${s.closed ? 'muted' : x.owe ? 'c-bad' : 'c-in'}" style="font-weight:700">${dirText}</span></div>
+      <button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    <div class="spread" style="align-items:baseline"><span class="big">${fmt(s.closed ? d.a : s.left)} so'm</span><span class="small num ${x.dueCls}">${x.due}</span></div>
+    <span class="small muted">${x.owe ? "To'langan" : 'Qaytgan'}: ${fmt(s.paid)} / ${fmt(d.a)}</span>
+    <div class="bar"><i style="width:${x.pct}%;--c:var(--${s.closed ? 'mint' : x.color})"></i></div>
+    ${actions}
+    ${hist ? `<div class="col" style="gap:0">${hist}</div>` : ''}
+    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="d-edit" data-id="${d.id}">${ic('edit', 16)}Tahrirlash</button>
+      <button class="btn sm danger" data-act="d-delete" data-id="${d.id}">${ic('trash', 16)}O'chirish</button></div>`;
+}
+function debtFormHTML() {
   const f = debtUI.form;
   const owe = f.dir === 'owe';
-  return `<header class="top"><h1 class="h1">Qarzlar</h1><button class="pill-btn primary" data-act="d-new">${ic('plus', 16, 2.5)}Yangi qarz</button></header>
-    <div class="grid2">
-      <section class="card" style="gap:4px"><span class="small muted" style="font-weight:700">Men qarzdorman</span><span class="big c-bad">${fmt(s.owe)}</span>
-        <span class="small muted">${s.nOwe ? `${s.nOwe} ta faol qarz` : "qarz yo'q"}</span></section>
-      <section class="card" style="gap:4px"><span class="small muted" style="font-weight:700">Menga qarzdor</span><span class="big c-in">${fmt(s.lent)}</span>
-        <span class="small muted">${s.nLent ? `${s.nLent} ta faol` : 'hammasi qaytgan'}</span></section>
+  return `<div class="spread"><span class="h2" style="font-size:18px">${f.id ? 'Qarzni tahrirlash' : 'Yangi qarz'}</span>
+      <button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    <div class="seg inset"><button data-act="d-dir" data-dir="owe" aria-pressed="${owe}">Men qarzdorman</button><button data-act="d-dir" data-dir="lent" aria-pressed="${!owe}">Menga qarzdor</button></div>
+    <label class="fl">${owe ? 'Kimdan oldingiz?' : 'Kimga berdingiz?'}<input class="field" data-input="d-who" value="${esc(f.who)}" maxlength="60" placeholder="Ism, bank yoki do'kon" autocomplete="off"></label>
+    <div class="formgrid">
+      <label class="fl">Summa<input class="field r" data-input="d-a" data-change="fmt-num" value="${f.a ? fmt(digits(f.a)) : ''}" inputmode="numeric" placeholder="0" autocomplete="off"></label>
+      <label class="fl">Qaytarish muddati<input class="field" type="date" data-input="d-due" value="${f.due}"></label>
     </div>
-    <div class="seg"><button data-act="d-tab" data-tab="active" aria-pressed="${debtUI.tab === 'active'}">Faol (${active.length})</button>
-      <button data-act="d-tab" data-tab="closed" aria-pressed="${debtUI.tab === 'closed'}">Yopilgan (${closed.length})</button></div>
-    ${list.length ? list.map(x => debtCard(C, x.d, x.s, t)).join('') : `<p class="empty">${debtUI.tab === 'active' ? "Faol qarz yo'q" : "Yopilgan qarz yo'q"}</p>`}
-    <section class="card" id="d-form">
-      <span class="h2">${f.id ? 'Qarzni tahrirlash' : "Yangi qarz qo'shish"}</span>
-      <div class="seg inset"><button data-act="d-dir" data-dir="owe" aria-pressed="${owe}">Men qarzdorman</button><button data-act="d-dir" data-dir="lent" aria-pressed="${!owe}">Menga qarzdor</button></div>
-      <label class="fl">${owe ? 'Kimdan oldingiz?' : 'Kimga berdingiz?'}<input class="field" data-input="d-who" value="${esc(f.who)}" maxlength="60" placeholder="Ism, bank yoki do'kon" autocomplete="off"></label>
-      <div class="formgrid">
-        <label class="fl">Summa<input class="field r" data-input="d-a" data-change="fmt-num" value="${f.a ? fmt(digits(f.a)) : ''}" inputmode="numeric" placeholder="0" autocomplete="off"></label>
-        <label class="fl">Qaytarish muddati<input class="field" type="date" data-input="d-due" value="${f.due}"></label>
-      </div>
-      ${f.id ? '' : `<label class="check"><input type="checkbox" data-change="d-flow"${f.flow ? ' checked' : ''}>${owe ? 'Olingan pulni Kartaga kirim qilib yozish' : 'Berilgan pulni Kartadan chiqim qilib yozish'}</label>`}
-      <button class="btn primary" data-act="d-save" style="min-height:50px">${f.id ? 'Saqlash' : 'Qarzni saqlash'}</button>
-      ${f.id ? `<div class="grid2" style="gap:8px"><button class="btn sm" data-act="d-cancel">Bekor qilish</button><button class="btn sm danger" data-act="d-delete" data-id="${f.id}">${ic('trash', 16)}O'chirish</button></div>` : ''}
-      <p class="note" style="padding:0">Muddati yaqinlashgan qarz Asosiy ekranda ko'rinadi, muddati o'tsa qizil bo'ladi. Har bir to'lov Tarixga yoziladi.</p>
-    </section>`;
+    ${f.id ? '' : `<label class="check"><input type="checkbox" data-change="d-flow"${f.flow ? ' checked' : ''}>${owe ? 'Olingan pulni Kartaga kirim qilib yozish' : 'Berilgan pulni Kartadan chiqim qilib yozish'}</label>`}
+    <button class="btn primary" data-act="d-save" data-enter>${f.id ? 'Saqlash' : 'Qarzni saqlash'}</button>`;
 }
-function debtCard(C, d, s, t) {
-  const owe = d.dir === 'owe';
-  const color = s.closed ? 'mint' : owe ? 'amber' : 'mint';
-  const dirText = s.closed ? (owe ? 'Men qarzdor edim' : 'Menga qarzdor edi') : owe ? 'Men qarzdorman' : 'Menga qarzdor';
-  const txs = db.tx.filter(x => x.debt === d.id).sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id));
-  const planned = [...C.events.values()].filter(e => e.debt === d.id && isPending(C, e));
-  const overdue = !s.closed && d.due && d.due < t;
-  const lastPay = txs.filter(x => x.k === repayKind(d)).pop();
-  const due = s.closed ? `Yopildi${lastPay ? ` · ${dm(lastPay.d)}` : ''}` : d.due ? `Muddat: ${dm(d.due)} · ${overdue ? "o'tib ketdi" : relDay(d.due, t)}` : 'Muddatsiz';
-  const dueColor = s.closed ? 'c-in' : overdue ? 'c-bad' : d.due && d.due <= addDays(t, 3) ? 'c-warn' : 'muted';
-  const pct = Math.min(100, Math.round((s.paid / d.a) * 100));
-  const rows = txs.map(x => `<div class="spread small muted" style="padding-top:8px;border-top:1px solid var(--line)"><span>${dm(x.d)}.${x.d.slice(0, 4)} · ${debtFlow(x, d)} · ${ACC[x.acc].name}</span>`
-    + `<span class="num ${x.k === 'in' ? 'c-in' : ''}">${x.k === 'in' ? '+' : '−'}${fmt(x.a)}</span></div>`)
-    .concat(planned.map(e => `<div class="spread small muted" style="padding-top:8px;border-top:1px solid var(--line)"><span>Rejada: ${longDate(e.iso)}, ${e.kind === 'in' ? 'Kartaga' : 'Kartadan'}</span>`
-    + `<span class="num c-soft">${e.kind === 'in' ? '+' : '−'}${fmt(e.amount)}</span></div>`)).join('');
-  return `<section class="card ${s.closed ? '' : overdue ? 'bad-border' : owe ? 'warn-border' : ''}" style="gap:12px">
-    <div style="display:flex;align-items:center;gap:12px">${iconTile(/bank/i.test(d.who) ? 'bank' : 'user', color, 'md')}
-      <div class="body"><span style="font-size:16px;font-weight:800">${esc(d.who)}</span><span class="small ${owe && !s.closed ? 'c-bad' : 'c-in'}" style="font-weight:700">${dirText}</span></div>
-      <span class="num" style="font-size:18px">${fmt(s.closed ? d.a : s.left)}</span></div>
-    <div class="spread" style="font-size:13px"><span class="muted">${owe ? "To'langan" : 'Qaytarildi'}: ${fmt(s.paid)} / ${fmt(d.a)}</span><span class="num ${dueColor}">${due}</span></div>
-    <div class="bar"><i style="width:${pct}%;--c:var(--${s.closed ? 'mint' : color})"></i></div>
-    ${rows}
-    ${s.closed ? `<button class="link-btn" data-act="d-edit" data-id="${d.id}" style="align-self:flex-start">Tahrirlash</button>`
-      : `<div class="grid2" style="gap:8px"><button class="btn sm" data-act="d-pay" data-id="${d.id}">${owe ? "Qisman to'lash" : 'Qisman qaytdi'}</button>
-      <button class="btn sm fill-warn" data-act="d-close" data-id="${d.id}">${owe ? "To'liq yopish" : "To'liq qaytdi"}</button></div>
-      <button class="link-btn" data-act="d-edit" data-id="${d.id}" style="align-self:flex-start">Tahrirlash</button>`}
-  </section>`;
-}
-function payDebt(id, full) {
+function recordDebtPay(id, amount) {
   const C = calc();
   const d = C.debtMap.get(id);
-  if (!d) return;
   const s = debtState(C, d);
+  const a = Math.min(amount, s.left);
+  if (!a) return;
   const k = repayKind(d);
-  openAdd({ k, c: k === 'out' ? 'qarz' : 'qarzq', debt: d.id, acc: 'card', a: full ? String(s.left) : '', d: clampDate(C.t) });
+  const t = { d: clampDate(C.t), tm: nowHM(), k, a, acc: debtUI.acc, c: k === 'out' ? 'qarz' : 'qarzq', debt: d.id };
+  t.p = autoLink(t);
+  addTx(t);
+  closeModal();
+  haptic.ok();
+  toast(s.left - a ? `${d.who}: ${fmt(a)} yozildi, ${fmt(s.left - a)} qoldi` : `${d.who}: qarz yopildi`);
+  rerender();
 }
 function saveDebt() {
   const f = debtUI.form;
@@ -1396,13 +1541,21 @@ function saveDebt() {
   const a = digits(f.a);
   if (!who) { toast('Kim bilan ekanini yozing'); haptic.error(); return; }
   if (!a) { toast('Summani kiriting'); haptic.error(); return; }
+  const dirName = dir => (dir === 'owe' ? 'men qarzdorman' : 'menga qarzdor');
   if (f.id) {
     const d = debtById(f.id);
+    const ch = [];
+    if (d.who !== who) ch.push(`ism ${d.who} → ${who}`);
+    if (d.dir !== f.dir) ch.push(`yo'nalish → ${dirName(f.dir)}`);
+    if (d.a !== a) ch.push(`summa ${fmt(d.a)} → ${fmt(a)}`);
+    if (d.due !== f.due) ch.push(`muddat ${d.due ? dm(d.due) : '—'} → ${f.due ? dm(f.due) : '—'}`);
     Object.assign(d, { dir: f.dir, who, a, due: f.due });
+    if (ch.length) logEv('debt', `Qarz o'zgartirildi: ${who} — ${ch.join(', ')}`, d.id);
     toast('Qarz yangilandi');
   } else {
     const d = { id: nextId('d'), dir: f.dir, who, a, due: f.due, d: clampDate(today()) };
     db.debts.push(d);
+    logEv('debt', `Yangi qarz: ${who} — ${dirName(f.dir)}, ${fmt(a)}${f.due ? ` · muddat ${dm(f.due)}` : ''}`, d.id);
     if (f.flow) {
       addTx({ d: clampDate(today()), tm: nowHM(), k: f.dir === 'owe' ? 'in' : 'out', a, acc: 'card', c: f.dir === 'owe' ? 'qarzo' : 'qarz', debt: d.id });
     }
@@ -1411,7 +1564,7 @@ function saveDebt() {
   touch('meta', 'debts');
   haptic.ok();
   debtUI.form = blankDebtForm();
-  debtUI.tab = 'active';
+  closeModal();
   rerender();
 }
 
@@ -1558,7 +1711,14 @@ function topCard(txs, C) {
       <span class="body"><span class="t"><span>${esc(it.title)}</span></span><span class="s">${esc(it.sub)}</span></span><span class="num ${it.bad ? 'c-bad' : ''}">−${fmt(it.a)}</span></div>`).join('')}</section>`;
 }
 function dataCard() {
-  return `<div class="grid2" style="gap:8px">
+  return `<section class="card">
+      <span class="h2">Xavfsizlik</span>
+      <p class="small muted" style="line-height:1.5">PIN-kod o'rnatilsa, treker har ochilganda va 1 daqiqadan ko'p fonda turgandan keyin PIN so'raydi.</p>
+      ${db.pin ? `<div class="msg soft c-in">${ic('lock', 16)}PIN-kod o'rnatilgan</div>
+        <div class="grid2" style="gap:8px"><button class="btn sm" data-act="pin-change">PIN'ni o'zgartirish</button><button class="btn sm danger" data-act="pin-off">PIN'ni o'chirish</button></div>`
+        : `<button class="btn sm" data-act="pin-set">${ic('lock', 16)}PIN-kod o'rnatish</button>`}
+    </section>
+    <div class="grid2" style="gap:8px">
       <button class="btn" data-act="csv">${ic('download', 16)}CSV (Excel)</button>
       <button class="btn" data-act="b-export">${ic('download', 16)}JSON zaxira</button></div>
     <section class="card">
@@ -1580,7 +1740,7 @@ function dataCard() {
 // ===== Zaxira, CSV =====
 const exportText = () => JSON.stringify({
   v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq,
-  debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)),
+  debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log,
 });
 function parseBackup(text) {
   if (!text) throw new Error('Avval zaxira JSON matnini joylang.');
@@ -1595,7 +1755,7 @@ function parseBackup(text) {
   }
   if (data.v !== 2 || !Array.isArray(data.tx) || !Array.isArray(data.debts)) throw new Error('Format noto\'g\'ri: {"v": 2, "tx": [...], "debts": [...]} kutilgan.');
   const meta = cleanMeta({ ...data, mig: 1 });
-  return finishDb(meta, data.debts.map(cleanDebt), data.tx.map(cleanTx));
+  return finishDb(meta, data.debts.map(cleanDebt), data.tx.map(cleanTx), data.log || []);
 }
 // sep=';' — fayl (Excel), sep='\t' — buferga (Excel/Sheets'ga joylanganda ustunlarga bo'linadi)
 function csvText(sep) {
@@ -1639,7 +1799,7 @@ async function exportData(kind) {
 
 // ===== HUMO import =====
 // @HUMOcardbot xabarlari nusxalanib joylanadi; matn faqat shu qurilmada tahlil qilinadi
-const humo = { text: '', on: {}, choice: {}, cat: {}, fix: true };
+const humo = { text: '', on: {}, choice: {}, cat: {}, note: {}, fix: true };
 const H_DT = /(\d{1,2}):(\d{2})\s+(\d{2})\.(\d{2})\.(\d{4})/;
 const H_AMT = /(?:^|[^\d])([+\-−–➕➖])?️?\s*(\d[\d ., ]*\d|\d)\s*(?:UZS|so['ʻ’`]?m|sum|сум)(?![A-Za-z])/i;
 const H_IN = /to['ʻ’`]?ldirish|popolnen|пополн|kirim|zachisl|зачисл|поступ|tushum|qabul/i;
@@ -1765,7 +1925,8 @@ const P2P_CHOICES = {
   in: [['back', 'Qarz qaytdi'], ['save', 'Omonatdan'], ['inc', 'Kirim']],
 };
 function humoTx(x) {
-  const base = { d: x.d, tm: x.tm, a: x.a, n: x.place === 'Noma\'lum' ? '' : x.place.slice(0, 120), p: x.link, h: x.key, debt: x.debt, to: '', c: '' };
+  const n = [humo.note[x.key], x.place === 'Noma\'lum' ? '' : x.place].filter(Boolean).join(' · ').slice(0, 120);
+  const base = { d: x.d, tm: x.tm, a: x.a, n, p: x.link, h: x.key, debt: x.debt, to: '', c: '' };
   if (x.tr) return { ...base, k: 'tr', ...x.tr, debt: '' };
   if (x.ask || x.forceChoice) {
     const ch = x.choice;
@@ -1859,6 +2020,8 @@ function humoRowHTML(r, i) {
         <select data-change="hu-cat" data-key="${esc(r.key)}">${Object.entries(CATS).filter(([, c]) => c.k === catKind && !c.hidden).map(([id, c]) => `<option value="${id}"${id === cur ? ' selected' : ''}>${c.name}</option>`).join('')}</select></label>`;
       if (!r.ask && !r.autoCat && r.dir === 'out' && !humo.cat[r.key]) notes += '<span class="hnote c-warn">Joy tanilmadi — kategoriyani tekshiring</span>';
     }
+    notes += `<input class="field" data-input="hu-note" data-key="${esc(r.key)}" value="${esc(humo.note[r.key] || '')}" maxlength="80" autocomplete="off"`
+      + ` placeholder="${r.dir === 'out' ? "Nima uchun? (masalan: dori, sovg'a)" : 'Izoh (ixtiyoriy)'}" aria-label="Nima uchun">`;
   }
   return `<section class="hrow${dis || !r.on ? ' off' : ''}">
     <div class="top"><label class="cb"><span class="sr">${esc(r.place)} — qo'shish</span><input type="checkbox" data-change="hu-on" data-key="${esc(r.key)}"${r.on ? ' checked' : ''}${dis ? ' disabled' : ''}></label>
@@ -1874,11 +2037,12 @@ function importHumo(el) {
     if (t.newDebt) {
       const d = { id: nextId('d'), dir: 'lent', who: r.place === 'Noma\'lum' ? `P2P ${dm(r.d)}` : r.place.slice(0, 60), a: r.a, due: '', d: r.d };
       db.debts.push(d);
+      logEv('debt', `Yangi qarz (HUMO): ${d.who} — menga qarzdor, ${fmt(d.a)}`, d.id);
       t.debt = d.id;
       delete t.newDebt;
     }
     if (!t.p) t.p = autoLink(t);
-    addTx(t);
+    addTx(t, { prefix: 'HUMO import' });
     n++;
   }
   // Belgilanmagan "ehtimoliy takror"lar mavjud amalga bog'lanadi — keyingi importda aniq takror bo'ladi
@@ -1887,10 +2051,10 @@ function importHumo(el) {
   }
   const fix = Number(el.dataset.fix);
   if (fix && humo.fix) {
-    addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' });
+    addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' });
   }
   touch('meta', 'debts');
-  Object.assign(humo, { text: '', on: {}, choice: {}, cat: {}, fix: true });
+  Object.assign(humo, { text: '', on: {}, choice: {}, cat: {}, note: {}, fix: true });
   haptic.ok();
   toast(`${n} ta amal qo'shildi`);
   hist.f = 'humo';
@@ -1898,14 +2062,125 @@ function importHumo(el) {
   go('tarix');
 }
 
+// ===== Qurilma sozlamasi: balansni yashirish (faqat shu qurilmada) =====
+const ui = { hide: false };
+try { ui.hide = localStorage.getItem('byudjet:ui:hide') === '1'; } catch { /* saqlash yo'q */ }
+function toggleHide() {
+  ui.hide = !ui.hide;
+  try { localStorage.setItem('byudjet:ui:hide', ui.hide ? '1' : '0'); } catch { /* saqlash yo'q */ }
+  haptic.light();
+  rerender();
+}
+
+// ===== PIN-kod: ochilganda va 1 daqiqadan ko'p fonda turgandan keyin so'raladi =====
+// Bu ekran qulfi: telefoningizni olgan odam trekerni ko'ra olmaydi. Hash bulutda saqlanadi.
+const PIN_LEN = 4;
+const PIN_TITLES = { unlock: 'PIN-kodni kiriting', verify: 'Joriy PIN-kodni kiriting', set1: 'Yangi PIN-kod (4 raqam)', set2: 'PIN-kodni takrorlang' };
+const pinUI = { mode: '', buf: '', first: '', fails: 0, until: 0, msg: '', done: null };
+const hex = bytes => [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+async function pinHash(pin, salt) {
+  const data = new TextEncoder().encode(`${salt}:${pin}`);
+  if (window.crypto?.subtle) return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', data)));
+  let h = 0x811c9dc5;
+  for (const b of data) { h ^= b; h = Math.imul(h, 16777619) >>> 0; }
+  return h.toString(16).padStart(64, '0');
+}
+function showLock(mode, done) {
+  Object.assign(pinUI, { mode, buf: '', first: '', msg: '', done });
+  $('lock').hidden = false;
+  renderLock();
+}
+function hideLock() {
+  $('lock').hidden = true;
+  $('lock').innerHTML = '';
+}
+function renderLock(shake) {
+  const u = pinUI;
+  const wait = Math.max(0, Math.ceil((u.until - Date.now()) / 1000));
+  const dis = wait ? ' disabled' : '';
+  const side = u.mode === 'unlock' ? '<button class="ghost" data-act="pin-forgot">Unutdim</button>' : '<button class="ghost" data-act="pin-cancel">Bekor</button>';
+  $('lock').innerHTML = `<div class="lockbox" role="dialog" aria-modal="true" aria-labelledby="lock-title">
+    <span class="tile lg soft" style="--c:var(--blue)">${ic('lock', 24)}</span>
+    <h1 class="h2" id="lock-title" style="font-size:18px">${PIN_TITLES[u.mode]}</h1>
+    <div class="pindots${shake ? ' shake' : ''}" role="img" aria-label="${u.buf.length} / ${PIN_LEN}">${Array.from({ length: PIN_LEN }, (_, i) => `<i class="${i < u.buf.length ? 'on' : ''}"></i>`).join('')}</div>
+    <p class="small ${u.msg || wait ? 'c-bad' : 'muted'}" style="min-height:18px;font-weight:700" role="alert">${wait ? `Juda ko'p urinish. ${wait} soniyadan keyin qayta urining.` : esc(u.msg)}</p>
+    <div class="keys">${['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(k => `<button data-act="pin-key" data-k="${k}"${dis}>${k}</button>`).join('')}
+      ${side}<button data-act="pin-key" data-k="0"${dis}>0</button><button data-act="pin-key" data-k="back" aria-label="O'chirish">${ic('backspace', 24)}</button></div>
+  </div>`;
+  if (wait) setTimeout(() => { if (!$('lock').hidden) renderLock(); }, 1000);
+}
+function finishLock() {
+  const done = pinUI.done;
+  pinUI.done = null;
+  hideLock();
+  done?.();
+}
+async function pinKey(k) {
+  const u = pinUI;
+  if (u.until > Date.now()) return;
+  if (k === 'back') { u.buf = u.buf.slice(0, -1); renderLock(); return; }
+  if (u.buf.length >= PIN_LEN) return;
+  u.buf += k;
+  u.msg = '';
+  renderLock();
+  if (u.buf.length < PIN_LEN) return;
+  const pin = u.buf;
+  if (u.mode === 'set1') { Object.assign(u, { first: pin, buf: '', mode: 'set2' }); renderLock(); return; }
+  if (u.mode === 'set2') {
+    if (pin !== u.first) {
+      Object.assign(u, { mode: 'set1', buf: '', first: '', msg: 'PIN-kodlar mos kelmadi, qaytadan kiriting' });
+      haptic.error();
+      renderLock(true);
+      return;
+    }
+    const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+    db.pin = { s: salt, h: await pinHash(pin, salt) };
+    touch('meta');
+    logEv('set', "PIN-kod o'rnatildi");
+    haptic.ok();
+    toast("PIN-kod o'rnatildi");
+    finishLock();
+    return;
+  }
+  if (db.pin && (await pinHash(pin, db.pin.s)) === db.pin.h) {
+    u.fails = 0;
+    haptic.ok();
+    finishLock();
+    return;
+  }
+  u.fails++;
+  u.buf = '';
+  u.msg = "Noto'g'ri PIN-kod";
+  if (u.fails >= 5) { u.until = Date.now() + 30000; u.fails = 0; }
+  haptic.error();
+  renderLock(true);
+}
+async function forgotPin() {
+  if (!(await confirmDialog("PIN-kodni unutgan bo'lsangiz, xavfsizlik uchun trekerdagi barcha ma'lumotlar o'chiriladi va u yangidan boshlanadi. Zaxira nusxangiz bo'lsa, keyin uni import qilishingiz mumkin. Davom etasizmi?"))) return;
+  if (!(await confirmDialog("Rostdan ham barcha ma'lumotlar o'chirilsinmi? Buni qaytarib bo'lmaydi."))) return;
+  const ours = (await store.keys()).filter(k => DOC_RE.test(k) || V1_RE.test(k));
+  for (let i = 0; i < ours.length; i += 20) await store.remove(ours.slice(i, i + 20));
+  for (const k of Object.keys(chunkCount)) delete chunkCount[k];
+  db = blankDb();
+  touch('meta', 'debts');
+  logEv('set', "PIN-kod unutildi — ma'lumotlar tozalandi");
+  finishLock();
+}
+let hiddenAt = 0;
+function lockIfAway() {
+  if (db?.pin && $('lock').hidden && !$('view').hidden && hiddenAt && Date.now() - hiddenAt > 60000) showLock('unlock', null);
+  hiddenAt = 0;
+}
+
 // ===== Modal (balansni tuzatish) =====
-function openModal(html) {
+function openModal(html, focus) {
   const m = $('modal');
   m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
   m.hidden = false;
   if (tgAtLeast('6.1')) WA.BackButton.show();
-  m.querySelector('input')?.focus();
+  if (focus) m.querySelector('input')?.focus();
 }
+const setModal = html => { $('modal').firstElementChild.innerHTML = html; };
 function closeModal() {
   $('modal').hidden = true;
   $('modal').innerHTML = '';
@@ -1934,7 +2209,8 @@ const ACT = {
     const list = [...C.events.values()].filter(e => e.id === 'yol' && e.iso < C.t && isPending(C, e));
     if (!list.length) return;
     if (!(await confirmDialog(`${list.length} kunlik yo'lkira (${fmt(sum(list, e => e.amount))} so'm) Naqddan yozilsinmi?`))) return;
-    for (const e of list) addTx(txFromEvent(e, e.iso));
+    for (const e of list) addTx(txFromEvent(e, e.iso), { nolog: true });
+    logEv('add', `${list.length} kunlik yo'lkira yozildi: −${fmt(sum(list, e => e.amount))} · Naqd · ${dm(list[0].iso)}–${dm(list[list.length - 1].iso)}`);
     haptic.ok();
     toast(`${list.length} kunlik yo'lkira yozildi`);
     rerender();
@@ -1944,8 +2220,8 @@ const ACT = {
     const C = calc();
     openModal(`<h2 class="h2">${ACC[acc].name} qoldig'ini tuzatish</h2>
       <p class="small muted" style="line-height:1.5">Trekerda: <b style="color:var(--text)">${fmt(C.bal[acc])}</b> so'm. Haqiqiy qoldiqni kiriting — farq «Balans tuzatish» amali sifatida Tarixga yoziladi.</p>
-      <input class="field r" id="m-amt" inputmode="numeric" autocomplete="off" value="${C.bal[acc] > 0 ? fmt(C.bal[acc]) : '0'}" aria-label="Haqiqiy qoldiq">
-      <div class="grid2" style="gap:8px"><button class="btn sm" data-act="modal-close">Bekor qilish</button><button class="btn sm fill-warn" data-act="adjust-save" data-acc="${acc}">Saqlash</button></div>`);
+      <input class="field r big-in" id="m-amt" inputmode="numeric" autocomplete="off" value="${C.bal[acc] > 0 ? fmt(C.bal[acc]) : '0'}" aria-label="Haqiqiy qoldiq">
+      <div class="grid2" style="gap:8px"><button class="btn sm" data-act="modal-close">Bekor qilish</button><button class="btn sm fill-warn" data-act="adjust-save" data-acc="${acc}" data-enter>Saqlash</button></div>`);
     $('m-amt').select();
   },
   'adjust-save': el => {
@@ -1953,12 +2229,26 @@ const ACT = {
     const diff = digits($('m-amt').value) - calc().bal[acc];
     closeModal();
     if (!diff) { toast("Farq yo'q — o'zgarmadi"); return; }
-    addTx({ d: clampDate(today()), tm: nowHM(), k: diff > 0 ? 'in' : 'out', a: Math.abs(diff), acc, c: 'tuz', n: '' });
+    addTx({ d: clampDate(today()), tm: nowHM(), k: diff > 0 ? 'in' : 'out', a: Math.abs(diff), acc, c: 'tuz', n: '' }, { prefix: 'Balans tuzatildi' });
     haptic.ok();
     toast(`${ACC[acc].name}: ${signed(diff)} so'm tuzatildi`);
     rerender();
   },
   'modal-close': () => closeModal(),
+  eye: () => toggleHide(),
+  'pin-key': el => pinKey(el.dataset.k),
+  'pin-forgot': () => forgotPin(),
+  'pin-cancel': () => { pinUI.done = null; hideLock(); },
+  'pin-lock': () => { if (db.pin) showLock('unlock', null); else showLock('set1', rerender); },
+  'pin-set': () => showLock('set1', rerender),
+  'pin-change': () => showLock('verify', () => showLock('set1', rerender)),
+  'pin-off': () => showLock('verify', () => {
+    db.pin = null;
+    touch('meta');
+    logEv('set', "PIN-kod o'chirildi");
+    toast("PIN-kod o'chirildi");
+    rerender();
+  }),
   // Qo'shish shakli
   'f-type': el => {
     const k = el.dataset.k;
@@ -1994,6 +2284,7 @@ const ACT = {
     document.querySelectorAll('[data-act="h-f"]').forEach(b => b.setAttribute('aria-pressed', String(b === el)));
     $('h-list').innerHTML = histList(calc());
   },
+  'h-mode': el => { hist.mode = el.dataset.m; hist.q = ''; rerender(); },
   // Reja
   'r-month': el => {
     const i = MONTHS.indexOf(reja.m) + Number(el.dataset.step);
@@ -2009,38 +2300,40 @@ const ACT = {
     rerender();
   },
   // Qarzlar
-  'd-tab': el => { debtUI.tab = el.dataset.tab; rerender(); },
-  'd-dir': el => { debtUI.form.dir = el.dataset.dir; rerender(); },
-  'd-new': () => {
-    debtUI.form = blankDebtForm();
-    rerender();
-    $('d-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(() => document.querySelector('[data-input="d-who"]')?.focus({ preventScroll: true }), 300);
+  'd-new': () => { debtUI.form = blankDebtForm(); openModal(debtFormHTML(), true); },
+  'd-open': el => { debtUI.open = el.dataset.id; debtUI.acc = 'card'; openModal(debtSheet(el.dataset.id)); },
+  'd-acc': el => { debtUI.acc = el.dataset.acc; setModal(debtSheet(debtUI.open)); },
+  'd-full': el => {
+    const C = calc();
+    recordDebtPay(el.dataset.id, debtState(C, C.debtMap.get(el.dataset.id)).left);
   },
+  'd-part': el => {
+    const v = digits($('d-part').value);
+    if (!v) { toast('Summani kiriting'); haptic.error(); return; }
+    recordDebtPay(el.dataset.id, v);
+  },
+  'd-dir': el => { debtUI.form.dir = el.dataset.dir; setModal(debtFormHTML()); },
   'd-edit': el => {
     const d = debtById(el.dataset.id);
     debtUI.form = { id: d.id, dir: d.dir, who: d.who, a: String(d.a), due: d.due, flow: false };
-    rerender();
-    $('d-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setModal(debtFormHTML());
   },
-  'd-cancel': () => { debtUI.form = blankDebtForm(); rerender(); },
   'd-delete': async el => {
     const d = debtById(el.dataset.id);
     if (!d || !(await confirmDialog(`«${d.who}» qarzi o'chirilsinmi? Unga bog'langan amallar Tarixda qoladi.`))) return;
     db.debts.splice(db.debts.indexOf(d), 1);
+    logEv('del', `Qarz o'chirildi: ${d.who} (${fmt(d.a)})`, d.id);
     for (const t of db.tx) if (t.debt === d.id) {
       t.debt = '';
       if (CATS[t.c]?.hidden) t.c = t.k === 'in' ? 'kirim' : 'boshqa';
       touch(tdoc(t.d));
     }
     touch('debts');
-    debtUI.form = blankDebtForm();
+    closeModal();
     toast("Qarz o'chirildi");
     rerender();
   },
   'd-save': () => saveDebt(),
-  'd-pay': el => payDebt(el.dataset.id, false),
-  'd-close': el => payDebt(el.dataset.id, true),
   // Hisobot
   'h-month': el => {
     const i = MONTHS.indexOf(rep.m) + Number(el.dataset.step);
@@ -2053,12 +2346,14 @@ const ACT = {
     document.querySelectorAll('[data-lim]').forEach(i => { const v = digits(i.value); if (v) lim[i.dataset.lim] = v; });
     db.lim = lim;
     touch('meta');
+    logEv('set', Object.keys(lim).length ? `Oylik limitlar: ${Object.entries(lim).map(([c, v]) => `${CATS[c].name} ${fmt(v)}`).join(', ')}` : 'Oylik limitlar olib tashlandi');
     toast('Limitlar saqlandi');
     rerender();
   },
   'save-open': () => {
     document.querySelectorAll('[data-open]').forEach(i => { db.open[i.dataset.open] = digits(i.value); });
     touch('meta');
+    logEv('set', `Boshlang'ich qoldiqlar: ${ACC_IDS.map(a => `${ACC[a].name} ${fmt(db.open[a])}`).join(', ')}`);
     toast("Boshlang'ich qoldiqlar saqlandi");
     rerender();
   },
@@ -2081,8 +2376,10 @@ const ACT = {
     }
     if (!(await confirmDialog("Joriy ma'lumotlar zaxiradagisi bilan almashtiriladi. Davom etasizmi?"))) return;
     const oldDocs = Object.keys(chunkCount).filter(d => d.startsWith('t_'));
+    next.pin = db.pin;
     db = next;
-    touch('meta', 'debts', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
+    logEv('import', `Zaxira import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz`);
+    touch('meta', 'debts', 'log', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
     await flush();
     rerender();
     setBackupMsg(`Import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz.`, false);
@@ -2109,8 +2406,9 @@ function setBackupMsg(text, isError) {
 let huTimer;
 const INPUT = {
   'f-note': el => { form.n = el.value; },
-  'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histList(calc()); },
+  'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histHTML(); },
   'd-who': el => { debtUI.form.who = el.value; },
+  'hu-note': el => { humo.note[el.dataset.key] = el.value.trim(); },
   'd-a': el => { debtUI.form.a = el.value; },
   'd-due': el => { debtUI.form.due = validISO(el.value) ? el.value : ''; },
   'hu-text': el => {
@@ -2141,9 +2439,18 @@ document.addEventListener('click', ev => {
 document.addEventListener('input', ev => { const k = ev.target.dataset?.input; if (k && INPUT[k]) INPUT[k](ev.target); });
 document.addEventListener('change', ev => { const k = ev.target.dataset?.change; if (k && CHANGE[k]) CHANGE[k](ev.target); });
 document.addEventListener('keydown', ev => {
+  if (!$('lock').hidden) {
+    if (/^\d$/.test(ev.key)) pinKey(ev.key);
+    else if (ev.key === 'Backspace') pinKey('back');
+    else return;
+    ev.preventDefault();
+    return;
+  }
   if (!$('modal').hidden) {
     if (ev.key === 'Escape') closeModal();
-    if (ev.key === 'Enter') $('modal').querySelector('[data-act="adjust-save"]')?.click();
+    if (ev.key === 'Enter' && ev.target.matches?.('input:not([type="checkbox"])')) {
+      $('modal').querySelector(ev.target.id === 'd-part' ? '[data-act="d-part"]' : '[data-enter]')?.click();
+    }
     return;
   }
   if (route !== 'add' || ev.target.closest('input, textarea, select')) return;
@@ -2175,8 +2482,15 @@ async function start() {
     $('loading').innerHTML = `<p>Ma'lumotlarni yuklab bo'lmadi: ${esc(e.message)}</p><button class="btn primary" onclick="location.reload()">Qayta urinish</button>`;
     return;
   }
-  $('fab').innerHTML = ic('plus', 28, 2.5);
   $('loading').hidden = true;
+  if (inTelegram && tgAtLeast('8.0')) {
+    WA.onEvent('deactivated', () => { hiddenAt = Date.now(); flush(); });
+    WA.onEvent('activated', lockIfAway);
+  }
+  if (db.pin) showLock('unlock', showApp); else showApp();
+}
+function showApp() {
+  $('fab').innerHTML = ic('plus', 28, 2.5);
   $('view').hidden = false;
   $('nav').hidden = false;
   $('fab').hidden = false;
