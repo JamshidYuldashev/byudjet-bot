@@ -552,10 +552,16 @@ function calc() {
   for (const key of byPlan.keys()) expected += delta(events.get(key));
   const total = bal.card + bal.cash + bal.save;
   const sorted = [...db.tx].sort(txCmp);
-  // Har amaldan keyingi jami balans (vaqt tartibida, eng eskisidan)
+  // Har amaldan keyingi hisob qoldig'i (vaqt tartibida, eng eskisidan) — HUMO xabaridagi 💰 bilan solishtiriladi
   const after = new Map();
-  let run = db.open.card + db.open.cash + db.open.save;
-  for (let i = sorted.length - 1; i >= 0; i--) after.set(sorted[i].id, (run += txDelta(sorted[i])));
+  const run = { ...db.open };
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const tx = sorted[i];
+    if (tx.k === 'in') run[tx.acc] += tx.a;
+    else if (tx.k === 'out') run[tx.acc] -= tx.a;
+    else { run[tx.acc] -= tx.a; run[tx.to] += tx.a; }
+    after.set(tx.id, run[tx.acc]);
+  }
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, total, byPlan, dayStat, debtPaid, debtMap,
     expected, dev: total - expected, sorted, after,
@@ -1024,7 +1030,7 @@ function txRow(t, C, withDate, withBal) {
     + `<span class="body"><span class="t"><span>${esc(txTitle(t, C))}</span>${t.h ? '<span class="tag">HUMO</span>' : ''}</span>`
     + `<span class="s">${esc(txSub(t, C, withDate))}</span></span>`
     + `<span class="end">${amountHTML(t)}${bad ? '<span class="badge soft">Qoida buzildi</span>' : ''}`
-    + `${withBal ? `<span class="bal">Balans: ${ui.hide ? '•••••' : fmt(C.after.get(t.id))}</span>` : ''}</span></button>`;
+    + `${withBal ? `<span class="bal">${ACC[t.acc].name}: ${ui.hide ? '•••••' : fmt(C.after.get(t.id))}</span>` : ''}</span></button>`;
 }
 const ACT_LABEL = { in: 'Tushdi', out: "To'lash", lock: 'Qulflash' };
 function evAmount(e) {
