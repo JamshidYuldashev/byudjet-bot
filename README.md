@@ -134,6 +134,17 @@ Qo'shimcha imkoniyatlar:
   Kvadratni bossangiz, o'sha kun Reja'da ochiladi.
 - **Tez yozish** — «+» oynasining tepasida bir qatorda yozing: `30k non karta`, `kecha 12 000 taksi naqd`,
   `+3.3m oylik`. Summa, kategoriya, hisob va sana o'zi ajratiladi, keyin «Saqlash» ni bosasiz.
+- **Bot xabaridan bir bosishda** — eslatmada har to'lov uchun tugma bor: «✅ To'ladim: Claude obunasi»,
+  «💰 Tushdi: Asosiy oylik», «🔒 Qulfladim». Bosilsa, treker shu to'lov bilan tayyor ochiladi — faqat «Saqlash».
+  Agar band allaqachon yozilgan bo'lsa, o'sha amal tahrirlash uchun ochiladi. PIN bo'lsa — avval PIN.
+- **Kalkulyator** — klaviaturada «+ − × ÷»: `25 000 + 12 000`, `120 000 ÷ 3`. Natija darhol hisoblanadi
+  (ko'paytirish va bo'lish avval), saqlanadigan summa — natija.
+- **«24 soat qoidasi» — xohishlar ro'yxati** — taqiqlangan yoki 30 000+ rejadan tashqari xarid yozilayotganda
+  «24 soat kutaman» tugmasi chiqadi. Xarid darrov yozilmaydi; 24 soatdan keyin Diqqat'da «hali ham kerakmi?» so'raladi:
+  «Ha, sotib oldim» — amal yoziladi, «Kerak emas» — summa «Tejalgan» hisobiga qo'shiladi, «Yana 24 soat» — kechiktiriladi.
+- **Qachon sotib ola olaman?** — narxni yozasiz (Yakuniy maqsad kartasi yoki Xohishlar'dan). Karta va naqd
+  (omonatga tegmasdan) rejadagi barcha to'lovlar bilan kunma-kun hisoblanadi va xariddan keyin hech qaysi kunda
+  pul yetmay qolmaydigan eng erta sana ko'rsatiladi. Xohishlar ro'yxatidagi har xarid yonida ham shu sana turadi.
 - **Jonli animatsiyalar** — balans raqami sanab o'zgaradi, kartalar silliq paydo bo'ladi, oylik tushganda yoki
   qarz yopilganda konfetti. Telefonda «harakatni kamaytirish» yoqilgan bo'lsa — animatsiyasiz.
 
