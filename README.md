@@ -124,6 +124,10 @@ Hisob-kitob qoidalari:
   Rejadan tashqari har bir xarajat farqni kamaytiradi. Hali belgilanmagan bandlar farqqa ta'sir qilmaydi.
 - **Prognoz** = yakuniy reja + rejadan farq.
 - **PIN-kod**: Hisobot → Xavfsizlik bo'limida o'rnatiladi. Shundan so'ng treker har ochilganda va 1 daqiqadan ko'p fonda turgandan keyin 4 xonali PIN so'raydi. 5 marta xato kiritilsa, 30 soniya kutiladi. PIN unutilsa, xavfsizlik uchun trekerdagi barcha ma'lumotlar o'chiriladi — shuning uchun JSON zaxira saqlab qo'ying.
+- **Barmoq izi / yuzni tanish**: PIN o'rnatilgandan keyin Xavfsizlik bo'limida «Barmoq izi bilan ochishni yoqish» chiqadi
+  (faqat telefonda biometrika bo'lsa, Telegram 7.2+). Yoqilsa, treker ochilganda barmoq izi avtomatik so'raladi.
+  Bekor qilsangiz — PIN bilan ochasiz. Har qurilmada alohida yoqiladi. Telegram Desktop'da biometrika yo'q, u yerda PIN ishlaydi.
+  PIN o'chirilsa, biometrik ochish ham o'chadi.
 - **Balansni tuzatish**: Asosiy ekranda hisobni bosing va haqiqiy qoldiqni kiriting.
   Farq "Balans tuzatish" amali sifatida yoziladi.
 - Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).
