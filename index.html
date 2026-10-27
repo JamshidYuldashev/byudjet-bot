@@ -55,7 +55,7 @@ h1, h2, p { margin: 0; }
 #loading { padding: 64px 16px; text-align: center; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
 #view { max-width: 560px; margin: 0 auto; padding: 20px 16px calc(112px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
 body.sub #view { padding-top: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
-body.sub #nav, body.sub #fab { display: none; }
+body.sub #nav { display: none; }
 
 /* Umumiy bloklar */
 .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
@@ -290,9 +290,6 @@ button.hero-total { background: none; border: 0; padding: 0; color: #FFFFFF; tex
 #nav button { flex: 1; min-width: 0; border: 0; background: none; color: var(--muted); display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 0; }
 #nav button[aria-current="page"] { color: var(--accent); }
-#fab { position: fixed; z-index: 21; right: max(20px, calc(50% - 260px)); bottom: calc(84px + env(safe-area-inset-bottom)); width: 60px; height: 60px;
-  border-radius: 30px; border: 0; background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 24px var(--shadow);
-  display: flex; align-items: center; justify-content: center; }
 #toast { position: fixed; z-index: 50; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 600;
   max-width: calc(100% - 32px); width: max-content; opacity: 0; pointer-events: none; transition: opacity .2s; }
@@ -313,12 +310,49 @@ body.sub #toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 .group > .logrow:first-child { border-top: 0; }
 .logrow .tile { width: 34px; height: 34px; border-radius: 11px; }
 .logrow .m { font-size: 13px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+
+/* Markaziy «+» */
+#nav .nav-add { flex: none; width: 58px; height: 58px; margin: 0 6px; align-self: center; transform: translateY(-14px); border-radius: 29px;
+  background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 22px var(--shadow); gap: 0; }
+/* Balans tuzatish — xira, ixcham */
+.row.adj { min-height: 44px; padding: 6px 0; }
+.row.adj .tile { width: 30px; height: 30px; border-radius: 10px; opacity: .7; }
+.row.adj .t { font-size: 13px; font-weight: 600; color: var(--muted); }
+.row.adj .end .num { font-size: 13px; color: var(--muted); }
+.dayend { font-size: 11px; font-weight: 600; color: var(--muted); padding: 0 4px; margin-top: -4px; }
+/* Tarix: qatorni surish */
+.group.sw-list { overflow: hidden; }
+.sw { position: relative; margin: 0 -14px; padding: 0 14px; }
+.sw + .sw { border-top: 1px solid var(--line); }
+.sw > .row { position: relative; z-index: 1; background: var(--surface); border-top: 0; touch-action: pan-y; transition: transform .18s ease; }
+.sw > .row.swiping { transition: none; }
+.sw-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
+  font-size: 13px; font-weight: 800; color: var(--on-strong); visibility: hidden; }
+.sw-bg > span { display: flex; align-items: center; gap: 6px; }
+.sw[data-dir="r"] .sw-bg { visibility: visible; background: var(--mint); }
+.sw[data-dir="l"] .sw-bg { visibility: visible; background: var(--coral); }
+.sw[data-dir="r"] .sw-bg .x, .sw[data-dir="l"] .sw-bg .c { visibility: hidden; }
+/* Hero: 7 kunlik chiziq, bosiladigan farq */
+.spark { display: block; width: 100%; height: 34px; overflow: visible; }
+.spark-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--hero-muted); margin-top: -6px; }
+.spark-row b { color: #FFFFFF; }
+.dev-btn { border: 0; background: rgba(255, 255, 255, .08); border-radius: 10px; padding: 2px 8px; margin: -2px 0; font-size: 13px; }
+/* Reja: xarajat issiqlik xaritasi */
+.cal .d.heat { position: relative; isolation: isolate; }
+.cal .d.heat::before { content: ""; position: absolute; inset: 0; border-radius: 10px; background: var(--accent); opacity: calc(var(--heat) * .5); z-index: -1; }
+/* Tez summalar */
+.quick { margin-top: -4px; }
+.quick .chip { min-height: 34px; display: inline-flex; align-items: center; gap: 4px; }
+/* Bekor qilish tugmali xabar */
+#toast.act { pointer-events: auto; display: flex; align-items: center; gap: 14px; }
+.toast-btn { border: 0; background: none; color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; padding: 4px 2px; min-height: 32px; }
+.setrow { display: flex; align-items: center; gap: 6px; min-height: 52px; border-top: 1px solid var(--line); }
+.setrow .check { flex: 1; min-width: 0; }
 </style>
 </head>
 <body>
 <div id="loading">Yuklanmoqda…</div>
 <main id="view" hidden></main>
-<button id="fab" data-act="add" aria-label="Yangi amal qo'shish" hidden></button>
 <nav id="nav" aria-label="Bo'limlar" hidden><div class="in"></div></nav>
 <div id="modal" hidden></div>
 <div id="lock" hidden></div>
@@ -406,6 +440,8 @@ const ICON = {
   edit: 'M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4l-10.5 10.5v4 M13.5 6.5l4 4',
   eye: 'M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0 M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6',
   eyeOff: 'M10.585 10.587a2 2 0 0 0 2.829 2.828 M16.681 16.673a8.717 8.717 0 0 1-4.681 1.327c-3.6 0-6.6-2-9-6c1.272-2.12 2.712-3.678 4.32-4.674m2.86-1.146a9.055 9.055 0 0 1 1.82-.18c3.6 0 6.6 2 9 6c-.666 1.11-1.379 2.067-2.138 2.87 M3 3l18 18',
+  up: 'M6 15l6-6l6 6',
+  down: 'M6 9l6 6l6-6',
   finger: 'M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3 M8 11a4 4 0 0 1 8 0v1a10.05 10.05 0 0 0 2 6 M12 11v2a14 14 0 0 0 2.5 8 M8 15a18 18 0 0 0 1.8 6 M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95',
   faceId: 'M4 8v-2a2 2 0 0 1 2-2h2 M4 16v2a2 2 0 0 0 2 2h2 M16 4h2a2 2 0 0 1 2 2v2 M16 20h2a2 2 0 0 0 2-2v-2 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
 };
@@ -500,7 +536,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null, bio: {},
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null, bio: {}, home: { order: [], off: [] }, imp: null,
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -555,7 +591,7 @@ function calc() {
   const total = bal.card + bal.cash + bal.save;
   const sorted = [...db.tx].sort(txCmp);
   // Har amaldan keyingi hisob qoldig'i (vaqt tartibida, eng eskisidan) — HUMO xabaridagi 💰 bilan solishtiriladi
-  const after = new Map();
+  const after = new Map(), dayEnd = new Map();
   const run = { ...db.open };
   for (let i = sorted.length - 1; i >= 0; i--) {
     const tx = sorted[i];
@@ -563,14 +599,34 @@ function calc() {
     else if (tx.k === 'out') run[tx.acc] -= tx.a;
     else { run[tx.acc] -= tx.a; run[tx.to] += tx.a; }
     after.set(tx.id, run[tx.acc]);
+    dayEnd.set(tx.d, { ...run }); // kun oxiridagi qoldiqlar (sanalar o'sish tartibida qo'shiladi)
   }
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, total, byPlan, dayStat, debtPaid, debtMap,
-    expected, dev: total - expected, sorted, after,
+    expected, dev: total - expected, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
   };
   return cache;
 }
 const isPending = (C, e) => !C.byPlan.has(e.key);
+// iso kuni oxiridagi hisob qoldiqlari
+function balOn(C, iso) {
+  for (let i = C.endDays.length - 1; i >= 0; i--) if (C.endDays[i] <= iso) return C.dayEnd.get(C.endDays[i]);
+  return db.open;
+}
+const totalOf = b => b.card + b.cash + b.save;
+// Rejadan farq nimadan yig'ilgan: farq = jami − kutilgan; har amal o'z ulushini qo'shadi
+function devParts(C) {
+  const p = { out: 0, in: 0, tuz: 0, plan: 0, open: totalOf(db.open) - PLAN.startBalance, byCat: {} };
+  for (const x of db.tx) {
+    if (x.k === 'tr') continue;
+    const e = x.p && C.byPlan.get(x.p) === x ? C.events.get(x.p) : null;
+    if (e) p.plan += txDelta(x) - delta(e);
+    else if (x.c === 'tuz') p.tuz += txDelta(x);
+    else if (x.k === 'out') { p.out -= x.a; p.byCat[x.c] = (p.byCat[x.c] || 0) + x.a; }
+    else p.in += x.a;
+  }
+  return p;
+}
 function debtState(C, d) {
   const paid = C.debtPaid[d.id] || 0;
   return { paid, left: Math.max(0, d.a - paid), closed: paid >= d.a };
@@ -590,13 +646,16 @@ function confirmDialog(text) {
   if (tgAtLeast('6.2')) return new Promise(res => WA.showConfirm(text, ok => res(!!ok)));
   return Promise.resolve(window.confirm(text));
 }
-let toastTimer;
-function toast(text) {
+let toastTimer, toastUndo = null;
+// undo berilsa — 5 soniya «Qaytarish» tugmasi bilan turadi
+function toast(text, undo) {
   const el = $('toast');
-  el.textContent = text;
+  el.innerHTML = esc(text) + (undo ? '<button class="toast-btn" data-act="undo">Qaytarish</button>' : '');
+  el.classList.toggle('act', !!undo);
   el.classList.add('show');
+  toastUndo = undo || null;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => { el.classList.remove('show', 'act'); toastUndo = null; }, undo ? 5000 : 2600);
 }
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch {
@@ -607,7 +666,8 @@ async function copyText(text) {
   }
 }
 function applyTheme() {
-  const dark = inTelegram ? WA.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const sys = inTelegram ? WA.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = ui.theme === 'dark' || (ui.theme !== 'light' && sys);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   if (!tgAtLeast('6.1')) return;
   const css = getComputedStyle(document.documentElement);
@@ -670,7 +730,7 @@ const unpackTx = (a, m) => {
   return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt };
 };
 function serialize(doc) {
-  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio });
+  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
   const m = doc.slice(2);
@@ -778,7 +838,13 @@ function cleanMeta(o) {
   // Biometrik ochish: qurilma id → token hash'i. PIN bo'lmasa ma'nosiz.
   const bio = {};
   if (pin) for (const [k, v] of Object.entries(isObj(o.bio) ? o.bio : {})) if (/^[\w-]{1,128}$/.test(k) && /^[0-9a-f]{64}$/.test(v)) bio[k] = v;
-  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio };
+  // Asosiy ekran kartalari tartibi va yashirilganlari
+  const homeIds = v => [...new Set(Array.isArray(v) ? v.filter(id => HOME_IDS.includes(id)) : [])];
+  const home = { order: homeIds(o.home?.order), off: homeIds(o.home?.off) };
+  // Oxirgi HUMO import — bekor qilish uchun: qo'shilgan amallar, yangi qarzlar, takror deb bog'langanlar
+  const ids = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string' && /^[a-z][0-9a-z]{1,12}$/.test(x)).slice(0, 500) : []);
+  const imp = isObj(o.imp) && typeof o.imp.t === 'string' ? { t: o.imp.t.slice(0, 16), tx: ids(o.imp.tx), debts: ids(o.imp.debts), h: ids(o.imp.h) } : null;
+  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio, home, imp };
 }
 const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import'];
 function cleanLog(list) {
@@ -937,6 +1003,35 @@ function removeTx(tx) {
   touch(tdoc(tx.d));
   logEv('del', `O'chirildi: ${label}${debtNote(tx)}`, tx.debt || tx.id);
 }
+// O'chirish — tasdiqsiz, lekin 5 soniya «Qaytarish» bilan
+function deleteTx(tx) {
+  const copy = { ...tx };
+  removeTx(tx);
+  haptic.light();
+  toast("O'chirildi", () => {
+    if (db.tx.some(x => x.id === copy.id)) return;
+    db.tx.push(copy);
+    touch('meta', tdoc(copy.d));
+    logEv('add', `Qaytarildi: ${txLabel(copy)}${debtNote(copy)}`, copy.debt || copy.id);
+    toast('Qaytarildi');
+    rerender();
+  });
+}
+// Amalni bugungi sanaga takrorlash (HUMO izi va reja bog'lanishisiz)
+function copyTxToday(tx) {
+  if (tx.c === 'tuz') { toast("Balans tuzatishni nusxalab bo'lmaydi"); return; }
+  const t = { d: clampDate(today()), tm: nowHM(), k: tx.k, a: tx.a, acc: tx.acc, to: tx.to, c: tx.c, n: tx.n, p: '', h: '',
+    debt: tx.debt && debtById(tx.debt) ? tx.debt : '' };
+  t.p = autoLink(t);
+  const nt = addTx(t, { prefix: 'Nusxalandi' });
+  haptic.ok();
+  toast(`Bugunga nusxalandi: ${sgn(nt)}`, () => {
+    if (!db.tx.includes(nt)) return;
+    removeTx(nt);
+    toast('Nusxa bekor qilindi');
+    rerender();
+  });
+}
 function txFromEvent(e, d) {
   const base = { d, tm: '', n: '', p: e.key, h: '' };
   if (e.kind === 'lock') return { ...base, k: 'tr', a: e.amount, acc: 'card', to: 'save', c: '', debt: '' };
@@ -964,7 +1059,8 @@ function setWorkday(iso, work) {
 }
 
 // ===== Navigatsiya =====
-const TABS = [['main', 'Asosiy', 'home'], ['tarix', 'Tarix', 'list'], ['reja', 'Reja', 'calendar'], ['qarz', 'Qarzlar', 'users'], ['hisobot', 'Hisobot', 'chart']];
+// «+» menyu o'rtasida; Reja — Asosiy ekrandagi kalendar tugmasidan (Telegram «Orqaga» Asosiy'ga qaytaradi)
+const TABS = [['main', 'Asosiy', 'home'], ['tarix', 'Tarix', 'list'], ['add'], ['qarz', 'Qarzlar', 'users'], ['hisobot', 'Hisobot', 'chart']];
 let route = 'main';
 const stack = [];
 function go(name) {
@@ -980,7 +1076,7 @@ function push(name) {
 function back() {
   if (!$('modal').hidden) { closeModal(); return; }
   const prev = stack.pop();
-  if (!prev) return;
+  if (!prev) { if (route === 'reja') go('main'); return; }
   route = prev.route;
   render(prev.y);
 }
@@ -988,10 +1084,11 @@ function render(scrollY) {
   const sub = route === 'add' || route === 'humo';
   document.body.classList.toggle('sub', sub);
   $('view').innerHTML = VIEWS[route]();
-  $('nav').firstElementChild.innerHTML = TABS.map(([id, label, icon]) =>
-    `<button data-act="tab" data-to="${id}"${route === id ? ' aria-current="page"' : ''}>${ic(icon, 22)}${label}</button>`).join('');
+  $('nav').firstElementChild.innerHTML = TABS.map(([id, label, icon]) => (id === 'add'
+    ? `<button class="nav-add" data-act="add" aria-label="Yangi amal qo'shish">${ic('plus', 28, 2.5)}</button>`
+    : `<button data-act="tab" data-to="${id}"${route === id ? ' aria-current="page"' : ''}>${ic(icon, 22)}${label}</button>`)).join('');
   if (scrollY !== undefined) window.scrollTo(0, scrollY);
-  if (tgAtLeast('6.1')) { if (stack.length) WA.BackButton.show(); else WA.BackButton.hide(); }
+  if (tgAtLeast('6.1')) { if (stack.length || route === 'reja') WA.BackButton.show(); else WA.BackButton.hide(); }
 }
 const rerender = () => render();
 
@@ -1030,7 +1127,7 @@ function amountHTML(t) {
 function txRow(t, C, withDate, withBal) {
   const look = txLook(t);
   const bad = t.k === 'out' && CATS[t.c]?.bad;
-  return `<button class="row" data-act="edit-tx" data-id="${t.id}">`
+  return `<button class="row${t.c === 'tuz' ? ' adj' : ''}" data-act="edit-tx" data-id="${t.id}">`
     + `<span class="tile soft" style="--c:var(--${look.color})">${ic(look.icon)}</span>`
     + `<span class="body"><span class="t"><span>${esc(txTitle(t, C))}</span>${t.h ? '<span class="tag">HUMO</span>' : ''}</span>`
     + `<span class="s">${esc(txSub(t, C, withDate))}</span></span>`
@@ -1064,22 +1161,104 @@ function viewMain() {
   const show = v => (hide ? '•••••' : v);
   return `<header class="top">
       <div class="col"><span class="kicker">${WEEKDAYS[dowOf(t)]}, ${longDate(t)}</span><h1 class="h1">Byudjet</h1></div>
-      <div style="display:flex;gap:8px"><button class="round" data-act="pin-lock" aria-label="${db.pin ? 'Hozir qulflash' : "PIN-kod o'rnatish"}">${ic('lock', 18)}</button>
-        <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO import</button></div>
+      <div style="display:flex;gap:8px"><button class="round" data-act="tab" data-to="reja" aria-label="Reja kalendari">${ic('calendar', 18)}</button>
+        <button class="round" data-act="pin-lock" aria-label="${db.pin ? 'Hozir qulflash' : "PIN-kod o'rnatish"}">${ic('lock', 18)}</button>
+        <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO</button></div>
     </header>
     <section class="hero">
       <div class="spread"><span class="lbl" style="display:flex;align-items:center;gap:8px">Jami balans
         <button class="eye" data-act="eye" aria-pressed="${hide}" aria-label="${hide ? "Summalarni ko'rsatish" : 'Summalarni yashirish'}">${ic(hide ? 'eyeOff' : 'eye', 18)}</button></span>
         <span class="hero-chip">${chip}</span></div>
       ${hide ? `<button class="hero-total" data-act="eye" aria-label="Summalarni ko'rsatish">•••••• <small>so'm</small></button>`
-        : `<div class="hero-total">${fmt(C.total)} <small>so'm</small></div>`}
+        : `<div class="hero-total">${fmt(C.total)} <small>so'm</small></div>${sparkHTML(C, t)}`}
       <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="${hide ? 'eye' : 'adjust'}" data-acc="${a}" aria-label="${hide ? `${ACC[a].name}: summani ko'rsatish` : `${ACC[a].name}: ${fmt(C.bal[a])} so'm, qoldiqni tuzatish`}">`
         + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}</span><b>${show(fmt(C.bal[a]))}</b></button>`).join('')}</div>
       <hr>
       <div class="hero-row"><span>Reja bo'yicha hozir: <b>${show(fmt(C.expected))}</b></span>`
-      + `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" title="Rejadan farq">${show(C.dev ? signed(C.dev) : '±0')}</span></div>
+      + (hide ? `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}">•••••</span>`
+        : `<button class="dev-btn ${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" data-act="dev-info" aria-label="Rejadan farq: ${C.dev ? signed(C.dev) : '±0'}, tafsilot">${C.dev ? signed(C.dev) : '±0'}</button>`)
+      + `</div>
     </section>
-    ${alertsCard(C, t)}${todayCard(C, t)}${overdueCard(C, t)}${nextCard(C, t)}${goalCard(C)}${statCards(C, t)}${debtSummary(C, t)}${recentCard(C)}`;
+    ${homeList().filter(x => x.on).map(x => x.fn(C, t)).join('')}`;
+}
+// Hero: so'nggi 7 kun oxiridagi jami balans chizig'i
+function sparkHTML(C, t) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6));
+  const vals = days.map(d => totalOf(balOn(C, d)));
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const y = v => (max === min ? 16 : 28 - ((v - min) / (max - min)) * 24).toFixed(1);
+  const pts = vals.map((v, i) => `${((i / 6) * 100).toFixed(1)},${y(v)}`).join(' ');
+  const ch = vals[6] - vals[0];
+  return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <div class="spark-row"><span>${dm(days[0])} – ${dm(days[6])}</span><span>7 kunda: <b>${ch ? signed(ch) : '±0'}</b></span></div>`;
+}
+// Asosiy ekran kartalari: tartib va ko'rinishi Hisobot → Ko'rinish'da sozlanadi
+const HOME_CARDS = [
+  ['alerts', 'Diqqat', alertsCard], ['today', 'Bugungi xarajat', todayCard], ['overdue', 'Belgilanmagan rejalar', overdueCard],
+  ['next', "Keyingi to'lov", nextCard], ['goal', 'Yakuniy maqsad', goalCard], ['stats', 'Seriya va qoida', statCards],
+  ['debts', 'Qarzlar', debtSummary], ['recent', 'Oxirgi amallar', recentCard],
+];
+const HOME_IDS = HOME_CARDS.map(x => x[0]);
+function homeList() {
+  const order = [...db.home.order, ...HOME_IDS.filter(id => !db.home.order.includes(id))];
+  return order.map(id => {
+    const [, label, fn] = HOME_CARDS.find(x => x[0] === id);
+    return { id, label, fn, on: !db.home.off.includes(id) };
+  });
+}
+function moveHomeCard(id, step) {
+  const order = homeList().map(x => x.id);
+  const i = order.indexOf(id), j = i + step;
+  if (i < 0 || j < 0 || j >= order.length) return;
+  [order[i], order[j]] = [order[j], order[i]];
+  db.home.order = order;
+  touch('meta');
+  logEv('set', `Asosiy ekran: «${HOME_CARDS.find(x => x[0] === id)[1]}» ${step < 0 ? 'yuqoriga' : 'pastga'} surildi`);
+  haptic.light();
+  rerender();
+}
+function toggleHomeCard(id, on) {
+  db.home.off = on ? db.home.off.filter(x => x !== id) : [...new Set([...db.home.off, id])];
+  touch('meta');
+  logEv('set', `Asosiy ekran: «${HOME_CARDS.find(x => x[0] === id)[1]}» ${on ? "ko'rsatiladi" : 'yashirildi'}`);
+  haptic.light();
+}
+// «Rejadan farq» bosilganda: farq qaysi amallardan yig'ilgani
+function devInfo() {
+  const C = calc();
+  const p = devParts(C);
+  const top = Object.entries(p.byCat).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c, v]) => `${CATS[c]?.name || c} ${fmt(v)}`).join(' · ');
+  const line = (label, v, sub) => (v ? `<div class="spread" style="padding:10px 0;border-top:1px solid var(--line);align-items:flex-start">
+      <span class="col"><span style="font-weight:700">${label}</span>${sub ? `<span class="small muted" style="line-height:1.4">${sub}</span>` : ''}</span>
+      <span class="num ${v < 0 ? 'c-bad' : 'c-in'}">${signed(v)}</span></div>` : '');
+  const rows = line('Rejadan tashqari xarajatlar', p.out, top) + line('Rejadan tashqari kirimlar', p.in)
+    + line('Balans tuzatishlar', p.tuz, 'Hisob qoldig\'ini qo\'lda yoki HUMO bo\'yicha to\'g\'rilash')
+    + line('Reja summasidan farq', p.plan, 'Bajarilgan bandlar rejadagidan boshqa summada yozilgan')
+    + line("Boshlang'ich qoldiq", p.open, `Rejadagi ${fmt(PLAN.startBalance)} dan farqi`);
+  openModal(`<h2 class="h2">Rejadan farq: <span class="${C.dev < 0 ? 'c-bad' : 'c-in'}">${C.dev ? signed(C.dev) : '±0'}</span></h2>
+    <p class="small muted" style="line-height:1.5">Jami balans ${fmt(C.total)} − reja bo'yicha hozir ${fmt(C.expected)}. Farq nimadan yig'ilgan:</p>
+    <div>${rows || '<p class="small muted">Farq yo\'q — hammasi reja bo\'yicha.</p>'}</div>
+    <button class="btn sm" data-act="modal-close">Yopish</button>`);
+}
+// Mavzu: Telegram'dagidek / yorug' / qorong'i — faqat shu qurilmada
+function setTheme(v) {
+  ui.theme = ['light', 'dark'].includes(v) ? v : 'auto';
+  try { localStorage.setItem('byudjet:ui:theme', ui.theme); } catch { /* saqlash yo'q */ }
+  applyTheme();
+  haptic.light();
+  rerender();
+}
+function settingsCard() {
+  const list = homeList();
+  return `<section class="card">
+      <span class="h2">Ko'rinish</span>
+      <div class="seg inset">${[['auto', 'Telegram'], ['light', "Yorug'"], ['dark', "Qorong'i"]].map(([v, l]) => `<button data-act="theme" data-v="${v}" aria-pressed="${ui.theme === v}">${l}</button>`).join('')}</div>
+      <span class="lbl" style="margin-top:4px">Asosiy ekran kartalari — belgini olib yashiring, strelkalar bilan tartiblang</span>
+      <div>${list.map((x, i) => `<div class="setrow">
+        <label class="check"><input type="checkbox" data-change="home-on" data-id="${x.id}"${x.on ? ' checked' : ''}>${x.label}</label>
+        <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="-1" aria-label="${x.label}: yuqoriga"${i === 0 ? ' disabled' : ''}>${ic('up', 16)}</button>
+        <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="1" aria-label="${x.label}: pastga"${i === list.length - 1 ? ' disabled' : ''}>${ic('down', 16)}</button></div>`).join('')}</div>
+    </section>`;
 }
 // Diqqat: qarz muddati, limitlar, bugungi qoida buzilishi, kechki yo'lkira, seriya
 function alertsCard(C, t) {
@@ -1138,8 +1317,8 @@ function todayCard(C, t) {
     ? `<span class="small c-bad">Rejadan tashqari: −${fmt(extra)}</span>`
     : `<span class="small muted">${spent ? "Rejadan tashqari xarajat yo'q" : "Hali xarajat yo'q"}</span>`;
   const status = isWorkday(day) ? '' : '<span class="status soft c-soft">Dam olish</span>';
-  return `<section class="card rowcard">${iconTile('chart', 'blue')}
-    <div class="body"><span class="lbl">Bugungi xarajat</span><span class="big">${fmt(spent)} so'm</span>${sub}</div>${status}</section>`;
+  return `<button class="card rowcard" data-act="today-tx" style="border:0;text-align:left;color:var(--text);width:100%">${iconTile('chart', 'blue')}
+    <span class="body"><span class="lbl">Bugungi xarajat</span><span class="big">${fmt(spent)} so'm</span>${sub}</span>${status}<span class="c-muted" style="display:flex">${ic('right', 18)}</span></button>`;
 }
 function overdueCard(C, t) {
   const late = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e));
@@ -1238,7 +1417,7 @@ function recentCard(C) {
 let form = null;
 const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
 function openAdd(pre = {}) {
-  form = { ...blankForm(), ...pre };
+  form = { ...blankForm(), ...pre, catSet: !!pre.c };
   push('add');
 }
 function openEdit(id) {
@@ -1277,39 +1456,92 @@ function viewAdd() {
       ${f.to === 'save' ? '<p class="note">Omonatga o\'tkazma jami balansni o\'zgartirmaydi — pul faqat qulflanadi.</p>' : ''}
       ${dateBtn}`;
   } else {
-    let catBlock;
-    if (debt) {
-      catBlock = `<div class="linkchip">${ic('users', 18)}<span class="body"><span>Qarz: <b>${esc(debt.who)}</b></span><span class="muted">· ${debtFlow({ k: f.k }, debt)}</span></span>`
-        + `<button class="round sm" data-act="f-undebt" aria-label="Qarzdan ajratish">${ic('x', 16)}</button></div>`;
-    } else if (CATS[f.c]?.hidden) {
-      catBlock = `<div class="linkchip">${ic(CATS[f.c].icon, 18)}<span class="body"><b>${CATS[f.c].name}</b></span>`
-        + `<button class="round sm" data-act="f-cat" data-c="" aria-label="Boshqa kategoriya tanlash">${ic('x', 16)}</button></div>`;
-    } else {
-      catBlock = `<div class="cats">${Object.entries(CATS).filter(([, c]) => c.k === f.k && !c.hidden).map(([id, c]) =>
-        `<button class="cat${c.bad ? ' bad' : ''}" data-act="f-cat" data-c="${id}" aria-pressed="${f.c === id}">`
-        + `<span class="tile soft" style="--c:var(--${c.color})">${ic(c.icon, 18)}</span><span class="nm">${c.name}</span>`
-        + `${c.bad ? `<span class="lock" title="Taqiqlangan">${ic('lock', 10, 3)}</span>` : ''}</button>`).join('')}</div>`;
-    }
-    const warn = forbidden ? `<div class="msg warnbox soft c-bad">${ic('alert', 20)}<span><b class="c-bad">Taqiqlangan xarajat!</b> Saqlasangiz, bu kun «qoida buzilgan kun» bo'ladi va prognoz ${fmt(amount)} so'mga kamayadi.</span></div>` : '';
-    middle = `${catBlock}${warn}
+    middle = `<div id="f-cats" style="display:contents">${addCatsHTML(f, debt)}</div>
       <div class="grid3">${['card', 'cash'].map(a => `<button class="opt" data-act="f-acc" data-acc="${a}" aria-pressed="${f.acc === a}">${ic(ACC[a].icon, 16)}${ACC[a].name}</button>`).join('')}${dateBtn}</div>`;
   }
   const planChip = ev ? `<div class="linkchip">${ic('calendar', 18)}<span class="body"><span>Reja: <b>${esc(ev.title)}</b></span><span class="muted">· ${dm(ev.iso)}</span></span>`
     + `<button class="round sm" data-act="f-unplan" aria-label="Rejadan ajratish">${ic('x', 16)}</button></div>` : '';
-  const needCat = !isTr && !catOk(f.c, f.k);
-  const saveLabel = !amount ? 'Summani kiriting' : needCat ? 'Kategoriyani tanlang' : forbidden ? 'Baribir saqlash' : 'Saqlash';
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', 'back'];
+  const yest = addDays(t, -1);
+  const quick = `<div class="chips quick">${yest >= PLAN.start ? `<button class="chip sm" data-act="f-yday" aria-pressed="${f.d === yest}">${ic('calendar', 14)}Kecha</button>` : ''}`
+    + `${QUICK_AMOUNTS.map(v => `<button class="chip sm" data-act="f-quick" data-v="${v}">${fmt(v)}</button>`).join('')}</div>`;
   return `<header class="top">
       <button class="round" data-act="back" aria-label="Yopish">${ic('x')}</button>
       <h1 class="h2" style="font-size:17px">${f.id ? 'Amalni tahrirlash' : 'Yangi amal'}</h1>
-      ${f.id ? `<button class="round" data-act="f-delete" aria-label="O'chirish" style="color:var(--coral)">${ic('trash')}</button>` : `<button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO'dan</button>`}
+      ${f.id ? `<div style="display:flex;gap:8px"><button class="round" data-act="f-copy" aria-label="Bugunga nusxalash">${ic('copy')}</button>`
+        + `<button class="round" data-act="f-delete" aria-label="O'chirish" style="color:var(--coral)">${ic('trash')}</button></div>`
+        : `<button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO'dan</button>`}
     </header>
     <div class="seg">${types.map(([k, label]) => `<button data-act="f-type" data-k="${k}" aria-pressed="${f.k === k}">${label}</button>`).join('')}</div>
     <div class="amount"><span class="lbl">${amountLabel}</span><b class="${amtColor}${String(amount).length > 7 ? ' long' : ''}">${fmt(amount)} <small>so'm</small></b></div>
-    ${middle}${planChip}
-    <label class="notefield">Izoh<input data-input="f-note" value="${esc(f.n)}" maxlength="120" placeholder="ixtiyoriy" autocomplete="off"></label>
+    ${quick}${middle}${planChip}
+    <label class="notefield">Izoh<input data-input="f-note" value="${esc(f.n)}" maxlength="120" placeholder="masalan: non, sim karta" autocomplete="off"></label>
     <div class="keys">${keys.map(k => `<button data-act="key" data-k="${k}" aria-label="${k === 'back' ? "O'chirish" : k}">${k === 'back' ? ic('backspace', 24) : k}</button>`).join('')}</div>
-    <button class="btn primary${forbidden ? ' bad' : ''}" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${saveLabel}</button>`;
+    ${addSaveHTML(f)}`;
+}
+const QUICK_AMOUNTS = [5000, 10000, 20000, 50000, 100000];
+// Kategoriya bloki va «Saqlash» — izohdan kategoriya tanlanganda shu ikkisi qayta chiziladi
+function addCatsHTML(f, debt) {
+  let catBlock;
+  if (debt) {
+    catBlock = `<div class="linkchip">${ic('users', 18)}<span class="body"><span>Qarz: <b>${esc(debt.who)}</b></span><span class="muted">· ${debtFlow({ k: f.k }, debt)}</span></span>`
+      + `<button class="round sm" data-act="f-undebt" aria-label="Qarzdan ajratish">${ic('x', 16)}</button></div>`;
+  } else if (CATS[f.c]?.hidden) {
+    catBlock = `<div class="linkchip">${ic(CATS[f.c].icon, 18)}<span class="body"><b>${CATS[f.c].name}</b></span>`
+      + `<button class="round sm" data-act="f-cat" data-c="" aria-label="Boshqa kategoriya tanlash">${ic('x', 16)}</button></div>`;
+  } else {
+    catBlock = `<div class="cats">${Object.entries(CATS).filter(([, c]) => c.k === f.k && !c.hidden).map(([id, c]) =>
+      `<button class="cat${c.bad ? ' bad' : ''}" data-act="f-cat" data-c="${id}" aria-pressed="${f.c === id}">`
+      + `<span class="tile soft" style="--c:var(--${c.color})">${ic(c.icon, 18)}</span><span class="nm">${c.name}</span>`
+      + `${c.bad ? `<span class="lock" title="Taqiqlangan">${ic('lock', 10, 3)}</span>` : ''}</button>`).join('')}</div>`;
+  }
+  const forbidden = f.k === 'out' && CATS[f.c]?.bad;
+  const warn = forbidden ? `<div class="msg warnbox soft c-bad">${ic('alert', 20)}<span><b class="c-bad">Taqiqlangan xarajat!</b> Saqlasangiz, bu kun «qoida buzilgan kun» bo'ladi va prognoz ${fmt(digits(f.a))} so'mga kamayadi.</span></div>` : '';
+  return catBlock + warn;
+}
+function addSaveHTML(f) {
+  const isTr = f.k === 'tr';
+  const amount = digits(f.a);
+  const forbidden = f.k === 'out' && CATS[f.c]?.bad;
+  const needCat = !isTr && !catOk(f.c, f.k);
+  const label = !amount ? 'Summani kiriting' : needCat ? 'Kategoriyani tanlang' : forbidden ? 'Baribir saqlash' : 'Saqlash';
+  return `<button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button>`;
+}
+
+// ===== Izohdan kategoriya: oldingi amallaringizdan o'rganadi + tayyor kalit so'zlar =====
+const CAT_WORDS = {
+  oziq: 'non gosht bozor korzinka makro havas sut meva sabzavot guruch yog tuxum kartoshka piyoz shakar oziq ovqat',
+  kucha: 'shaurma lavash somsa burger kafe choyxona pizza hotdog fastfood kfc evos tushlik',
+  kofe: 'kofe coffee shirinlik tort muzqaymoq pishiriq kapuchino latte',
+  taksi: 'taksi taxi yandex mytaxi uklon',
+  aloqa: 'sim telefon internet beeline ucell mobiuz uzmobile obuna aloqa',
+  yol: 'metro avtobus yolkira marshrutka',
+  talim: 'kurs kitob dars ingliz talim',
+  sog: 'dori apteka dorixona shifokor klinika stomatolog',
+  uy: 'kommunal svet gaz suv ijara sovun idish uyga',
+  oylik: 'oylik maosh', avans: 'avans', kirim: 'sovga bonus',
+};
+const noteWords = s => s.toLowerCase().replace(/[ʻʼ’‘'`]/g, '').split(/[^a-z0-9а-яёўқғҳ]+/).filter(w => w.length >= 3);
+let learnCache = null;
+function noteCat(text, k) {
+  const words = noteWords(text);
+  if (!words.length) return '';
+  if (!learnCache || learnCache.ver !== ver) {
+    const map = {};
+    for (const x of db.tx) {
+      if (!x.n || !CATS[x.c] || CATS[x.c].hidden) continue;
+      for (const w of noteWords(x.n)) (map[w] ||= {})[x.c] = (map[w][x.c] || 0) + 1;
+    }
+    learnCache = { ver, map };
+  }
+  const score = {};
+  for (const w of words) {
+    for (const [c, n] of Object.entries(learnCache.map[w] || {})) score[c] = (score[c] || 0) + 3 * n;
+    for (const [c, list] of Object.entries(CAT_WORDS)) if (list.split(' ').some(kw => w.startsWith(kw))) score[c] = (score[c] || 0) + 2;
+  }
+  let best = '', top = 0;
+  for (const [c, v] of Object.entries(score)) if (CATS[c]?.k === k && v > top) { best = c; top = v; }
+  return best;
 }
 function pressKey(k) {
   const a = k === 'back' ? form.a.slice(0, -1) : (form.a + k).replace(/^0+/, '').slice(0, 9);
@@ -1335,13 +1567,13 @@ function saveForm() {
 }
 
 // ===== Tarix =====
-const hist = { q: '', f: 'all', mode: 'tx' };
+const hist = { q: '', f: 'all', mode: 'tx', day: '' };
 const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'] };
 const histHTML = () => (hist.mode === 'log' ? logList() : histList(calc()));
 function viewTarix() {
   const C = calc();
   const m = clampMonth(C.t.slice(0, 7));
-  const inM = db.tx.filter(t => t.d.startsWith(m));
+  const inM = db.tx.filter(t => t.d.startsWith(m) && t.c !== 'tuz');
   const ins = sum(inM.filter(t => t.k === 'in'), t => t.a);
   const outs = sum(inM.filter(t => t.k === 'out'), t => t.a);
   const bads = sum(inM.filter(t => t.k === 'out' && CATS[t.c]?.bad), t => t.a);
@@ -1356,6 +1588,7 @@ function viewTarix() {
       <div class="col"><span class="small muted" style="font-weight:600">Chiqim</span><span class="num">−${fmt(outs)}</span></div>
       <div class="col"><span class="small muted" style="font-weight:600">Taqiqlangan</span><span class="num${bads ? ' c-bad' : ''}">${bads ? '−' : ''}${fmt(bads)}</span></div>
     </section>
+    ${hist.day ? `<div class="chips"><button class="chip" data-act="h-day-clear" aria-pressed="true" style="display:inline-flex;align-items:center;gap:6px">${ic('calendar', 14)}${longDate(hist.day)}${ic('x', 14)}</button></div>` : ''}
     <div id="h-list" style="display:flex;flex-direction:column;gap:12px">${histList(C)}</div>`}`;
 }
 // Jurnal: har bir o'zgarish vaqti bilan, eng yangisi tepada
@@ -1384,6 +1617,7 @@ function histList(C) {
     if (hist.f === 'tr' && t.k !== 'tr') return false;
     if (hist.f === 'bad' && !(t.k === 'out' && CATS[t.c]?.bad)) return false;
     if (hist.f === 'humo' && !t.h) return false;
+    if (hist.day && t.d !== hist.day) return false;
     if (!q) return true;
     const text = `${txTitle(t, C)} ${t.n} ${CATS[t.c]?.name || ''}`.toLowerCase();
     return text.includes(q) || (qd.length >= 3 && qd === q.replace(/\s/g, '') && String(t.a).includes(qd));
@@ -1395,14 +1629,18 @@ function histList(C) {
     groups[groups.length - 1].items.push(t);
   }
   if (!groups.length) return `<p class="empty">${db.tx.length ? "Bu filtr bo'yicha amal yo'q" : "Hali amal yo'q"}</p>`;
+  const swBg = `<span class="sw-bg" aria-hidden="true"><span class="c">${ic('copy', 18)}Nusxalash</span><span class="x">O'chirish${ic('trash', 18)}</span></span>`;
   return groups.map(g => {
-    const total = sum(g.items, txDelta);
+    const total = sum(g.items.filter(x => x.c !== 'tuz'), txDelta); // tuzatish haqiqiy kirim/chiqim emas
     const bad = (C.dayStat[g.d]?.bad || 0) > 0;
     const label = g.d === C.t ? `Bugun, ${longDate(g.d)}` : g.d === addDays(C.t, -1) ? `Kecha, ${longDate(g.d)}` : longDate(g.d);
+    const end = C.dayEnd.get(g.d);
+    const endText = ACC_IDS.filter(a => a !== 'save' || end.save).map(a => `${ACC[a].name} ${ui.hide ? '•••••' : fmt(end[a])}`).join(' · ');
     return `<section style="display:flex;flex-direction:column;gap:6px">
       <div class="dayhead"><span class="${bad ? 'c-bad' : ''}">${label} <span class="wd">· ${WEEKDAYS[dowOf(g.d)]}</span></span>
         <span class="${total > 0 ? 'c-in' : bad ? 'c-bad' : 'c-soft'}">${total ? signed(total) : '0'}</span></div>
-      <div class="group${bad ? ' bad' : ''}">${g.items.map(t => txRow(t, C, false, true)).join('')}</div></section>`;
+      <div class="dayend">Kun oxirida: ${endText}</div>
+      <div class="group sw-list${bad ? ' bad' : ''}">${g.items.map(t => `<div class="sw">${swBg}${txRow(t, C, false, true)}</div>`).join('')}</div></section>`;
   }).join('');
 }
 
@@ -1428,6 +1666,8 @@ function viewReja() {
   const nDays = new Date(Date.UTC(y, mo, 0)).getUTCDate();
   const lead = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7;
   const cells = [];
+  // Issiqlik xaritasi: kundalik xarajat (majburiy to'lovlarsiz) oyning eng ko'p kuniga nisbatan
+  const maxDisc = Math.max(1, ...days.map(d => C.dayStat[d.iso]?.disc || 0));
   for (let i = 0; i < lead; i++) cells.push('<span></span>');
   for (let dd = 1; dd <= nDays; dd++) {
     const iso = `${m}-${pad(dd)}`;
@@ -1437,8 +1677,10 @@ function viewReja() {
     const colors = { in: 'mint', out: 'amber', lock: 'blue' };
     const dots = evs.map(e => `<i class="${isPending(C, e) ? '' : 'done'}" style="--c:var(--${colors[e.kind]})"></i>`).join('');
     const bad = (C.dayStat[iso]?.bad || 0) > 0;
-    const cls = ['d', !isWorkday(day) && 'off', iso === t && 'today', bad && 'bad soft'].filter(Boolean).join(' ');
-    cells.push(`<button class="${cls}" data-act="r-sel" data-iso="${iso}" aria-pressed="${reja.sel === iso}" aria-label="${longDate(iso)}${evs.length ? `, ${evs.length} ta reja` : ''}"><b>${dd}</b><span class="dots">${dots}</span></button>`);
+    const disc = C.dayStat[iso]?.disc || 0;
+    const heat = disc && !bad ? ` style="--heat:${(disc / maxDisc).toFixed(2)}"` : '';
+    const cls = ['d', !isWorkday(day) && 'off', iso === t && 'today', bad && 'bad soft', heat && 'heat'].filter(Boolean).join(' ');
+    cells.push(`<button class="${cls}"${heat} data-act="r-sel" data-iso="${iso}" aria-pressed="${reja.sel === iso}" aria-label="${longDate(iso)}${evs.length ? `, ${evs.length} ta reja` : ''}${disc ? `, xarajat ${fmt(disc)}` : ''}"><b>${dd}</b><span class="dots">${dots}</span></button>`);
   }
   return `<header class="top"><h1 class="h1">Reja</h1>
       <div class="mnav"><button class="round sm" data-act="r-month" data-step="-1" aria-label="Oldingi oy"${mi === 0 ? ' disabled' : ''}>${ic('left', 18)}</button>
@@ -1456,7 +1698,8 @@ function viewReja() {
     <section class="card" style="padding:14px 10px;gap:6px">
       <div class="cal">${WD_SHORT.map(w => `<span class="wdh">${w}</span>`).join('')}${cells.join('')}</div>
       <div class="legend"><span><i style="--c:var(--mint)"></i>Kirim</span><span><i style="--c:var(--amber)"></i>To'lov</span>
-        <span><i style="--c:var(--blue)"></i>Qulflash</span><span><i style="--c:var(--coral)"></i>Qoida buzilgan</span></div></section>
+        <span><i style="--c:var(--blue)"></i>Qulflash</span><span><i style="--c:var(--coral)"></i>Qoida buzilgan</span>
+        <span><i style="--c:var(--accent);opacity:.5;border-radius:3px"></i>Ko'p xarajat</span></div></section>
     ${rejaDay(C, reja.sel)}
     <p class="note">«To'lash» yoki «Tushdi» bosilganda summa tanlangan hisobdan Tarixga yoziladi. Ish kunini dam olishga almashtirsangiz, o'sha kunning yo'lkirasi rejadan olib tashlanadi.</p>`;
 }
@@ -1632,7 +1875,7 @@ function viewHisobot() {
   const m = rep.m, mi = MONTHS.indexOf(m);
   const days = DAYS.filter(d => d.month === m && d.iso <= t);
   const range = days.length ? `${monthName(m)} · ${days[0].day}–${days[days.length - 1].day}` : monthName(m);
-  const txs = db.tx.filter(x => x.d.startsWith(m));
+  const txs = db.tx.filter(x => x.d.startsWith(m) && x.c !== 'tuz'); // tuzatish — kirim/chiqim emas
   const ins = sum(txs.filter(x => x.k === 'in'), x => x.a);
   const outs = sum(txs.filter(x => x.k === 'out'), x => x.a);
   const net = ins - outs;
@@ -1645,7 +1888,7 @@ function viewHisobot() {
       <section class="kpi"><span class="lbl">Chiqim</span><span class="num">−${fmt(outs)}</span></section>
       <section class="kpi"><span class="lbl">Sof</span><span class="num ${net >= 0 ? 'c-in' : 'c-bad'}">${signed(net)}</span></section>
     </div>
-    ${donutCard(txs)}${barsCard(C, days)}${lineCard(C)}${limitsCard(C, m, txs)}${topCard(txs, C)}${dataCard()}`;
+    ${donutCard(txs)}${barsCard(C, days)}${lineCard(C)}${limitsCard(C, m, txs)}${topCard(txs, C)}${settingsCard()}${dataCard()}`;
 }
 function donutCard(txs) {
   const out = txs.filter(x => x.k === 'out');
@@ -2013,7 +2256,16 @@ function viewHumo() {
       <textarea class="field" id="hu-text" data-input="hu-text" spellcheck="false" autocomplete="off" placeholder="To'lov&#10;− 25.000,00 UZS&#10;SHAURMA CAFE>Tos&#10;HUMOCARD *1234&#10;13:20 10.11.2026&#10;1.008.691,05 UZS">${esc(humo.text)}</textarea>
     </div>
     <div id="hu-res" style="display:flex;flex-direction:column;gap:12px">${humoResults()}</div>
+    ${lastImportCard()}
     <p class="note" style="text-align:center">Matn faqat shu telefonda tahlil qilinadi va hech qayerga yuborilmaydi.</p>`;
+}
+function lastImportCard() {
+  const imp = db.imp;
+  if (!imp) return '';
+  const n = db.tx.filter(x => imp.tx.includes(x.id)).length;
+  return `<section class="card rowcard">${iconTile('clipboard', 'teal', 'md')}
+      <span class="body"><span class="lbl">Oxirgi import · ${imp.t.slice(8, 10)}.${imp.t.slice(5, 7)}, ${imp.t.slice(11)}</span><span style="font-weight:800">${n} ta amal</span></span>
+      <button class="chip sm" data-act="imp-undo">Bekor qilish</button></section>`;
 }
 function humoResults() {
   if (!humo.text.trim()) return '';
@@ -2088,40 +2340,62 @@ function humoRowHTML(r, i) {
 }
 function importHumo(el) {
   const rows = humoRows().filter(r => r.on);
-  let n = 0;
+  const imp = { t: `${today()} ${nowHM()}`, tx: [], debts: [], h: [] };
   for (const r of rows) {
     const t = humoTx(r);
     if (t.newDebt) {
       const d = { id: nextId('d'), dir: 'lent', who: r.place === 'Noma\'lum' ? `P2P ${dm(r.d)}` : r.place.slice(0, 60), a: r.a, due: '', d: r.d };
       db.debts.push(d);
+      imp.debts.push(d.id);
       logEv('debt', `Yangi qarz (HUMO): ${d.who} — menga qarzdor, ${fmt(d.a)}`, d.id);
       t.debt = d.id;
       delete t.newDebt;
     }
     if (!t.p) t.p = autoLink(t);
-    addTx(t, { prefix: 'HUMO import' });
-    n++;
+    imp.tx.push(addTx(t, { prefix: 'HUMO import' }).id);
   }
+  const n = imp.tx.length;
   // Belgilanmagan "ehtimoliy takror"lar mavjud amalga bog'lanadi — keyingi importda aniq takror bo'ladi
   for (const r of humoRows()) {
-    if (r.status === 'maybe' && !r.on) { const t = db.tx.find(x => x.id === r.match); if (t && !t.h) { t.h = r.key; touch(tdoc(t.d)); } }
+    if (r.status === 'maybe' && !r.on) { const t = db.tx.find(x => x.id === r.match); if (t && !t.h) { t.h = r.key; imp.h.push(t.id); touch(tdoc(t.d)); } }
   }
   const fix = Number(el.dataset.fix);
   if (fix && humo.fix) {
-    addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' });
+    imp.tx.push(addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' }).id);
   }
+  db.imp = imp;
   touch('meta', 'debts');
   Object.assign(humo, { text: '', on: {}, choice: {}, cat: {}, note: {}, fix: true });
   haptic.ok();
-  toast(`${n} ta amal qo'shildi`);
   hist.f = 'humo';
   hist.q = '';
+  hist.day = '';
   go('tarix');
+  toast(`${n} ta amal qo'shildi`, () => undoImport(false));
+}
+// Oxirgi HUMO importini to'liq qaytarish: qo'shilgan amallar va qarzlar o'chadi, takror bog'lanishlar bekor bo'ladi
+async function undoImport(ask) {
+  const imp = db.imp;
+  if (!imp) return;
+  const txs = db.tx.filter(x => imp.tx.includes(x.id));
+  if (ask && !(await confirmDialog(`Oxirgi HUMO import (${imp.t.slice(8, 10)}.${imp.t.slice(5, 7)} ${imp.t.slice(11)}) bekor qilinsinmi? ${txs.length} ta amal o'chiriladi.`))) return;
+  for (const x of txs) { db.tx.splice(db.tx.indexOf(x), 1); touch(tdoc(x.d)); }
+  db.debts = db.debts.filter(d => !imp.debts.includes(d.id) || db.tx.some(x => x.debt === d.id));
+  for (const x of db.tx) if (imp.h.includes(x.id) && x.h) { x.h = ''; touch(tdoc(x.d)); }
+  db.imp = null;
+  touch('meta', 'debts');
+  logEv('import', `HUMO import bekor qilindi: ${txs.length} ta amal o'chirildi`);
+  haptic.ok();
+  toast('Import bekor qilindi');
+  rerender();
 }
 
 // ===== Qurilma sozlamasi: balansni yashirish (faqat shu qurilmada) =====
-const ui = { hide: false };
-try { ui.hide = localStorage.getItem('byudjet:ui:hide') === '1'; } catch { /* saqlash yo'q */ }
+const ui = { hide: false, theme: 'auto' };
+try {
+  ui.hide = localStorage.getItem('byudjet:ui:hide') === '1';
+  ui.theme = ['light', 'dark'].includes(localStorage.getItem('byudjet:ui:theme')) ? localStorage.getItem('byudjet:ui:theme') : 'auto';
+} catch { /* saqlash yo'q */ }
 function toggleHide() {
   ui.hide = !ui.hide;
   try { localStorage.setItem('byudjet:ui:hide', ui.hide ? '1' : '0'); } catch { /* saqlash yo'q */ }
@@ -2342,7 +2616,7 @@ function closeModal() {
 
 // ===== Hodisalar =====
 const ACT = {
-  tab: el => go(el.dataset.to),
+  tab: el => { if (el.dataset.to === 'tarix') hist.day = ''; go(el.dataset.to); },
   back: () => back(),
   add: () => openAdd(),
   humo: () => push('humo'),
@@ -2392,11 +2666,12 @@ const ACT = {
   'f-type': el => {
     const k = el.dataset.k;
     if (k === form.k) return;
-    Object.assign(form, { k, c: '', debt: '', p: '', acc: 'card', to: form.acc === 'save' ? 'card' : 'save' });
+    Object.assign(form, { k, c: '', catSet: false, debt: '', p: '', acc: 'card', to: form.acc === 'save' ? 'card' : 'save' });
     rerender();
   },
   'f-cat': el => {
     form.c = el.dataset.c;
+    form.catSet = !!form.c;
     if (CATS[form.c]?.bad) haptic.warn(); else haptic.light();
     rerender();
   },
@@ -2408,13 +2683,40 @@ const ACT = {
     if (CATS[form.c]?.hidden) form.c = '';
     rerender();
   },
-  'f-delete': async () => {
+  'f-delete': () => {
     const t = db.tx.find(x => x.id === form.id);
-    if (!t || !(await confirmDialog("Bu amal o'chirilsinmi?"))) return;
-    removeTx(t);
-    toast("O'chirildi");
+    if (!t) return;
     back();
+    deleteTx(t);
+    rerender();
   },
+  'f-copy': () => {
+    const t = db.tx.find(x => x.id === form.id);
+    if (!t) return;
+    back();
+    copyTxToday(t);
+    rerender();
+  },
+  'f-quick': el => { form.a = el.dataset.v; haptic.light(); rerender(); },
+  'f-yday': () => {
+    const t = today(), y = addDays(t, -1);
+    form.d = clampDate(form.d === y ? t : y);
+    if (!form.id) form.tm = '';
+    haptic.light();
+    rerender();
+  },
+  undo: () => {
+    const fn = toastUndo;
+    toastUndo = null;
+    $('toast').classList.remove('show', 'act');
+    fn?.();
+  },
+  'today-tx': () => { Object.assign(hist, { mode: 'tx', f: 'all', q: '', day: calc().t }); go('tarix'); },
+  'h-day-clear': () => { hist.day = ''; rerender(); },
+  'dev-info': () => devInfo(),
+  theme: el => setTheme(el.dataset.v),
+  'home-move': el => moveHomeCard(el.dataset.id, Number(el.dataset.step)),
+  'imp-undo': () => undoImport(true),
   key: el => pressKey(el.dataset.k),
   save: () => saveForm(),
   // Tarix
@@ -2517,6 +2819,7 @@ const ACT = {
     const oldDocs = Object.keys(chunkCount).filter(d => d.startsWith('t_'));
     next.pin = db.pin;
     next.bio = db.bio;
+    next.home = db.home;
     db = next;
     logEv('import', `Zaxira import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz`);
     touch('meta', 'debts', 'log', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
@@ -2545,7 +2848,17 @@ function setBackupMsg(text, isError) {
 }
 let huTimer;
 const INPUT = {
-  'f-note': el => { form.n = el.value; },
+  'f-note': el => {
+    form.n = el.value;
+    // Kategoriya qo'lda tanlanmagan yangi amalda — izohga qarab tanlanadi (fokus yo'qolmasligi uchun faqat shu bloklar yangilanadi)
+    if (form.id || form.catSet || form.k === 'tr' || form.debt) return;
+    const c = noteCat(el.value, form.k);
+    if (!c || c === form.c) return;
+    form.c = c;
+    $('f-cats').innerHTML = addCatsHTML(form, null);
+    $('f-save').outerHTML = addSaveHTML(form);
+    $('view').querySelector('.amount b')?.classList.toggle('c-bad', !!CATS[c].bad && form.k === 'out');
+  },
   'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histHTML(); },
   'd-who': el => { debtUI.form.who = el.value; },
   'hu-note': el => { humo.note[el.dataset.key] = el.value.trim(); },
@@ -2564,6 +2877,7 @@ const CHANGE = {
   'hu-on': el => { humo.on[el.dataset.key] = el.checked; $('hu-res').innerHTML = humoResults(); },
   'hu-cat': el => { humo.cat[el.dataset.key] = el.value; $('hu-res').innerHTML = humoResults(); },
   'hu-fix': el => { humo.fix = el.checked; $('hu-res').innerHTML = humoResults(); },
+  'home-on': el => toggleHomeCard(el.dataset.id, el.checked),
 };
 document.addEventListener('click', ev => {
   // Kompyuterda sana tanlagich faqat ikonkadan ochiladi — butun tugmadan ochilsin
@@ -2576,6 +2890,55 @@ document.addEventListener('click', ev => {
   const fn = ACT[el.dataset.act];
   if (fn) { ev.preventDefault(); fn(el, ev); }
 });
+// Tarix: qatorni chapga surish — o'chirish, o'ngga — bugunga nusxalash (90px dan keyin)
+const swipe = { row: null, id: 0, x0: 0, y0: 0, dx: 0, on: false, block: false };
+const SWIPE_AT = 90;
+document.addEventListener('pointerdown', ev => {
+  const row = ev.target.closest?.('.sw > .row[data-id]');
+  if (!row || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+  Object.assign(swipe, { row, id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, dx: 0, on: false });
+});
+document.addEventListener('pointermove', ev => {
+  const s = swipe;
+  if (!s.row || ev.pointerId !== s.id) return;
+  const dx = ev.clientX - s.x0, dy = ev.clientY - s.y0;
+  if (!s.on) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { s.row = null; return; }
+    if (Math.abs(dx) < 12) return;
+    s.on = true;
+    s.row.classList.add('swiping');
+    try { s.row.setPointerCapture(ev.pointerId); } catch { /* sintetik hodisa */ }
+  }
+  s.dx = Math.max(-140, Math.min(140, dx));
+  s.row.style.transform = `translateX(${s.dx}px)`;
+  const wrap = s.row.parentElement;
+  if (s.dx > 0) wrap.dataset.dir = 'r'; else wrap.dataset.dir = 'l';
+  if (Math.abs(s.dx) >= SWIPE_AT && !s.row.dataset.armed) { s.row.dataset.armed = '1'; haptic.light(); }
+  if (Math.abs(s.dx) < SWIPE_AT) delete s.row.dataset.armed;
+});
+function endSwipe(ev) {
+  const s = swipe;
+  if (!s.row || ev.pointerId !== s.id) return;
+  const { row, dx, on } = s;
+  s.row = null;
+  if (!on) return;
+  s.block = true; // keyingi "click" tahrirlashni ochmasin
+  setTimeout(() => { s.block = false; }, 350);
+  row.classList.remove('swiping');
+  const tx = db.tx.find(x => x.id === row.dataset.id);
+  if (ev.type === 'pointerup' && tx && Math.abs(dx) >= SWIPE_AT) {
+    if (dx < 0) deleteTx(tx); else copyTxToday(tx);
+    rerender();
+    return;
+  }
+  row.style.transform = '';
+  setTimeout(() => { delete row.parentElement?.dataset.dir; }, 200);
+}
+document.addEventListener('pointerup', endSwipe);
+document.addEventListener('pointercancel', endSwipe);
+document.addEventListener('click', ev => {
+  if (swipe.block && ev.target.closest?.('.sw')) { swipe.block = false; ev.stopPropagation(); ev.preventDefault(); }
+}, true);
 document.addEventListener('input', ev => { const k = ev.target.dataset?.input; if (k && INPUT[k]) INPUT[k](ev.target); });
 document.addEventListener('change', ev => { const k = ev.target.dataset?.change; if (k && CHANGE[k]) CHANGE[k](ev.target); });
 document.addEventListener('keydown', ev => {
@@ -2634,10 +2997,8 @@ async function start() {
   if (db.pin) showLock('unlock', showApp); else showApp();
 }
 function showApp() {
-  $('fab').innerHTML = ic('plus', 28, 2.5);
   $('view').hidden = false;
   $('nav').hidden = false;
-  $('fab').hidden = false;
   render(0);
 }
 start();
