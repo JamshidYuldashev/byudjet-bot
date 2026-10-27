@@ -70,7 +70,9 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 - PIN: `meta.pin = { s: salt, h: sha256(salt:pin) }` — ekran qulfi. Zaxira eksportiga kirmaydi.
 - `meta.home = { order, off }` — Asosiy ekran kartalari tartibi/yashirilganlari (`HOME_CARDS` id lari).
   `meta.imp = { t, tx, debts, h }` — oxirgi HUMO import, «Bekor qilish» uchun. Ikkalasi zaxira eksportiga kirmaydi.
-- Mavzu (`byudjet:ui:theme`) va summalarni yashirish (`byudjet:ui:hide`) — faqat qurilmada (localStorage).
+- Faqat qurilmada (localStorage): mavzu `byudjet:ui:theme`, summalarni yashirish `byudjet:ui:hide`,
+  tabriklangan nishonlar `byudjet:ui:badges`, ko'rilgan oy yakunlari `byudjet:ui:wrap`.
+- Animatsiyalar `prefers-reduced-motion` ga bo'ysunadi; rAF to'xtasa ham `setTimeout` yakuniy holatni ko'rsatadi.
 - «Balans tuzatish» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Hisobot), lekin qoldiqqa kiradi.
 - Biometrik ochish (BiometricManager, 7.2+): tasodifiy token qurilmaning xavfsiz xotirasida, bulutda faqat
   `meta.bio = { [deviceId]: sha256(token) }`. PIN bo'lmasa `bio` bo'sh. Zaxira eksportiga kirmaydi.
@@ -91,3 +93,5 @@ TODAY=2026-12-01 python remind.py --dry-run --slot morning
 ```
 
 Mini App'ni boshqa sana bilan ochish: `index.html?today=2026-11-13`.
+Brauzer testlarida qiymatlarni o'qishdan oldin animatsiya tugashini kuting yoki Chrome'ni
+`--force-prefers-reduced-motion` bilan ishga tushiring.
