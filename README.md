@@ -53,19 +53,20 @@ Yakuniy reja balansi qoidalardan hisoblanadi: standart sozlamalarda 101 ish kuni
    git push -u origin main
    ```
 
-3. Repo → **Settings → Pages** → *Build and deployment*:
-   - Source: **Deploy from a branch**
-   - Branch: **main**, papka: **/ (root)** → **Save**.
+3. Repo → **Settings → Pages** → *Build and deployment* → Source: **GitHub Actions**.
+   Sahifani `pages` workflow'i chiqaradi. Unga `CHAT_ID` secret kerak, shuning uchun avval 4-qadamni bajaring,
+   keyin **Actions → pages → Run workflow** ni bosing (keyingi har push'da o'zi ishlaydi).
 4. 1–2 daqiqadan so'ng sahifa shu manzilda ochiladi:
 
    ```
    https://<USERNAME>.github.io/byudjet-bot/
    ```
 
-   Bu — sizning **WEBAPP_URL**. Uni oddiy brauzerda ochib tekshirib ko'ring.
+   Bu — sizning **WEBAPP_URL**. Oddiy brauzerda u «Bu shaxsiy ilova» deb ko'rsatadi — bu to'g'ri.
 
-> Diqqat: repo ochiq, shuning uchun `index.html` dagi summalar hammaga ko'rinadi.
+> Diqqat: repo ochiq, shuning uchun koddagi reja summalari hammaga ko'rinadi.
 > Token va chat_id esa faqat Secrets'da turadi va hech qayerda ko'rinmaydi.
+> Treker faqat `CHAT_ID` ga teng Telegram akkauntida ochiladi (pastda «Faqat egasi» ga qarang).
 
 ### 4. Secrets qo'shish
 
@@ -128,6 +129,11 @@ Hisob-kitob qoidalari:
 - Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).
 - Ishga bormagan kunni (masalan, Ramazon hayiti) Reja'da "Dam olish" ga o'tkazing.
   O'sha kunning 10 000 so'mlik yo'lkirasi rejadan olib tashlanadi.
+- **Faqat egasi**: treker faqat Telegram ID si `CHAT_ID` ga teng akkauntda ochiladi. Boshqa odam botni topib
+  «Treker» ni bossa yoki manzilni brauzerda ochsa, «Bu shaxsiy ilova» ekrani chiqadi. Hech narsa yuklanmaydi
+  va yozilmaydi. ID kodda turmaydi: `pages` workflow'i sahifaga faqat uning SHA-256 hash'ini joylaydi.
+  Sizning amallaringiz, qarzlaringiz va jurnalingiz baribir faqat sizning Telegram bulutingizda turadi —
+  boshqa akkaunt ularni hech qachon ko'ra olmaydi.
 
 ### HUMO'dan import
 
@@ -154,7 +160,7 @@ Matn faqat telefoningizda tahlil qilinadi va hech qayerga yuborilmaydi.
   - Kalitlar: `meta` (sozlamalar), `debts` (qarzlar) va har oy uchun alohida `t_2026-11` (amallar).
   - Har bir hujjat 3 500 belgilik bo'laklarga bo'lib saqlanadi (`t_2026-11_0`, `t_2026-11_1`, …),
     chunki CloudStorage'da bitta qiymat 4 096 belgidan oshmasligi kerak.
-- **Oddiy brauzerda** — shu brauzerning `localStorage`'ida (`byudjet:` prefiksi bilan).
+- **Kompyuterda sinaganda** (fayl yoki localhost) — brauzerning `localStorage`'ida (`byudjet:` prefiksi bilan).
 - Birinchi versiyada belgilangan to'lovlar (`m_2026-11`) birinchi ochilishda avtomatik ko'chiriladi.
 - Telegram va brauzer ma'lumotlari bir-biridan alohida. Ko'chirish yoki zaxiralash uchun **Hisobot → Zaxira nusxa**
   bo'limidan foydalaning:
@@ -213,8 +219,8 @@ Remove-Item Env:TODAY
 ```
 
 `--dry-run` xabarlarni yubormaydi, faqat ekranga chiqaradi va secretlarni talab qilmaydi.
-Mini App'ni sinash uchun `index.html` ni brauzerda ochish kifoya. Boshqa sanadagi holatni ko'rish uchun
-manzil oxiriga `?today=2026-11-13` qo'shing.
+Mini App'ni sinash uchun `index.html` ni brauzerda ochish kifoya (fayl va localhost'da egasi tekshirilmaydi).
+Boshqa sanadagi holatni ko'rish uchun manzil oxiriga `?today=2026-11-13` qo'shing.
 
 ## Rejani o'zgartirish
 
