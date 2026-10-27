@@ -106,6 +106,21 @@ main { max-width: 560px; margin: 0 auto; padding: 12px 12px calc(24px + env(safe
 .warn[hidden] { display: none; }
 .plan { margin-top: 6px; text-align: right; font-size: 13px; color: var(--hint); }
 
+/* Backup */
+.backup { margin-top: 16px; background: var(--section); border-radius: 14px; padding: 0 12px; }
+.backup[open] { padding-bottom: 12px; }
+.backup summary { min-height: 48px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; list-style: none; }
+.backup summary::-webkit-details-marker { display: none; }
+.backup p { margin: 0 0 10px; font-size: 13px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.btn { flex: 1; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: transparent; color: var(--text);
+  font: inherit; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 12px; }
+.btn.primary { background: var(--accent); color: var(--accent-text); border-color: transparent; }
+#b-text { display: block; width: 100%; min-height: 110px; border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px;
+  background: var(--page); color: var(--text); font: 12px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+.b-msg { min-height: 1em; margin: 0; font-size: 13px; font-weight: 600; }
+.foot { text-align: center; font-size: 12px; margin: 16px 0 0; }
+
 #toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   background: var(--text); color: var(--page); padding: 10px 14px; border-radius: 12px; font-size: 14px; max-width: calc(100% - 32px);
   opacity: 0; pointer-events: none; transition: opacity .2s; }
@@ -131,6 +146,19 @@ main { max-width: 560px; margin: 0 auto; padding: 12px 12px calc(24px + env(safe
     </div>
     <nav class="tabs" id="tabs" role="tablist"></nav>
     <section id="days"></section>
+    <details class="backup">
+      <summary><i class="ti ti-download"></i>Zaxira nusxa</summary>
+      <p class="hint">Eksport — joriy ma'lumotlarni nusxalab, xavfsiz joyga saqlang.
+        Import — saqlangan JSON ni shu yerga joylab, tiklang (joriy ma'lumotlar almashtiriladi).</p>
+      <div class="btns">
+        <button class="btn" id="b-export"><i class="ti ti-download"></i>Eksport</button>
+        <button class="btn" id="b-copy"><i class="ti ti-copy"></i>Nusxalash</button>
+      </div>
+      <textarea id="b-text" spellcheck="false" autocomplete="off" placeholder='{"v":1,"months":{...}}'></textarea>
+      <div class="btns"><button class="btn primary" id="b-import"><i class="ti ti-upload"></i>Import qilish</button></div>
+      <p class="b-msg" id="b-msg" role="alert"></p>
+    </details>
+    <p class="foot hint" id="store-label"></p>
   </div>
 </main>
 <div id="toast" role="status"></div>
@@ -252,11 +280,122 @@ function nextPayment(today) {
   return null;
 }
 
-// ===== Saqlash (keyingi bosqichda: CloudStorage / localStorage) =====
-function save(month) {}
-
 // ===== Telegram yordamchilari =====
-const haptic = { light() {}, error() {} };
+const WA = window.Telegram?.WebApp;
+const inTelegram = !!WA?.initData;
+const tgAtLeast = v => inTelegram && WA.isVersionAtLeast(v);
+const haptic = {
+  light() { if (tgAtLeast('6.1')) WA.HapticFeedback.impactOccurred('light'); },
+  error() { if (tgAtLeast('6.1')) WA.HapticFeedback.notificationOccurred('error'); },
+};
+function confirmDialog(text) {
+  if (tgAtLeast('6.2')) return new Promise(res => WA.showConfirm(text, ok => res(!!ok)));
+  return Promise.resolve(window.confirm(text));
+}
+let toastTimer;
+function toast(text) {
+  const el = $('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ===== Saqlash: Telegram CloudStorage (6.9+) yoki localStorage, har oy alohida kalitda =====
+const MAX_VALUE = 4096; // CloudStorage bitta qiymat chegarasi
+const shardKey = month => `m_${month}`;
+
+function createStore() {
+  if (tgAtLeast('6.9') && WA.CloudStorage) {
+    const cs = WA.CloudStorage;
+    return {
+      label: "Ma'lumotlar Telegram bulutida saqlanadi.",
+      getMany: keys => new Promise((res, rej) => cs.getItems(keys, (err, vals) => (err ? rej(new Error(err)) : res(vals || {})))),
+      set: (key, value) => new Promise((res, rej) => cs.setItem(key, value, err => (err ? rej(new Error(err)) : res()))),
+    };
+  }
+  // *.github.io domeni barcha repolar uchun umumiy, shuning uchun kalitlarga prefiks qo'shiladi
+  let ls = null;
+  try { ls = window.localStorage; ls.setItem('byudjet:t', '1'); ls.removeItem('byudjet:t'); } catch { ls = null; }
+  const mem = {};
+  return {
+    label: ls ? "Ma'lumotlar shu brauzerda (localStorage) saqlanadi."
+      : "Diqqat: ma'lumotlar saqlanmaydi — sahifa yopilsa yo'qoladi.",
+    getMany: async keys => Object.fromEntries(keys.map(k => [k, (ls ? ls.getItem(`byudjet:${k}`) : mem[k]) || ''])),
+    set: async (key, value) => { if (ls) ls.setItem(`byudjet:${key}`, value); else mem[key] = value; },
+  };
+}
+const store = createStore();
+
+const saveTimers = {};
+function save(month) {
+  clearTimeout(saveTimers[month]);
+  saveTimers[month] = setTimeout(() => flush(month), 400);
+}
+function flush(month) {
+  clearTimeout(saveTimers[month]);
+  delete saveTimers[month];
+  const json = JSON.stringify(state[month] || emptyShard());
+  if (json.length > MAX_VALUE) {
+    toast(`${month}: ma'lumot juda katta, saqlanmadi`);
+    return Promise.resolve();
+  }
+  return store.set(shardKey(month), json).catch(() => toast("Saqlab bo'lmadi. Internetni tekshiring."));
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) Object.keys(saveTimers).forEach(m => flush(m));
+});
+
+// ===== Tekshiruv (yuklash va import uchun) =====
+const ISO_SET = new Set(DAYS.map(d => d.iso));
+const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+function cleanShard(month, s) {
+  if (!isObj(s)) throw new Error(`${month}: obyekt kutilgan`);
+  for (const part of ['c', 'x', 'w']) {
+    if (s[part] !== undefined && !isObj(s[part])) throw new Error(`${month}.${part}: obyekt kutilgan`);
+  }
+  const dayOk = dd => ISO_SET.has(`${month}-${dd}`);
+  const out = emptyShard();
+  for (const [k, v] of Object.entries(s.c || {})) {
+    if (!/^\d{2}:[a-z]+$/.test(k) || !dayOk(k.slice(0, 2)) || v !== 1) throw new Error(`${month}: noto'g'ri belgi "${k}"`);
+    out.c[k] = 1;
+  }
+  for (const [k, v] of Object.entries(s.x || {})) {
+    if (!dayOk(k) || !Number.isInteger(v) || v < 0 || v > 999999999) throw new Error(`${month}: noto'g'ri xarajat "${k}"`);
+    if (v > 0) out.x[k] = v;
+  }
+  for (const [k, v] of Object.entries(s.w || {})) {
+    if (!dayOk(k) || (v !== 0 && v !== 1)) throw new Error(`${month}: noto'g'ri ish kuni "${k}"`);
+    out.w[k] = v;
+  }
+  return out;
+}
+
+function parseBackup(text) {
+  if (!text) throw new Error('Avval zaxira JSON matnini joylang.');
+  let data;
+  try { data = JSON.parse(text); } catch (e) { throw new Error(`JSON xato: ${e.message}`); }
+  if (!isObj(data) || data.v !== 1 || !isObj(data.months)) throw new Error('Format noto\'g\'ri: {"v": 1, "months": {...}} kutilgan.');
+  const next = {};
+  for (const [m, s] of Object.entries(data.months)) {
+    if (!MONTHS.includes(m)) throw new Error(`Noma'lum oy: "${m}"`);
+    next[m] = cleanShard(m, s);
+  }
+  return next;
+}
+const exportText = () => JSON.stringify({ v: 1, months: state });
+
+async function load() {
+  const raw = await store.getMany(MONTHS.map(shardKey));
+  const next = {};
+  for (const m of MONTHS) {
+    const text = raw[shardKey(m)];
+    if (!text) continue;
+    try { next[m] = cleanShard(m, JSON.parse(text)); } catch { toast(`${m}: saqlangan ma'lumot buzilgan, e'tiborsiz qoldirildi`); }
+  }
+  state = next;
+}
 
 // ===== Ko'rinish =====
 let selectedMonth = null;
@@ -425,15 +564,65 @@ $('days').addEventListener('click', ev => {
   renderDays(plan);
 });
 
+function setBackupMsg(text, isError) {
+  const el = $('b-msg');
+  el.textContent = text;
+  el.className = `b-msg ${isError ? 'bad-text' : 'in'}`;
+}
+$('b-export').addEventListener('click', () => {
+  $('b-text').value = exportText();
+  setBackupMsg('', false);
+});
+$('b-copy').addEventListener('click', async () => {
+  const ta = $('b-text');
+  if (!ta.value.trim()) ta.value = exportText();
+  try { await navigator.clipboard.writeText(ta.value); } catch { ta.select(); document.execCommand('copy'); }
+  toast('Nusxalandi');
+});
+$('b-import').addEventListener('click', async () => {
+  let next;
+  try {
+    next = parseBackup($('b-text').value.trim());
+  } catch (e) {
+    setBackupMsg(e.message, true);
+    haptic.error();
+    return;
+  }
+  if (!(await confirmDialog("Joriy ma'lumotlar zaxiradagisi bilan almashtiriladi. Davom etasizmi?"))) return;
+  state = next;
+  await Promise.all(MONTHS.map(m => flush(m)));
+  setBackupMsg('Import qilindi.', false);
+  render();
+});
+
 // ===== Ishga tushirish =====
-function start() {
+async function start() {
+  if (inTelegram) {
+    WA.ready();
+    WA.expand();
+    const syncScheme = () => { document.documentElement.style.colorScheme = WA.colorScheme; };
+    syncScheme();
+    WA.onEvent('themeChanged', syncScheme);
+    if (tgAtLeast('6.1')) {
+      WA.setHeaderColor('secondary_bg_color');
+      WA.setBackgroundColor('secondary_bg_color');
+    }
+  }
+  try {
+    await load();
+  } catch (e) {
+    $('loading').innerHTML = `<p>Ma'lumotlarni yuklab bo'lmadi: ${esc(e.message)}</p>`
+      + '<button class="btn primary" onclick="location.reload()">Qayta urinish</button>';
+    return;
+  }
+  $('store-label').textContent = store.label;
   const today = todayISO();
   selectedMonth = MONTHS.includes(today.slice(0, 7)) ? today.slice(0, 7)
     : today < PLAN.start ? MONTHS[0] : MONTHS[MONTHS.length - 1];
   $('loading').hidden = true;
   $('app').hidden = false;
   render();
-  $(`d-${today}`)?.scrollIntoView({ block: 'center' });
+  $(`d-${today}`)?.scrollIntoView({ block: 'nearest' });
 }
 start();
 </script>
