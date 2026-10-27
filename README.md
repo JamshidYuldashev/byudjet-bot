@@ -89,6 +89,7 @@ Uchta secret qo'shing:
 
 1. Repo → **Actions** bo'limi. Agar so'ralsa, workflowlarni yoqing (*I understand... enable*).
 2. **remind** → **Run workflow**:
+   - `slot`: `evening` (20:00 xabari) yoki `morning` (08:00 xabari);
    - `today` maydoniga `2026-11-04` yozing (bo'sh qoldirilsa — bugungi sana olinadi);
    - `dry_run` belgilanmagan bo'lsin → **Run workflow**.
 3. Telegram'ga "Ertaga, 05.11:" xabari va "Trekerni ochish" tugmasi kelishi kerak.
@@ -164,14 +165,28 @@ Matn faqat telefoningizda tahlil qilinadi va hech qayerga yuborilmaydi.
 
 ### Eslatmalar
 
-| Qachon (20:00) | Xabar |
+| Qachon | Xabar |
 |---|---|
-| 4-sana | Ertaga: avans, ingliz tili kursi (2026-11-04 da qarz qaytishi ham) |
-| 13-sana | Ertaga: Claude obunasi (2026-11-13 da Uzum qarzi ham) |
-| 19-sana | Ertaga: asosiy oylik, telefon, omonatga qulflash |
-| 20-sana | 2 500 000 qulflandimi? |
+| Har ish kuni, 08:00 | "Bugun ish kuni — faqat 10 000 yo'lkira, tushlik uydan" |
+| To'lov kuni, 08:00 | Bugungi reja: to'lovlar va kirimlar ro'yxati (dam olish kuni bo'lsa ham keladi) |
+| Oyning 1-sanasi, 08:00 | Oy rejasi: kirim, majburiy to'lovlar, yo'lkira, omonat, oy oxiridagi reja balansi |
+| 4-sana, 20:00 | Ertaga: avans, ingliz tili kursi (2026-11-04 da qarz qaytishi ham) |
+| 13-sana, 20:00 | Ertaga: Claude obunasi (2026-11-13 da Uzum qarzi ham) |
+| 19-sana, 20:00 | Ertaga: asosiy oylik, telefon, omonatga qulflash |
+| 20-sana, 20:00 | 2 500 000 qulflandimi? |
+| Yakshanba, 20:00 | Keyingi haftaning to'lovlari va yo'lkira summasi |
 
-Kundalik 10 000 so'mlik yo'lkira har kuni takrorlanmasligi uchun eslatmalarga kiritilmagan.
+Dam olish va bayram kunlari to'lov bo'lmasa, ertalabki xabar kelmaydi.
+
+Bot reja asosida ishlaydi. U trekerdagi ma'lumotlarni ko'rmaydi: haqiqiy xarajatlarni ham, qo'lda o'zgartirilgan
+dam olish kunlarini ham. Shaxsiy ogohlantirishlar treker ichida chiqadi: Asosiy ekrandagi **Diqqat** blokida.
+U yerda ko'rinadi:
+
+- muddati 3 kun ichida bo'lgan yoki o'tib ketgan qarzlar;
+- 80% ga yetgan yoki oshgan oylik limitlar;
+- bugun qoida buzilgani;
+- soat 18:00 dan keyin bugungi yo'lkira yozilmagani;
+- har 7 kunlik seriya.
 
 ---
 
@@ -186,6 +201,8 @@ python -m unittest -v
 TODAY=2026-11-04 python remind.py --dry-run
 TODAY=2026-11-13 python remind.py --dry-run
 TODAY=2027-03-20 python remind.py --dry-run
+TODAY=2026-12-01 python remind.py --dry-run --slot morning   # ertalabki xabar + oy rejasi
+TODAY=2026-11-15 python remind.py --dry-run                  # yakshanba: keyingi hafta
 ```
 
 PowerShell'da:

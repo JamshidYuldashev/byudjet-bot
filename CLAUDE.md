@@ -41,7 +41,11 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 ## Loyiha qoidalari
 
 - Moliyaviy ma'lumotlar `index.html` (`PLAN`) va `remind.py` (`PLAN`) da bir martadan
-  config obyekt sifatida turadi. Biror summa o'zgarsa — **ikkalasini ham** va shu faylni yangilang.
+  config obyekt sifatida turadi: summalar, bayramlar, yo'lkira va boshlang'ich balans.
+  Biror qiymat o'zgarsa — **ikkalasini ham** va shu faylni yangilang.
+- `remind.py` ikki slotda ishlaydi: `--slot morning` (08:00 — bugungi kun, 1-sanada oy rejasi) va
+  `--slot evening` (20:00 — ertangi to'lovlar, 20-sanada qulflash, yakshanba — keyingi hafta).
+  Bot CloudStorage'ni o'qiy olmaydi, shuning uchun faqat reja asosida yozadi.
 - Foydalanuvchiga ko'rinadigan barcha matn (UI, bot xabarlari, README) — o'zbek tilida, lotin yozuvida.
 - Secretlar (BOT_TOKEN, CHAT_ID, WEBAPP_URL) faqat GitHub Secrets / env orqali. Kodda hech qachon.
 - `index.html`: vanilla HTML/CSS/JS, build yo'q. CDN: faqat telegram.org va jsdelivr
@@ -73,6 +77,7 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 ```sh
 python -m unittest
 TODAY=2026-11-04 python remind.py --dry-run
+TODAY=2026-12-01 python remind.py --dry-run --slot morning
 ```
 
 Mini App'ni boshqa sana bilan ochish: `index.html?today=2026-11-13`.
