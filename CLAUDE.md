@@ -44,11 +44,26 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
   config obyekt sifatida turadi. Biror summa o'zgarsa — **ikkalasini ham** va shu faylni yangilang.
 - Foydalanuvchiga ko'rinadigan barcha matn (UI, bot xabarlari, README) — o'zbek tilida, lotin yozuvida.
 - Secretlar (BOT_TOKEN, CHAT_ID, WEBAPP_URL) faqat GitHub Secrets / env orqali. Kodda hech qachon.
-- `index.html`: vanilla HTML/CSS/JS, build yo'q. CDN: faqat telegram.org va jsdelivr (Tabler icons outline).
+- `index.html`: vanilla HTML/CSS/JS, build yo'q. CDN: faqat telegram.org va jsdelivr
+  (`@fontsource-variable/manrope`, aniq versiya bilan). Ikonkalar — inline SVG (Tabler outline yo'llari).
 - `remind.py`: faqat Python 3 stdlib.
 - Raqam formati: minglar bo'sh joy bilan (3 325 200), faqat butun sonlar.
 - Reja sanalari UTC arifmetikasida; "bugun" — qurilmaning mahalliy sanasi.
 - Ish beruvchi nomi kodda/README da ko'rsatilmaydi (repo ochiq).
+
+## Mini App ma'lumot modeli (v2)
+
+- Hisoblar: `card` (Karta), `cash` (Naqd), `save` (Omonat — qulflangan). Boshlang'ich qoldiqlar `open` da
+  (standart: Karta 1 000 000).
+- Amal: `{ id, d, tm, k: in|out|tr, a, acc, to, c, n, p, h, debt }`.
+  - `p` — reja bandi kaliti (`2026-11-05:avans`): band bajarilgan deb hisoblanadi.
+  - `h` — HUMO xabari izi (takror importdan himoya).
+  - `debt` — qarz id si.
+- Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
+- Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz = yakuniy reja + farq.
+- Saqlash: hujjatlar `meta`, `debts`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
+  (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
+- HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
 
 ## Tekshirish
 
@@ -56,3 +71,5 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 python -m unittest
 TODAY=2026-11-04 python remind.py --dry-run
 ```
+
+Mini App'ni boshqa sana bilan ochish: `index.html?today=2026-11-13`.
