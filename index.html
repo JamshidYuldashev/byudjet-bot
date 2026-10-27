@@ -406,6 +406,8 @@ const ICON = {
   edit: 'M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4l-10.5 10.5v4 M13.5 6.5l4 4',
   eye: 'M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0 M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6',
   eyeOff: 'M10.585 10.587a2 2 0 0 0 2.829 2.828 M16.681 16.673a8.717 8.717 0 0 1-4.681 1.327c-3.6 0-6.6-2-9-6c1.272-2.12 2.712-3.678 4.32-4.674m2.86-1.146a9.055 9.055 0 0 1 1.82-.18c3.6 0 6.6 2 9 6c-.666 1.11-1.379 2.067-2.138 2.87 M3 3l18 18',
+  finger: 'M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3 M8 11a4 4 0 0 1 8 0v1a10.05 10.05 0 0 0 2 6 M12 11v2a14 14 0 0 0 2.5 8 M8 15a18 18 0 0 0 1.8 6 M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95',
+  faceId: 'M4 8v-2a2 2 0 0 1 2-2h2 M4 16v2a2 2 0 0 0 2 2h2 M16 4h2a2 2 0 0 1 2 2v2 M16 20h2a2 2 0 0 0 2-2v-2 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
 };
 const ic = (name, size = 20, sw) => `<svg class="i" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"${sw ? ` stroke-width="${sw}"` : ''}><path d="${ICON[name]}"/></svg>`;
 
@@ -498,7 +500,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null,
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null, bio: {},
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -668,7 +670,7 @@ const unpackTx = (a, m) => {
   return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt };
 };
 function serialize(doc) {
-  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin });
+  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
   const m = doc.slice(2);
@@ -773,7 +775,10 @@ function cleanMeta(o) {
   }
   const seq = Number.isInteger(o.seq) && o.seq >= 0 ? o.seq : 0;
   const pin = isObj(o.pin) && /^[0-9a-f]{32}$/.test(o.pin.s) && /^[0-9a-f]{64}$/.test(o.pin.h) ? { s: o.pin.s, h: o.pin.h } : null;
-  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin };
+  // Biometrik ochish: qurilma id → token hash'i. PIN bo'lmasa ma'nosiz.
+  const bio = {};
+  if (pin) for (const [k, v] of Object.entries(isObj(o.bio) ? o.bio : {})) if (/^[\w-]{1,128}$/.test(k) && /^[0-9a-f]{64}$/.test(v)) bio[k] = v;
+  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio };
 }
 const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import'];
 function cleanLog(list) {
@@ -1766,7 +1771,8 @@ function dataCard() {
       <span class="h2">Xavfsizlik</span>
       <p class="small muted" style="line-height:1.5">PIN-kod o'rnatilsa, treker har ochilganda va 1 daqiqadan ko'p fonda turgandan keyin PIN so'raydi.</p>
       ${db.pin ? `<div class="msg soft c-in">${ic('lock', 16)}PIN-kod o'rnatilgan</div>
-        <div class="grid2" style="gap:8px"><button class="btn sm" data-act="pin-change">PIN'ni o'zgartirish</button><button class="btn sm danger" data-act="pin-off">PIN'ni o'chirish</button></div>`
+        <div class="grid2" style="gap:8px"><button class="btn sm" data-act="pin-change">PIN'ni o'zgartirish</button><button class="btn sm danger" data-act="pin-off">PIN'ni o'chirish</button></div>
+        ${bioSettings()}`
         : `<button class="btn sm" data-act="pin-set">${ic('lock', 16)}PIN-kod o'rnatish</button>`}
     </section>
     <div class="grid2" style="gap:8px">
@@ -2129,6 +2135,7 @@ const PIN_LEN = 4;
 const PIN_TITLES = { unlock: 'PIN-kodni kiriting', verify: 'Joriy PIN-kodni kiriting', set1: 'Yangi PIN-kod (4 raqam)', set2: 'PIN-kodni takrorlang' };
 const pinUI = { mode: '', buf: '', first: '', fails: 0, until: 0, msg: '', done: null };
 const hex = bytes => [...bytes].map(b => b.toString(16).padStart(2, '0')).join('');
+const sha256hex = async s => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))));
 async function pinHash(pin, salt) {
   const data = new TextEncoder().encode(`${salt}:${pin}`);
   if (window.crypto?.subtle) return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', data)));
@@ -2140,6 +2147,7 @@ function showLock(mode, done) {
   Object.assign(pinUI, { mode, buf: '', first: '', msg: '', done });
   $('lock').hidden = false;
   renderLock();
+  if (mode === 'unlock') bioUnlock();
 }
 function hideLock() {
   $('lock').hidden = true;
@@ -2155,6 +2163,7 @@ function renderLock(shake) {
     <h1 class="h2" id="lock-title" style="font-size:18px">${PIN_TITLES[u.mode]}</h1>
     <div class="pindots${shake ? ' shake' : ''}" role="img" aria-label="${u.buf.length} / ${PIN_LEN}">${Array.from({ length: PIN_LEN }, (_, i) => `<i class="${i < u.buf.length ? 'on' : ''}"></i>`).join('')}</div>
     <p class="small ${u.msg || wait ? 'c-bad' : 'muted'}" style="min-height:18px;font-weight:700" role="alert">${wait ? `Juda ko'p urinish. ${wait} soniyadan keyin qayta urining.` : esc(u.msg)}</p>
+    ${u.mode === 'unlock' && bioOn() ? `<button class="btn sm" data-act="bio-unlock">${ic(bioIcon(), 18)}${bioName()} bilan ochish</button>` : ''}
     <div class="keys">${['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(k => `<button data-act="pin-key" data-k="${k}"${dis}>${k}</button>`).join('')}
       ${side}<button data-act="pin-key" data-k="0"${dis}>0</button><button data-act="pin-key" data-k="back" aria-label="O'chirish">${ic('backspace', 24)}</button></div>
   </div>`;
@@ -2213,9 +2222,79 @@ async function forgotPin() {
   for (let i = 0; i < ours.length; i += 20) await store.remove(ours.slice(i, i + 20));
   for (const k of Object.keys(chunkCount)) delete chunkCount[k];
   db = blankDb();
+  bioForget();
   touch('meta', 'debts');
   logEv('set', "PIN-kod unutildi — ma'lumotlar tozalandi");
   finishLock();
+}
+
+// ===== Barmoq izi / yuzni tanish bilan ochish (Telegram BiometricManager, 7.2+) =====
+// Qurilmaning xavfsiz xotirasida tasodifiy token turadi, bulutda faqat uning hash'i (qurilma id si bo'yicha).
+// Bu PIN o'rnini bosmaydi: PIN o'chirilsa, biometrik ochish ham o'chadi.
+const BM = tgAtLeast('7.2') ? WA.BiometricManager : null;
+let bioReady = false;
+function bioInit() {
+  if (!BM) return Promise.resolve();
+  return new Promise(res => {
+    BM.init(() => { bioReady = true; res(); });
+    setTimeout(res, 2000);
+  });
+}
+const bioAvailable = () => bioReady && BM.isBiometricAvailable && !!window.crypto?.subtle;
+const bioOn = () => bioAvailable() && BM.isBiometricTokenSaved && !!db.pin && !!db.bio[BM.deviceId];
+const bioName = () => ({ finger: 'Barmoq izi', face: 'Yuzni tanish' })[BM?.biometricType] || 'Biometrika';
+const bioIcon = () => (BM?.biometricType === 'face' ? 'faceId' : 'finger');
+function bioUnlock() {
+  if (!bioOn()) return;
+  BM.authenticate({ reason: 'Trekerni ochish' }, async (ok, token) => {
+    if ($('lock').hidden || pinUI.mode !== 'unlock') return;
+    if (ok && token && (await sha256hex(token)) === db.bio[BM.deviceId]) {
+      pinUI.fails = 0;
+      haptic.ok();
+      finishLock();
+      return;
+    }
+    if (ok) { pinUI.msg = 'Tasdiqlanmadi — PIN-kodni kiriting'; haptic.error(); renderLock(true); }
+  });
+}
+async function bioEnable() {
+  if (!db.pin || !bioAvailable()) return;
+  if (!BM.isAccessGranted) {
+    const granted = await new Promise(res => BM.requestAccess({ reason: 'Trekerni PIN-kodsiz tez ochish uchun' }, res));
+    if (!granted) { toast('Ruxsat berilmadi'); rerender(); return; }
+  }
+  const token = hex(crypto.getRandomValues(new Uint8Array(32)));
+  if (!(await new Promise(res => BM.updateBiometricToken(token, res)))) { toast("Saqlab bo'lmadi, qayta urining"); return; }
+  db.bio[BM.deviceId] = await sha256hex(token);
+  touch('meta');
+  logEv('set', `${bioName()} bilan ochish yoqildi`);
+  haptic.ok();
+  toast(`${bioName()} bilan ochish yoqildi`);
+  rerender();
+}
+// Shu qurilmadagi tokenni o'chiradi (bulutdagi hash'ni chaqiruvchi tozalaydi)
+function bioForget() {
+  if (bioAvailable() && BM.isBiometricTokenSaved) BM.updateBiometricToken('');
+}
+function bioDisable() {
+  bioForget();
+  if (BM) delete db.bio[BM.deviceId];
+  touch('meta');
+  logEv('set', `${bioName()} bilan ochish o'chirildi`);
+  toast(`${bioName()} bilan ochish o'chirildi`);
+  rerender();
+}
+function bioSettings() {
+  if (!db.pin || !bioAvailable()) return '';
+  const name = bioName();
+  if (bioOn()) {
+    return `<div class="msg soft c-in">${ic(bioIcon(), 16)}${name} bilan ochish yoqilgan</div>
+      <button class="btn sm" data-act="bio-off">${name} bilan ochishni o'chirish</button>`;
+  }
+  if (BM.isAccessRequested && !BM.isAccessGranted) {
+    return `<button class="btn sm" data-act="bio-settings">${ic(bioIcon(), 16)}${name}: Telegram sozlamalarida ruxsat bering</button>`;
+  }
+  return `<button class="btn sm" data-act="bio-on">${ic(bioIcon(), 16)}${name} bilan ochishni yoqish</button>`;
 }
 // ===== Egasi tekshiruvi: treker faqat bot egasining Telegram akkauntida ochiladi =====
 // OWNER_HASH ni pages workflow'i joylaydi: sha256("byudjet-bot:" + CHAT_ID secret). ID kodda turmaydi.
@@ -2224,8 +2303,7 @@ const OWNER_HASH = '__OWNER_HASH__';
 const DEV_HOST = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
 async function ownerMatch(id, hash) {
   if (!id || !/^[0-9a-f]{64}$/.test(hash) || !window.crypto?.subtle) return false;
-  const data = new TextEncoder().encode(`byudjet-bot:${id}`);
-  return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', data))) === hash;
+  return (await sha256hex(`byudjet-bot:${id}`)) === hash;
 }
 async function isOwner() {
   return DEV_HOST || ownerMatch(inTelegram && WA.initDataUnsafe?.user?.id, OWNER_HASH);
@@ -2292,6 +2370,10 @@ const ACT = {
   'modal-close': () => closeModal(),
   eye: () => toggleHide(),
   'pin-key': el => pinKey(el.dataset.k),
+  'bio-unlock': () => bioUnlock(),
+  'bio-on': () => bioEnable(),
+  'bio-off': () => bioDisable(),
+  'bio-settings': () => BM?.openSettings(),
   'pin-forgot': () => forgotPin(),
   'pin-cancel': () => { pinUI.done = null; hideLock(); },
   'pin-lock': () => { if (db.pin) showLock('unlock', null); else showLock('set1', rerender); },
@@ -2299,6 +2381,8 @@ const ACT = {
   'pin-change': () => showLock('verify', () => showLock('set1', rerender)),
   'pin-off': () => showLock('verify', () => {
     db.pin = null;
+    db.bio = {};
+    bioForget();
     touch('meta');
     logEv('set', "PIN-kod o'chirildi");
     toast("PIN-kod o'chirildi");
@@ -2432,6 +2516,7 @@ const ACT = {
     if (!(await confirmDialog("Joriy ma'lumotlar zaxiradagisi bilan almashtiriladi. Davom etasizmi?"))) return;
     const oldDocs = Object.keys(chunkCount).filter(d => d.startsWith('t_'));
     next.pin = db.pin;
+    next.bio = db.bio;
     db = next;
     logEv('import', `Zaxira import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz`);
     touch('meta', 'debts', 'log', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
@@ -2533,8 +2618,10 @@ async function start() {
   applyTheme();
   // Begona akkauntda ma'lumot yuklanmaydi ham, yozilmaydi ham.
   if (!(await isOwner())) { showPrivate(); return; }
+  const bioP = bioInit();
   try {
     await load();
+    await bioP;
   } catch (e) {
     $('loading').innerHTML = `<p>Ma'lumotlarni yuklab bo'lmadi: ${esc(e.message)}</p><button class="btn primary" onclick="location.reload()">Qayta urinish</button>`;
     return;
