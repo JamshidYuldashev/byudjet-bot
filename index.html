@@ -1061,7 +1061,58 @@ function viewMain() {
       <div class="hero-row"><span>Reja bo'yicha hozir: <b>${show(fmt(C.expected))}</b></span>`
       + `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" title="Rejadan farq">${show(C.dev ? signed(C.dev) : '±0')}</span></div>
     </section>
-    ${todayCard(C, t)}${overdueCard(C, t)}${nextCard(C, t)}${goalCard(C)}${statCards(C, t)}${debtSummary(C, t)}${recentCard(C)}`;
+    ${alertsCard(C, t)}${todayCard(C, t)}${overdueCard(C, t)}${nextCard(C, t)}${goalCard(C)}${statCards(C, t)}${debtSummary(C, t)}${recentCard(C)}`;
+}
+// Diqqat: qarz muddati, limitlar, bugungi qoida buzilishi, kechki yo'lkira, seriya
+function alertsCard(C, t) {
+  const items = [];
+  for (const d of db.debts) {
+    const s = debtState(C, d);
+    if (s.closed || !d.due || d.due > addDays(t, 3)) continue;
+    const late = d.due < t;
+    items.push({
+      lvl: late ? 2 : 1, color: late ? 'coral' : 'amber', icon: d.dir === 'owe' ? 'users' : 'user', act: `data-act="d-open" data-id="${d.id}"`,
+      text: `${esc(d.who)} — ${fmt(s.left)} ${d.dir === 'owe' ? "to'lashingiz kerak" : 'qaytarishi kerak'}`,
+      sub: late ? `Muddati ${-daysBetween(t, d.due)} kun oldin o'tdi (${dm(d.due)})` : `Muddat ${relDay(d.due, t)} (${dm(d.due)})`,
+    });
+  }
+  const m = t.slice(0, 7);
+  for (const c of LIMIT_CATS) {
+    const lim = db.lim[c];
+    if (!lim) continue;
+    const v = sum(db.tx.filter(x => x.k === 'out' && x.c === c && x.d.startsWith(m)), x => x.a);
+    if (v < lim * 0.8) continue;
+    const over = v > lim;
+    items.push({
+      lvl: over ? 2 : 1, color: over ? 'coral' : 'amber', icon: CATS[c].icon, act: 'data-act="tab" data-to="hisobot"',
+      text: over ? `${CATS[c].name} limiti oshdi: ${fmt(v)} / ${fmt(lim)}` : `${CATS[c].name} limitining ${Math.round((v / lim) * 100)}% ishlatildi`,
+      sub: over ? `${fmt(v - lim)} so'm ortiqcha` : `${fmt(lim - v)} so'm qoldi`,
+    });
+  }
+  const bad = C.dayStat[t]?.bad || 0;
+  if (bad) {
+    items.push({ lvl: 2, color: 'coral', icon: 'alert', act: 'data-act="tab" data-to="tarix"',
+      text: `Bugun qoida buzildi: −${fmt(bad)}`, sub: "Ko'cha ovqati, kofe yoki taksi — prognoz shuncha kamaydi" });
+  }
+  const day = DAY_BY_ISO.get(t);
+  if (day && isWorkday(day) && !C.byPlan.has(`${t}:yol`) && !TODAY_OVERRIDE && new Date().getHours() >= 18) {
+    items.push({ lvl: 1, color: 'blue', icon: 'bus', act: 'data-act="quick-yol"',
+      text: "Bugungi yo'lkira hali yozilmagan", sub: "Bosing — Naqddan 10 000 yoziladi" });
+  }
+  const streak = streakOf(C, t);
+  if (streak >= 7 && streak % 7 === 0) {
+    items.push({ lvl: 0, color: 'mint', icon: 'flame', act: '', text: `${streak} kun ketma-ket qoidaga amal qildingiz`, sub: "Zo'r natija — shunday davom eting" });
+  }
+  if (!items.length) return '';
+  items.sort((a, b) => b.lvl - a.lvl);
+  return `<section class="card list">
+    <div class="spread"><span class="h2 c-warn" style="display:flex;align-items:center;gap:6px">${ic('alert', 18)}Diqqat</span><span class="small muted">${items.length} ta</span></div>
+    ${items.map(x => {
+      const tag = x.act ? 'button' : 'div';
+      return `<${tag} class="row" ${x.act}><span class="tile soft" style="--c:var(--${x.color})">${ic(x.icon)}</span>`
+        + `<span class="body"><span class="t" style="white-space:normal">${x.text}</span><span class="s">${x.sub}</span></span>`
+        + `${x.act ? `<span class="c-muted" style="display:flex">${ic('right', 16)}</span>` : ''}</${tag}>`;
+    }).join('')}</section>`;
 }
 function todayCard(C, t) {
   const day = DAY_BY_ISO.get(t);
