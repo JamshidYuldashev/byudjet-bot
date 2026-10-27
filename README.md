@@ -105,16 +105,37 @@ kechikishi mumkin — bu normal holat.
 
 ### Treker (Mini App)
 
-Pastki menyuda 5 ta bo'lim bor. **«+»** tugmasi istalgan ekrandan yangi amal qo'shadi.
+Pastki menyu: Asosiy · Tarix · **«+»** (o'rtada, yangi amal) · Qarzlar · Hisobot. Reja kalendari Asosiy ekrandagi
+kalendar tugmasidan ochiladi (Telegram «Orqaga» tugmasi Asosiy'ga qaytaradi).
 
 | Bo'lim | Nima bor |
 |---|---|
-| **Asosiy** | Jami balans va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq. Ko'z tugmasi summalarni yashiradi, summani bosish yana ochadi. Qulf tugmasi trekerni darhol qulflaydi. "Bugungi xarajat" kartasi — bugun qancha sarflangani va rejadan tashqari qismi. Yo'lkira bu yerda eslatilmaydi (pulsiz borilgan kunlar ham bo'ladi): kerak bo'lsa «+» yoki Reja → «To'lash» orqali yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar |
-| **Qo'shish (+)** | Chiqim / Kirim / O'tkazma, raqamli klaviatura, kategoriyalar, hisob, sana, izoh. Ko'cha ovqati, kofe/shirinlik va taksi **taqiqlangan**: tanlansa ogohlantirish chiqadi, saqlansa kun "qoida buzilgan" bo'ladi |
-| **Tarix** | **Amallar**: barcha amallar kunlar bo'yicha, qidiruv va filtrlar bilan. Har amal tagida shu amaldan keyingi hisob qoldig'i ko'rinadi, masalan «Karta: 939 040» — HUMO xabaridagi 💰 bilan bir xil (ko'z tugmasi yopiq bo'lsa — yashirin). Amalni bosib tahrirlash yoki o'chirish mumkin. **Jurnal**: har bir o'zgarish vaqti bilan — amal qo'shildi, o'zgartirildi yoki o'chirildi; qarz ochildi, to'landi yoki yopildi; balans tuzatildi; ish kuni almashtirildi; sozlamalar o'zgardi; import qilindi |
-| **Reja** | Oy kalendari. Kunni tanlab «To'lash» / «Tushdi» / «Qulflash» ni bosasiz. Kunni ish kuni yoki dam olish kuniga almashtirish mumkin |
+| **Asosiy** | Jami balans, so'nggi 7 kunlik balans chizig'i va hisoblar (Karta, Naqd, Omonat), "Reja bo'yicha hozir" va rejadan farq — farqni bossangiz, u nimadan yig'ilgani chiqadi (rejadan tashqari xarajatlar kategoriyalar bilan, kirimlar, tuzatishlar). Ko'z tugmasi summalarni yashiradi, summani bosish yana ochadi. Qulf tugmasi trekerni darhol qulflaydi. "Bugungi xarajat" kartasi — bugun qancha sarflangani va rejadan tashqari qismi; bosilsa Tarix faqat bugungi amallar bilan ochiladi. Yo'lkira bu yerda eslatilmaydi (pulsiz borilgan kunlar ham bo'ladi): kerak bo'lsa «+» yoki Reja → «To'lash» orqali yoziladi. Keyingi to'lovlar (kartada pul yetadimi), belgilanmagan rejalar, maqsad va prognoz, qoidaga amal qilingan kunlar seriyasi, qarzlar, oxirgi amallar. Kartalarni Hisobot → Ko'rinish'da yashirish va tartiblash mumkin |
+| **Qo'shish (+)** | Chiqim / Kirim / O'tkazma, raqamli klaviatura, tez summalar (5 000 … 100 000) va «Kecha» tugmasi, kategoriyalar, hisob, sana, izoh. Izoh yozilsa kategoriya o'zi tanlanadi (masalan, «sim karta» → Aloqa): tayyor kalit so'zlar va oldingi izohlaringizdan o'rganadi; qo'lda tanlangan kategoriya o'zgarmaydi. Ko'cha ovqati, kofe/shirinlik va taksi **taqiqlangan**: tanlansa ogohlantirish chiqadi, saqlansa kun "qoida buzilgan" bo'ladi |
+| **Tarix** | **Amallar**: barcha amallar kunlar bo'yicha, qidiruv va filtrlar bilan. Har amal tagida shu amaldan keyingi hisob qoldig'i ko'rinadi, masalan «Karta: 939 040» — HUMO xabaridagi 💰 bilan bir xil (ko'z tugmasi yopiq bo'lsa — yashirin). Har kun ostida kun oxiridagi Karta/Naqd qoldig'i. «Balans tuzatish» qatorlari xira va kun/oy yig'indisiga kirmaydi. Qatorni **chapga surish — o'chirish**, **o'ngga — bugunga nusxalash**; amalni bosib tahrirlash, nusxalash yoki o'chirish ham mumkin. O'chirilgandan keyin 5 soniya «Qaytarish» tugmasi turadi. **Jurnal**: har bir o'zgarish vaqti bilan — amal qo'shildi, o'zgartirildi yoki o'chirildi; qarz ochildi, to'landi yoki yopildi; balans tuzatildi; ish kuni almashtirildi; sozlamalar o'zgardi; import qilindi |
+| **Reja** | Oy kalendari, kunlar kundalik xarajatga qarab bo'yalgan (to'qroq — ko'proq sarflangan, qizil — qoida buzilgan). Kunni tanlab «To'lash» / «Tushdi» / «Qulflash» ni bosasiz. Kunni ish kuni yoki dam olish kuniga almashtirish mumkin |
 | **Qarzlar** | Ikki ro'yxat: «Men qarzdorman» va «Menga qarzdor» (faollari tepada, yopilganlari pastda). Qarzni bossangiz oyna ochiladi: «To'liq to'landi / qaytdi» bir bosishda yoziladi, qisman summa ham kiritish mumkin, Karta yoki Naqd tanlanadi. Oynada qarzning to'liq tarixi ko'rinadi |
-| **Hisobot** | Kategoriyalar diagrammasi, kunlik xarajat va limit, reja va haqiqiy balans grafigi, oylik kategoriya limitlari, eng katta xarajatlar. Shu yerda PIN-kod (Xavfsizlik), CSV/JSON eksport, boshlang'ich qoldiqlar va zaxira ham bor |
+| **Hisobot** | Kategoriyalar diagrammasi, kunlik xarajat va limit, reja va haqiqiy balans grafigi, oylik kategoriya limitlari, eng katta xarajatlar. Shu yerda Ko'rinish (mavzu: Telegram / Yorug' / Qorong'i; Asosiy ekran kartalari), PIN-kod va barmoq izi (Xavfsizlik), CSV/JSON eksport, boshlang'ich qoldiqlar va zaxira ham bor. Balans tuzatishlar kirim/chiqim hisobiga kirmaydi |
+
+Qo'shimcha imkoniyatlar:
+
+- **Oy yakuni («Wrapped»)** — oy oxirgi kuni va keyingi oyning 1–5-sanalarida Asosiy ekranda 🎬 banner chiqadi
+  (istalgan oyni Hisobot → «… yakunini ko'rish» dan ochish mumkin). Story kabi to'liq ekranli kartalar: pul oqimi,
+  eng ko'p xarajat, eng katta xarajat, intizom xaritasi, jamg'arma, salomatlik bali. Oxirida konfetti va
+  «Rasm sifatida saqlash» (1080×1350 PNG).
+- **Moliyaviy salomatlik (0–100)** — intizom (40), rejaga muvofiqlik (30), reja bandlari (15), qarzlar (15).
+  Kartani bossangiz — har qism alohida va 9 ta nishon («7 kun taqiqsiz», «Qarzsiz», «Reja ustasi» …).
+  Yangi nishon olinganda tabrik va konfetti.
+- **Xulosalar** — o'tgan hafta bilan solishtirish, rejadan tashqari xarajatsiz kunlar, limit sur'ati,
+  eng ko'p sarflanadigan hafta kuni va joy (HUMO bo'yicha).
+- **«Agar…» simulyatori** — Yakuniy maqsad kartasida: «har kuni +X sarflasam / har oylikdan +Y tejasam»
+  slayderlari, mart oxiridagi balans darhol qayta hisoblanadi.
+- **Intizom xaritasi** — Hisobot'da 145 kunlik kvadratchalar: yashil — qoida bajarilgan, qizil — buzilgan.
+  Kvadratni bossangiz, o'sha kun Reja'da ochiladi.
+- **Tez yozish** — «+» oynasining tepasida bir qatorda yozing: `30k non karta`, `kecha 12 000 taksi naqd`,
+  `+3.3m oylik`. Summa, kategoriya, hisob va sana o'zi ajratiladi, keyin «Saqlash» ni bosasiz.
+- **Jonli animatsiyalar** — balans raqami sanab o'zgaradi, kartalar silliq paydo bo'ladi, oylik tushganda yoki
+  qarz yopilganda konfetti. Telefonda «harakatni kamaytirish» yoqilgan bo'lsa — animatsiyasiz.
 
 Hisob-kitob qoidalari:
 
@@ -156,6 +177,9 @@ xabarlari nusxalab joylanadi:
    Farq bo'lsa, uni "Balans tuzatish" sifatida yozishni taklif qiladi.
 
 Matn faqat telefoningizda tahlil qilinadi va hech qayerga yuborilmaydi.
+
+Importdan keyin 5 soniya «Qaytarish» tugmasi turadi. Keyinroq ham HUMO oynasidagi «Oxirgi import → Bekor qilish»
+bilan oxirgi importni to'liq qaytarish mumkin: qo'shilgan amallar, yangi qarzlar va balans tuzatishi o'chadi.
 
 ### Ma'lumotlar qayerda saqlanadi
 

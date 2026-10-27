@@ -55,7 +55,7 @@ h1, h2, p { margin: 0; }
 #loading { padding: 64px 16px; text-align: center; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 12px; }
 #view { max-width: 560px; margin: 0 auto; padding: 20px 16px calc(112px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; }
 body.sub #view { padding-top: 16px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
-body.sub #nav, body.sub #fab { display: none; }
+body.sub #nav { display: none; }
 
 /* Umumiy bloklar */
 .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
@@ -290,9 +290,6 @@ button.hero-total { background: none; border: 0; padding: 0; color: #FFFFFF; tex
 #nav button { flex: 1; min-width: 0; border: 0; background: none; color: var(--muted); display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 0; }
 #nav button[aria-current="page"] { color: var(--accent); }
-#fab { position: fixed; z-index: 21; right: max(20px, calc(50% - 260px)); bottom: calc(84px + env(safe-area-inset-bottom)); width: 60px; height: 60px;
-  border-radius: 30px; border: 0; background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 24px var(--shadow);
-  display: flex; align-items: center; justify-content: center; }
 #toast { position: fixed; z-index: 50; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   background: var(--text); color: var(--bg); padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 600;
   max-width: calc(100% - 32px); width: max-content; opacity: 0; pointer-events: none; transition: opacity .2s; }
@@ -313,14 +310,117 @@ body.sub #toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 .group > .logrow:first-child { border-top: 0; }
 .logrow .tile { width: 34px; height: 34px; border-radius: 11px; }
 .logrow .m { font-size: 13px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+
+/* Markaziy «+» */
+#nav .nav-add { flex: none; width: 58px; height: 58px; margin: 0 6px; align-self: center; transform: translateY(-14px); border-radius: 29px;
+  background: var(--accent); color: var(--on-accent); box-shadow: 0 8px 22px var(--shadow); gap: 0; }
+/* Balans tuzatish — xira, ixcham */
+.row.adj { min-height: 44px; padding: 6px 0; }
+.row.adj .tile { width: 30px; height: 30px; border-radius: 10px; opacity: .7; }
+.row.adj .t { font-size: 13px; font-weight: 600; color: var(--muted); }
+.row.adj .end .num { font-size: 13px; color: var(--muted); }
+.dayend { font-size: 11px; font-weight: 600; color: var(--muted); padding: 0 4px; margin-top: -4px; }
+/* Tarix: qatorni surish */
+.group.sw-list { overflow: hidden; }
+.sw { position: relative; margin: 0 -14px; padding: 0 14px; }
+.sw + .sw { border-top: 1px solid var(--line); }
+.sw > .row { position: relative; z-index: 1; background: var(--surface); border-top: 0; touch-action: pan-y; transition: transform .18s ease; }
+.sw > .row.swiping { transition: none; }
+.sw-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
+  font-size: 13px; font-weight: 800; color: var(--on-strong); visibility: hidden; }
+.sw-bg > span { display: flex; align-items: center; gap: 6px; }
+.sw[data-dir="r"] .sw-bg { visibility: visible; background: var(--mint); }
+.sw[data-dir="l"] .sw-bg { visibility: visible; background: var(--coral); }
+.sw[data-dir="r"] .sw-bg .x, .sw[data-dir="l"] .sw-bg .c { visibility: hidden; }
+/* Hero: 7 kunlik chiziq, bosiladigan farq */
+.spark { display: block; width: 100%; height: 34px; overflow: visible; }
+.spark-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--hero-muted); margin-top: -6px; }
+.spark-row b { color: #FFFFFF; }
+.dev-btn { border: 0; background: rgba(255, 255, 255, .08); border-radius: 10px; padding: 2px 8px; margin: -2px 0; font-size: 13px; }
+/* Reja: xarajat issiqlik xaritasi */
+.cal .d.heat { position: relative; isolation: isolate; }
+.cal .d.heat::before { content: ""; position: absolute; inset: 0; border-radius: 10px; background: var(--accent); opacity: calc(var(--heat) * .5); z-index: -1; }
+/* Tez summalar */
+.quick { margin-top: -4px; }
+.quick .chip { min-height: 34px; display: inline-flex; align-items: center; gap: 4px; }
+/* Bekor qilish tugmali xabar */
+#toast.act { pointer-events: auto; display: flex; align-items: center; gap: 14px; }
+.toast-btn { border: 0; background: none; color: inherit; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; padding: 4px 2px; min-height: 32px; }
+.setrow { display: flex; align-items: center; gap: 6px; min-height: 52px; border-top: 1px solid var(--line); }
+.setrow .check { flex: 1; min-width: 0; }
+
+/* Jonli animatsiyalar (harakatni kamaytirish yoqilgan bo'lsa — yo'q) */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes ring { from { stroke-dasharray: 0 999; } }
+@media (prefers-reduced-motion: no-preference) {
+  #view.enter > * { animation: rise .38s cubic-bezier(.2, .7, .3, 1) both; }
+  #view.enter > *:nth-child(2) { animation-delay: .04s; } #view.enter > *:nth-child(3) { animation-delay: .08s; }
+  #view.enter > *:nth-child(4) { animation-delay: .12s; } #view.enter > *:nth-child(5) { animation-delay: .16s; }
+  #view.enter > *:nth-child(n+6) { animation-delay: .2s; }
+  .ring .fg { animation: ring 1s cubic-bezier(.2, .7, .3, 1) both; }
+  .st-slide > * { animation: rise .5s cubic-bezier(.2, .7, .3, 1) both; }
+  .st-slide > *:nth-child(2) { animation-delay: .12s; } .st-slide > *:nth-child(3) { animation-delay: .24s; }
+  .st-slide > *:nth-child(4) { animation-delay: .36s; } .st-slide > *:nth-child(n+5) { animation-delay: .48s; }
+}
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 95; }
+/* Moliyaviy salomatlik */
+.ring { position: relative; width: 64px; height: 64px; flex: none; color: var(--c); }
+.ring svg { display: block; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 7; stroke-linecap: round; }
+.ring .bg { stroke: var(--line); } .ring .fg { stroke: currentColor; }
+.ring b { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 19px; font-weight: 800; color: var(--text); }
+.ring.lg { width: 120px; height: 120px; } .ring.lg b { font-size: 34px; }
+.bdgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.bdg { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 14px; background: var(--surface2);
+  text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); line-height: 1.25; }
+.bdg b { font-size: 12px; color: var(--text); }
+.bdg:not(.on) .tile { filter: grayscale(1); opacity: .4; } .bdg:not(.on) b { color: var(--muted); }
+/* Intizom xaritasi */
+.dmap { display: grid; grid-template-rows: repeat(7, auto); grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; }
+.dmap > * { aspect-ratio: 1; border-radius: 3px; background: var(--line); border: 0; padding: 0; min-width: 0; }
+.dmap > i { background: transparent; }
+.dmap .g { background: var(--mint); } .dmap .b { background: var(--coral); }
+.dmap .t { outline: 2px solid var(--text); outline-offset: 1px; }
+/* Simulyator, tez yozish */
+input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
+.qline { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 6px 0 14px; border-radius: 14px; background: var(--surface); color: var(--muted); }
+.qline input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 14px; font-weight: 600; }
+/* Oy yakuni («Wrapped») */
+.wrapb { background: linear-gradient(135deg, #2F6BFF, #7A4DFF) !important; color: #FFFFFF !important; }
+.wrapb .lbl, .wrapb .small { color: rgba(255, 255, 255, .8) !important; }
+#story { position: fixed; inset: 0; z-index: 80; color: #FFFFFF; display: flex; flex-direction: column; gap: 16px; overflow: hidden;
+  padding: calc(12px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom)); transition: background .4s; }
+.st-bars { display: flex; gap: 4px; padding-right: 52px; }
+.st-bars i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .28); }
+.st-bars i.on { background: #FFFFFF; }
+.st-x { position: absolute; top: calc(4px + env(safe-area-inset-top)); right: 12px; z-index: 4; background: rgba(255, 255, 255, .14); color: #FFFFFF; }
+.st-slide { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; width: 100%; max-width: 480px; margin: 0 auto; min-height: 0; }
+.st-k { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: rgba(255, 255, 255, .7); }
+.st-big { font-size: clamp(34px, 11vw, 52px); font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.st-mid { font-size: 22px; font-weight: 800; line-height: 1.2; }
+.st-p { font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, .82); }
+.st-p b { color: #FFFFFF; }
+.st-box { background: rgba(255, 255, 255, .1); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.st-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; }
+.st-bar { height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .15); overflow: hidden; }
+.st-bar > i { display: block; height: 100%; border-radius: inherit; background: #FFFFFF; }
+.st-nav { position: absolute; top: 56px; bottom: 0; border: 0; background: transparent; padding: 0; z-index: 2; }
+.st-nav.prev { left: 0; width: 35%; } .st-nav.next { right: 0; width: 65%; }
+.st-act { position: relative; z-index: 3; display: flex; flex-direction: column; gap: 10px; }
+.st-act .btn { border-color: rgba(255, 255, 255, .35); color: #FFFFFF; }
+.st-act .btn.primary { background: #FFFFFF; color: #10204A; }
+.st-img { width: 100%; max-height: 52vh; object-fit: contain; border-radius: 16px; }
+.dmap.st-map { grid-template-rows: repeat(7, 26px); grid-auto-columns: 26px; gap: 5px; justify-content: start; }
+.dmap.st-map > * { aspect-ratio: auto; border-radius: 6px; }
+.dmap.st-map .g { background: #6CF0B0; } .dmap.st-map .b { background: #FF8A7A; } .dmap.st-map > button, .dmap.st-map > span { background: rgba(255, 255, 255, .15); }
 </style>
 </head>
 <body>
 <div id="loading">Yuklanmoqda…</div>
 <main id="view" hidden></main>
-<button id="fab" data-act="add" aria-label="Yangi amal qo'shish" hidden></button>
 <nav id="nav" aria-label="Bo'limlar" hidden><div class="in"></div></nav>
 <div id="modal" hidden></div>
+<div id="story" hidden></div>
 <div id="lock" hidden></div>
 <div id="toast" role="status"></div>
 <script>
@@ -406,6 +506,9 @@ const ICON = {
   edit: 'M4 20h4l10.5-10.5a2.828 2.828 0 1 0-4-4l-10.5 10.5v4 M13.5 6.5l4 4',
   eye: 'M10 12a2 2 0 1 0 4 0a2 2 0 0 0-4 0 M21 12c-2.4 4-5.4 6-9 6c-3.6 0-6.6-2-9-6c2.4-4 5.4-6 9-6c3.6 0 6.6 2 9 6',
   eyeOff: 'M10.585 10.587a2 2 0 0 0 2.829 2.828 M16.681 16.673a8.717 8.717 0 0 1-4.681 1.327c-3.6 0-6.6-2-9-6c1.272-2.12 2.712-3.678 4.32-4.674m2.86-1.146a9.055 9.055 0 0 1 1.82-.18c3.6 0 6.6 2 9 6c-.666 1.11-1.379 2.067-2.138 2.87 M3 3l18 18',
+  bulb: 'M3 12h1m8-9v1m8 8h1m-15.4-6.4l.7.7m12.1-.7l-.7.7 M9 16a5 5 0 1 1 6 0a3.5 3.5 0 0 0-1 3a2 2 0 0 1-4 0a3.5 3.5 0 0 0-1-3 M9.7 17l4.6 0',
+  up: 'M6 15l6-6l6 6',
+  down: 'M6 9l6 6l6-6',
   finger: 'M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3 M8 11a4 4 0 0 1 8 0v1a10.05 10.05 0 0 0 2 6 M12 11v2a14 14 0 0 0 2.5 8 M8 15a18 18 0 0 0 1.8 6 M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95',
   faceId: 'M4 8v-2a2 2 0 0 1 2-2h2 M4 16v2a2 2 0 0 0 2 2h2 M16 4h2a2 2 0 0 1 2 2v2 M16 20h2a2 2 0 0 0 2-2v-2 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
 };
@@ -500,7 +603,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null, bio: {},
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], pin: null, bio: {}, home: { order: [], off: [] }, imp: null,
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -555,7 +658,7 @@ function calc() {
   const total = bal.card + bal.cash + bal.save;
   const sorted = [...db.tx].sort(txCmp);
   // Har amaldan keyingi hisob qoldig'i (vaqt tartibida, eng eskisidan) — HUMO xabaridagi 💰 bilan solishtiriladi
-  const after = new Map();
+  const after = new Map(), dayEnd = new Map();
   const run = { ...db.open };
   for (let i = sorted.length - 1; i >= 0; i--) {
     const tx = sorted[i];
@@ -563,14 +666,34 @@ function calc() {
     else if (tx.k === 'out') run[tx.acc] -= tx.a;
     else { run[tx.acc] -= tx.a; run[tx.to] += tx.a; }
     after.set(tx.id, run[tx.acc]);
+    dayEnd.set(tx.d, { ...run }); // kun oxiridagi qoldiqlar (sanalar o'sish tartibida qo'shiladi)
   }
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, total, byPlan, dayStat, debtPaid, debtMap,
-    expected, dev: total - expected, sorted, after,
+    expected, dev: total - expected, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
   };
   return cache;
 }
 const isPending = (C, e) => !C.byPlan.has(e.key);
+// iso kuni oxiridagi hisob qoldiqlari
+function balOn(C, iso) {
+  for (let i = C.endDays.length - 1; i >= 0; i--) if (C.endDays[i] <= iso) return C.dayEnd.get(C.endDays[i]);
+  return db.open;
+}
+const totalOf = b => b.card + b.cash + b.save;
+// Rejadan farq nimadan yig'ilgan: farq = jami − kutilgan; har amal o'z ulushini qo'shadi
+function devParts(C) {
+  const p = { out: 0, in: 0, tuz: 0, plan: 0, open: totalOf(db.open) - PLAN.startBalance, byCat: {} };
+  for (const x of db.tx) {
+    if (x.k === 'tr') continue;
+    const e = x.p && C.byPlan.get(x.p) === x ? C.events.get(x.p) : null;
+    if (e) p.plan += txDelta(x) - delta(e);
+    else if (x.c === 'tuz') p.tuz += txDelta(x);
+    else if (x.k === 'out') { p.out -= x.a; p.byCat[x.c] = (p.byCat[x.c] || 0) + x.a; }
+    else p.in += x.a;
+  }
+  return p;
+}
 function debtState(C, d) {
   const paid = C.debtPaid[d.id] || 0;
   return { paid, left: Math.max(0, d.a - paid), closed: paid >= d.a };
@@ -590,13 +713,16 @@ function confirmDialog(text) {
   if (tgAtLeast('6.2')) return new Promise(res => WA.showConfirm(text, ok => res(!!ok)));
   return Promise.resolve(window.confirm(text));
 }
-let toastTimer;
-function toast(text) {
+let toastTimer, toastUndo = null;
+// undo berilsa — 5 soniya «Qaytarish» tugmasi bilan turadi
+function toast(text, undo) {
   const el = $('toast');
-  el.textContent = text;
+  el.innerHTML = esc(text) + (undo ? '<button class="toast-btn" data-act="undo">Qaytarish</button>' : '');
+  el.classList.toggle('act', !!undo);
   el.classList.add('show');
+  toastUndo = undo || null;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => { el.classList.remove('show', 'act'); toastUndo = null; }, undo ? 5000 : 2600);
 }
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch {
@@ -607,7 +733,8 @@ async function copyText(text) {
   }
 }
 function applyTheme() {
-  const dark = inTelegram ? WA.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const sys = inTelegram ? WA.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = ui.theme === 'dark' || (ui.theme !== 'light' && sys);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   if (!tgAtLeast('6.1')) return;
   const css = getComputedStyle(document.documentElement);
@@ -670,7 +797,7 @@ const unpackTx = (a, m) => {
   return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt };
 };
 function serialize(doc) {
-  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio });
+  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
   const m = doc.slice(2);
@@ -778,7 +905,13 @@ function cleanMeta(o) {
   // Biometrik ochish: qurilma id → token hash'i. PIN bo'lmasa ma'nosiz.
   const bio = {};
   if (pin) for (const [k, v] of Object.entries(isObj(o.bio) ? o.bio : {})) if (/^[\w-]{1,128}$/.test(k) && /^[0-9a-f]{64}$/.test(v)) bio[k] = v;
-  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio };
+  // Asosiy ekran kartalari tartibi va yashirilganlari
+  const homeIds = v => [...new Set(Array.isArray(v) ? v.filter(id => HOME_IDS.includes(id)) : [])];
+  const home = { order: homeIds(o.home?.order), off: homeIds(o.home?.off) };
+  // Oxirgi HUMO import — bekor qilish uchun: qo'shilgan amallar, yangi qarzlar, takror deb bog'langanlar
+  const ids = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string' && /^[a-z][0-9a-z]{1,12}$/.test(x)).slice(0, 500) : []);
+  const imp = isObj(o.imp) && typeof o.imp.t === 'string' ? { t: o.imp.t.slice(0, 16), tx: ids(o.imp.tx), debts: ids(o.imp.debts), h: ids(o.imp.h) } : null;
+  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio, home, imp };
 }
 const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import'];
 function cleanLog(list) {
@@ -937,6 +1070,35 @@ function removeTx(tx) {
   touch(tdoc(tx.d));
   logEv('del', `O'chirildi: ${label}${debtNote(tx)}`, tx.debt || tx.id);
 }
+// O'chirish — tasdiqsiz, lekin 5 soniya «Qaytarish» bilan
+function deleteTx(tx) {
+  const copy = { ...tx };
+  removeTx(tx);
+  haptic.light();
+  toast("O'chirildi", () => {
+    if (db.tx.some(x => x.id === copy.id)) return;
+    db.tx.push(copy);
+    touch('meta', tdoc(copy.d));
+    logEv('add', `Qaytarildi: ${txLabel(copy)}${debtNote(copy)}`, copy.debt || copy.id);
+    toast('Qaytarildi');
+    rerender();
+  });
+}
+// Amalni bugungi sanaga takrorlash (HUMO izi va reja bog'lanishisiz)
+function copyTxToday(tx) {
+  if (tx.c === 'tuz') { toast("Balans tuzatishni nusxalab bo'lmaydi"); return; }
+  const t = { d: clampDate(today()), tm: nowHM(), k: tx.k, a: tx.a, acc: tx.acc, to: tx.to, c: tx.c, n: tx.n, p: '', h: '',
+    debt: tx.debt && debtById(tx.debt) ? tx.debt : '' };
+  t.p = autoLink(t);
+  const nt = addTx(t, { prefix: 'Nusxalandi' });
+  haptic.ok();
+  toast(`Bugunga nusxalandi: ${sgn(nt)}`, () => {
+    if (!db.tx.includes(nt)) return;
+    removeTx(nt);
+    toast('Nusxa bekor qilindi');
+    rerender();
+  });
+}
 function txFromEvent(e, d) {
   const base = { d, tm: '', n: '', p: e.key, h: '' };
   if (e.kind === 'lock') return { ...base, k: 'tr', a: e.amount, acc: 'card', to: 'save', c: '', debt: '' };
@@ -964,12 +1126,15 @@ function setWorkday(iso, work) {
 }
 
 // ===== Navigatsiya =====
-const TABS = [['main', 'Asosiy', 'home'], ['tarix', 'Tarix', 'list'], ['reja', 'Reja', 'calendar'], ['qarz', 'Qarzlar', 'users'], ['hisobot', 'Hisobot', 'chart']];
+// «+» menyu o'rtasida; Reja — Asosiy ekrandagi kalendar tugmasidan (Telegram «Orqaga» Asosiy'ga qaytaradi)
+const TABS = [['main', 'Asosiy', 'home'], ['tarix', 'Tarix', 'list'], ['add'], ['qarz', 'Qarzlar', 'users'], ['hisobot', 'Hisobot', 'chart']];
 let route = 'main';
 const stack = [];
+let enterAnim = false; // bo'lim almashganda kartalar silliq paydo bo'ladi
 function go(name) {
   stack.length = 0;
   route = name;
+  enterAnim = true;
   render(0);
 }
 function push(name) {
@@ -978,20 +1143,26 @@ function push(name) {
   render(0);
 }
 function back() {
+  if (!$('story').hidden) { closeStory(); return; }
   if (!$('modal').hidden) { closeModal(); return; }
   const prev = stack.pop();
-  if (!prev) return;
+  if (!prev) { if (route === 'reja') go('main'); return; }
   route = prev.route;
   render(prev.y);
 }
 function render(scrollY) {
   const sub = route === 'add' || route === 'humo';
   document.body.classList.toggle('sub', sub);
-  $('view').innerHTML = VIEWS[route]();
-  $('nav').firstElementChild.innerHTML = TABS.map(([id, label, icon]) =>
-    `<button data-act="tab" data-to="${id}"${route === id ? ' aria-current="page"' : ''}>${ic(icon, 22)}${label}</button>`).join('');
+  const view = $('view');
+  view.classList.remove('enter');
+  view.innerHTML = VIEWS[route]();
+  if (enterAnim) { void view.offsetWidth; view.classList.add('enter'); enterAnim = false; }
+  if (route === 'main') { heroCount(); const C = calc(); checkBadges(C, C.t); }
+  $('nav').firstElementChild.innerHTML = TABS.map(([id, label, icon]) => (id === 'add'
+    ? `<button class="nav-add" data-act="add" aria-label="Yangi amal qo'shish">${ic('plus', 28, 2.5)}</button>`
+    : `<button data-act="tab" data-to="${id}"${route === id ? ' aria-current="page"' : ''}>${ic(icon, 22)}${label}</button>`)).join('');
   if (scrollY !== undefined) window.scrollTo(0, scrollY);
-  if (tgAtLeast('6.1')) { if (stack.length) WA.BackButton.show(); else WA.BackButton.hide(); }
+  if (tgAtLeast('6.1')) { if (stack.length || route === 'reja') WA.BackButton.show(); else WA.BackButton.hide(); }
 }
 const rerender = () => render();
 
@@ -1030,7 +1201,7 @@ function amountHTML(t) {
 function txRow(t, C, withDate, withBal) {
   const look = txLook(t);
   const bad = t.k === 'out' && CATS[t.c]?.bad;
-  return `<button class="row" data-act="edit-tx" data-id="${t.id}">`
+  return `<button class="row${t.c === 'tuz' ? ' adj' : ''}" data-act="edit-tx" data-id="${t.id}">`
     + `<span class="tile soft" style="--c:var(--${look.color})">${ic(look.icon)}</span>`
     + `<span class="body"><span class="t"><span>${esc(txTitle(t, C))}</span>${t.h ? '<span class="tag">HUMO</span>' : ''}</span>`
     + `<span class="s">${esc(txSub(t, C, withDate))}</span></span>`
@@ -1064,22 +1235,105 @@ function viewMain() {
   const show = v => (hide ? '•••••' : v);
   return `<header class="top">
       <div class="col"><span class="kicker">${WEEKDAYS[dowOf(t)]}, ${longDate(t)}</span><h1 class="h1">Byudjet</h1></div>
-      <div style="display:flex;gap:8px"><button class="round" data-act="pin-lock" aria-label="${db.pin ? 'Hozir qulflash' : "PIN-kod o'rnatish"}">${ic('lock', 18)}</button>
-        <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO import</button></div>
+      <div style="display:flex;gap:8px"><button class="round" data-act="tab" data-to="reja" aria-label="Reja kalendari">${ic('calendar', 18)}</button>
+        <button class="round" data-act="pin-lock" aria-label="${db.pin ? 'Hozir qulflash' : "PIN-kod o'rnatish"}">${ic('lock', 18)}</button>
+        <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO</button></div>
     </header>
     <section class="hero">
       <div class="spread"><span class="lbl" style="display:flex;align-items:center;gap:8px">Jami balans
         <button class="eye" data-act="eye" aria-pressed="${hide}" aria-label="${hide ? "Summalarni ko'rsatish" : 'Summalarni yashirish'}">${ic(hide ? 'eyeOff' : 'eye', 18)}</button></span>
         <span class="hero-chip">${chip}</span></div>
       ${hide ? `<button class="hero-total" data-act="eye" aria-label="Summalarni ko'rsatish">•••••• <small>so'm</small></button>`
-        : `<div class="hero-total">${fmt(C.total)} <small>so'm</small></div>`}
+        : `<div class="hero-total"><span id="hero-num" data-v="${C.total}">${fmt(C.total)}</span> <small>so'm</small></div>${sparkHTML(C, t)}`}
       <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="${hide ? 'eye' : 'adjust'}" data-acc="${a}" aria-label="${hide ? `${ACC[a].name}: summani ko'rsatish` : `${ACC[a].name}: ${fmt(C.bal[a])} so'm, qoldiqni tuzatish`}">`
         + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}</span><b>${show(fmt(C.bal[a]))}</b></button>`).join('')}</div>
       <hr>
       <div class="hero-row"><span>Reja bo'yicha hozir: <b>${show(fmt(C.expected))}</b></span>`
-      + `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" title="Rejadan farq">${show(C.dev ? signed(C.dev) : '±0')}</span></div>
+      + (hide ? `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}">•••••</span>`
+        : `<button class="dev-btn ${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" data-act="dev-info" aria-label="Rejadan farq: ${C.dev ? signed(C.dev) : '±0'}, tafsilot">${C.dev ? signed(C.dev) : '±0'}</button>`)
+      + `</div>
     </section>
-    ${alertsCard(C, t)}${todayCard(C, t)}${overdueCard(C, t)}${nextCard(C, t)}${goalCard(C)}${statCards(C, t)}${debtSummary(C, t)}${recentCard(C)}`;
+    ${homeList().filter(x => x.on).map(x => x.fn(C, t)).join('')}`;
+}
+// Hero: so'nggi 7 kun oxiridagi jami balans chizig'i
+function sparkHTML(C, t) {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(t, i - 6));
+  const vals = days.map(d => totalOf(balOn(C, d)));
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const y = v => (max === min ? 16 : 28 - ((v - min) / (max - min)) * 24).toFixed(1);
+  const pts = vals.map((v, i) => `${((i / 6) * 100).toFixed(1)},${y(v)}`).join(' ');
+  const ch = vals[6] - vals[0];
+  return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>
+      <div class="spark-row"><span>${dm(days[0])} – ${dm(days[6])}</span><span>7 kunda: <b>${ch ? signed(ch) : '±0'}</b></span></div>`;
+}
+// Asosiy ekran kartalari: tartib va ko'rinishi Hisobot → Ko'rinish'da sozlanadi
+const HOME_CARDS = [
+  ['wrap', 'Oy yakuni', wrapBanner], ['alerts', 'Diqqat', alertsCard], ['score', 'Moliyaviy salomatlik', scoreCard],
+  ['today', 'Bugungi xarajat', todayCard], ['insights', 'Xulosalar', insightsCard], ['overdue', 'Belgilanmagan rejalar', overdueCard],
+  ['next', "Keyingi to'lov", nextCard], ['goal', 'Yakuniy maqsad', goalCard], ['stats', 'Seriya va qoida', statCards],
+  ['debts', 'Qarzlar', debtSummary], ['recent', 'Oxirgi amallar', recentCard],
+];
+const HOME_IDS = HOME_CARDS.map(x => x[0]);
+function homeList() {
+  const order = [...db.home.order, ...HOME_IDS.filter(id => !db.home.order.includes(id))];
+  return order.map(id => {
+    const [, label, fn] = HOME_CARDS.find(x => x[0] === id);
+    return { id, label, fn, on: !db.home.off.includes(id) };
+  });
+}
+function moveHomeCard(id, step) {
+  const order = homeList().map(x => x.id);
+  const i = order.indexOf(id), j = i + step;
+  if (i < 0 || j < 0 || j >= order.length) return;
+  [order[i], order[j]] = [order[j], order[i]];
+  db.home.order = order;
+  touch('meta');
+  logEv('set', `Asosiy ekran: «${HOME_CARDS.find(x => x[0] === id)[1]}» ${step < 0 ? 'yuqoriga' : 'pastga'} surildi`);
+  haptic.light();
+  rerender();
+}
+function toggleHomeCard(id, on) {
+  db.home.off = on ? db.home.off.filter(x => x !== id) : [...new Set([...db.home.off, id])];
+  touch('meta');
+  logEv('set', `Asosiy ekran: «${HOME_CARDS.find(x => x[0] === id)[1]}» ${on ? "ko'rsatiladi" : 'yashirildi'}`);
+  haptic.light();
+}
+// «Rejadan farq» bosilganda: farq qaysi amallardan yig'ilgani
+function devInfo() {
+  const C = calc();
+  const p = devParts(C);
+  const top = Object.entries(p.byCat).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([c, v]) => `${CATS[c]?.name || c} ${fmt(v)}`).join(' · ');
+  const line = (label, v, sub) => (v ? `<div class="spread" style="padding:10px 0;border-top:1px solid var(--line);align-items:flex-start">
+      <span class="col"><span style="font-weight:700">${label}</span>${sub ? `<span class="small muted" style="line-height:1.4">${sub}</span>` : ''}</span>
+      <span class="num ${v < 0 ? 'c-bad' : 'c-in'}">${signed(v)}</span></div>` : '');
+  const rows = line('Rejadan tashqari xarajatlar', p.out, top) + line('Rejadan tashqari kirimlar', p.in)
+    + line('Balans tuzatishlar', p.tuz, 'Hisob qoldig\'ini qo\'lda yoki HUMO bo\'yicha to\'g\'rilash')
+    + line('Reja summasidan farq', p.plan, 'Bajarilgan bandlar rejadagidan boshqa summada yozilgan')
+    + line("Boshlang'ich qoldiq", p.open, `Rejadagi ${fmt(PLAN.startBalance)} dan farqi`);
+  openModal(`<h2 class="h2">Rejadan farq: <span class="${C.dev < 0 ? 'c-bad' : 'c-in'}">${C.dev ? signed(C.dev) : '±0'}</span></h2>
+    <p class="small muted" style="line-height:1.5">Jami balans ${fmt(C.total)} − reja bo'yicha hozir ${fmt(C.expected)}. Farq nimadan yig'ilgan:</p>
+    <div>${rows || '<p class="small muted">Farq yo\'q — hammasi reja bo\'yicha.</p>'}</div>
+    <button class="btn sm" data-act="modal-close">Yopish</button>`);
+}
+// Mavzu: Telegram'dagidek / yorug' / qorong'i — faqat shu qurilmada
+function setTheme(v) {
+  ui.theme = ['light', 'dark'].includes(v) ? v : 'auto';
+  try { localStorage.setItem('byudjet:ui:theme', ui.theme); } catch { /* saqlash yo'q */ }
+  applyTheme();
+  haptic.light();
+  rerender();
+}
+function settingsCard() {
+  const list = homeList();
+  return `<section class="card">
+      <span class="h2">Ko'rinish</span>
+      <div class="seg inset">${[['auto', 'Telegram'], ['light', "Yorug'"], ['dark', "Qorong'i"]].map(([v, l]) => `<button data-act="theme" data-v="${v}" aria-pressed="${ui.theme === v}">${l}</button>`).join('')}</div>
+      <span class="lbl" style="margin-top:4px">Asosiy ekran kartalari — belgini olib yashiring, strelkalar bilan tartiblang</span>
+      <div>${list.map((x, i) => `<div class="setrow">
+        <label class="check"><input type="checkbox" data-change="home-on" data-id="${x.id}"${x.on ? ' checked' : ''}>${x.label}</label>
+        <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="-1" aria-label="${x.label}: yuqoriga"${i === 0 ? ' disabled' : ''}>${ic('up', 16)}</button>
+        <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="1" aria-label="${x.label}: pastga"${i === list.length - 1 ? ' disabled' : ''}>${ic('down', 16)}</button></div>`).join('')}</div>
+    </section>`;
 }
 // Diqqat: qarz muddati, limitlar, bugungi qoida buzilishi, kechki yo'lkira, seriya
 function alertsCard(C, t) {
@@ -1138,8 +1392,8 @@ function todayCard(C, t) {
     ? `<span class="small c-bad">Rejadan tashqari: −${fmt(extra)}</span>`
     : `<span class="small muted">${spent ? "Rejadan tashqari xarajat yo'q" : "Hali xarajat yo'q"}</span>`;
   const status = isWorkday(day) ? '' : '<span class="status soft c-soft">Dam olish</span>';
-  return `<section class="card rowcard">${iconTile('chart', 'blue')}
-    <div class="body"><span class="lbl">Bugungi xarajat</span><span class="big">${fmt(spent)} so'm</span>${sub}</div>${status}</section>`;
+  return `<button class="card rowcard" data-act="today-tx" style="border:0;text-align:left;color:var(--text);width:100%">${iconTile('chart', 'blue')}
+    <span class="body"><span class="lbl">Bugungi xarajat</span><span class="big">${fmt(spent)} so'm</span>${sub}</span>${status}<span class="c-muted" style="display:flex">${ic('right', 18)}</span></button>`;
 }
 function overdueCard(C, t) {
   const late = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e));
@@ -1183,7 +1437,8 @@ function goalCard(C) {
       <span class="num c-acc">${pct}%</span></div>
     <span class="big">${fmt(C.final)} so'm</span>
     <div class="bar lg"><i style="width:${pct}%"></i></div>
-    <span class="lbl" style="line-height:1.45">Prognoz: shu tezlikda ${longDate(PLAN.end)}da <b style="color:var(--text)">${fmt(prog)}</b> bo'ladi — ${tail}</span></section>`;
+    <span class="lbl" style="line-height:1.45">Prognoz: shu tezlikda ${longDate(PLAN.end)}da <b style="color:var(--text)">${fmt(prog)}</b> bo'ladi — ${tail}</span>
+    <button class="btn sm" data-act="sim">${ic('chart', 16)}«Agar…» — har kuni ko'proq sarflasam yoki tejasam?</button></section>`;
 }
 function streakOf(C, t) {
   let n = 0;
@@ -1238,7 +1493,7 @@ function recentCard(C) {
 let form = null;
 const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
 function openAdd(pre = {}) {
-  form = { ...blankForm(), ...pre };
+  form = { ...blankForm(), ...pre, catSet: !!pre.c };
   push('add');
 }
 function openEdit(id) {
@@ -1277,39 +1532,94 @@ function viewAdd() {
       ${f.to === 'save' ? '<p class="note">Omonatga o\'tkazma jami balansni o\'zgartirmaydi — pul faqat qulflanadi.</p>' : ''}
       ${dateBtn}`;
   } else {
-    let catBlock;
-    if (debt) {
-      catBlock = `<div class="linkchip">${ic('users', 18)}<span class="body"><span>Qarz: <b>${esc(debt.who)}</b></span><span class="muted">· ${debtFlow({ k: f.k }, debt)}</span></span>`
-        + `<button class="round sm" data-act="f-undebt" aria-label="Qarzdan ajratish">${ic('x', 16)}</button></div>`;
-    } else if (CATS[f.c]?.hidden) {
-      catBlock = `<div class="linkchip">${ic(CATS[f.c].icon, 18)}<span class="body"><b>${CATS[f.c].name}</b></span>`
-        + `<button class="round sm" data-act="f-cat" data-c="" aria-label="Boshqa kategoriya tanlash">${ic('x', 16)}</button></div>`;
-    } else {
-      catBlock = `<div class="cats">${Object.entries(CATS).filter(([, c]) => c.k === f.k && !c.hidden).map(([id, c]) =>
-        `<button class="cat${c.bad ? ' bad' : ''}" data-act="f-cat" data-c="${id}" aria-pressed="${f.c === id}">`
-        + `<span class="tile soft" style="--c:var(--${c.color})">${ic(c.icon, 18)}</span><span class="nm">${c.name}</span>`
-        + `${c.bad ? `<span class="lock" title="Taqiqlangan">${ic('lock', 10, 3)}</span>` : ''}</button>`).join('')}</div>`;
-    }
-    const warn = forbidden ? `<div class="msg warnbox soft c-bad">${ic('alert', 20)}<span><b class="c-bad">Taqiqlangan xarajat!</b> Saqlasangiz, bu kun «qoida buzilgan kun» bo'ladi va prognoz ${fmt(amount)} so'mga kamayadi.</span></div>` : '';
-    middle = `${catBlock}${warn}
+    middle = `<div id="f-cats" style="display:contents">${addCatsHTML(f, debt)}</div>
       <div class="grid3">${['card', 'cash'].map(a => `<button class="opt" data-act="f-acc" data-acc="${a}" aria-pressed="${f.acc === a}">${ic(ACC[a].icon, 16)}${ACC[a].name}</button>`).join('')}${dateBtn}</div>`;
   }
   const planChip = ev ? `<div class="linkchip">${ic('calendar', 18)}<span class="body"><span>Reja: <b>${esc(ev.title)}</b></span><span class="muted">· ${dm(ev.iso)}</span></span>`
     + `<button class="round sm" data-act="f-unplan" aria-label="Rejadan ajratish">${ic('x', 16)}</button></div>` : '';
-  const needCat = !isTr && !catOk(f.c, f.k);
-  const saveLabel = !amount ? 'Summani kiriting' : needCat ? 'Kategoriyani tanlang' : forbidden ? 'Baribir saqlash' : 'Saqlash';
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '000', '0', 'back'];
+  const yest = addDays(t, -1);
+  const quick = `<div class="chips quick">${yest >= PLAN.start ? `<button class="chip sm" data-act="f-yday" aria-pressed="${f.d === yest}">${ic('calendar', 14)}Kecha</button>` : ''}`
+    + `${QUICK_AMOUNTS.map(v => `<button class="chip sm" data-act="f-quick" data-v="${v}">${fmt(v)}</button>`).join('')}</div>`;
   return `<header class="top">
       <button class="round" data-act="back" aria-label="Yopish">${ic('x')}</button>
       <h1 class="h2" style="font-size:17px">${f.id ? 'Amalni tahrirlash' : 'Yangi amal'}</h1>
-      ${f.id ? `<button class="round" data-act="f-delete" aria-label="O'chirish" style="color:var(--coral)">${ic('trash')}</button>` : `<button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO'dan</button>`}
+      ${f.id ? `<div style="display:flex;gap:8px"><button class="round" data-act="f-copy" aria-label="Bugunga nusxalash">${ic('copy')}</button>`
+        + `<button class="round" data-act="f-delete" aria-label="O'chirish" style="color:var(--coral)">${ic('trash')}</button></div>`
+        : `<button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO'dan</button>`}
     </header>
+    ${f.id ? '' : `<label class="qline">${ic('edit', 18)}<span class="sr">Tez yozish</span><input id="qline" data-change="qline" placeholder="Tez yozish: 30k non karta" autocomplete="off" enterkeyhint="done">`
+      + `<button class="round sm" data-act="qline" aria-label="Ajratish">${ic('check', 18)}</button></label>`}
     <div class="seg">${types.map(([k, label]) => `<button data-act="f-type" data-k="${k}" aria-pressed="${f.k === k}">${label}</button>`).join('')}</div>
     <div class="amount"><span class="lbl">${amountLabel}</span><b class="${amtColor}${String(amount).length > 7 ? ' long' : ''}">${fmt(amount)} <small>so'm</small></b></div>
-    ${middle}${planChip}
-    <label class="notefield">Izoh<input data-input="f-note" value="${esc(f.n)}" maxlength="120" placeholder="ixtiyoriy" autocomplete="off"></label>
+    ${quick}${middle}${planChip}
+    <label class="notefield">Izoh<input data-input="f-note" value="${esc(f.n)}" maxlength="120" placeholder="masalan: non, sim karta" autocomplete="off"></label>
     <div class="keys">${keys.map(k => `<button data-act="key" data-k="${k}" aria-label="${k === 'back' ? "O'chirish" : k}">${k === 'back' ? ic('backspace', 24) : k}</button>`).join('')}</div>
-    <button class="btn primary${forbidden ? ' bad' : ''}" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${saveLabel}</button>`;
+    ${addSaveHTML(f)}`;
+}
+const QUICK_AMOUNTS = [5000, 10000, 20000, 50000, 100000];
+// Kategoriya bloki va «Saqlash» — izohdan kategoriya tanlanganda shu ikkisi qayta chiziladi
+function addCatsHTML(f, debt) {
+  let catBlock;
+  if (debt) {
+    catBlock = `<div class="linkchip">${ic('users', 18)}<span class="body"><span>Qarz: <b>${esc(debt.who)}</b></span><span class="muted">· ${debtFlow({ k: f.k }, debt)}</span></span>`
+      + `<button class="round sm" data-act="f-undebt" aria-label="Qarzdan ajratish">${ic('x', 16)}</button></div>`;
+  } else if (CATS[f.c]?.hidden) {
+    catBlock = `<div class="linkchip">${ic(CATS[f.c].icon, 18)}<span class="body"><b>${CATS[f.c].name}</b></span>`
+      + `<button class="round sm" data-act="f-cat" data-c="" aria-label="Boshqa kategoriya tanlash">${ic('x', 16)}</button></div>`;
+  } else {
+    catBlock = `<div class="cats">${Object.entries(CATS).filter(([, c]) => c.k === f.k && !c.hidden).map(([id, c]) =>
+      `<button class="cat${c.bad ? ' bad' : ''}" data-act="f-cat" data-c="${id}" aria-pressed="${f.c === id}">`
+      + `<span class="tile soft" style="--c:var(--${c.color})">${ic(c.icon, 18)}</span><span class="nm">${c.name}</span>`
+      + `${c.bad ? `<span class="lock" title="Taqiqlangan">${ic('lock', 10, 3)}</span>` : ''}</button>`).join('')}</div>`;
+  }
+  const forbidden = f.k === 'out' && CATS[f.c]?.bad;
+  const warn = forbidden ? `<div class="msg warnbox soft c-bad">${ic('alert', 20)}<span><b class="c-bad">Taqiqlangan xarajat!</b> Saqlasangiz, bu kun «qoida buzilgan kun» bo'ladi va prognoz ${fmt(digits(f.a))} so'mga kamayadi.</span></div>` : '';
+  return catBlock + warn;
+}
+function addSaveHTML(f) {
+  const isTr = f.k === 'tr';
+  const amount = digits(f.a);
+  const forbidden = f.k === 'out' && CATS[f.c]?.bad;
+  const needCat = !isTr && !catOk(f.c, f.k);
+  const label = !amount ? 'Summani kiriting' : needCat ? 'Kategoriyani tanlang' : forbidden ? 'Baribir saqlash' : 'Saqlash';
+  return `<button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button>`;
+}
+
+// ===== Izohdan kategoriya: oldingi amallaringizdan o'rganadi + tayyor kalit so'zlar =====
+const CAT_WORDS = {
+  oziq: 'non gosht bozor korzinka makro havas sut meva sabzavot guruch yog tuxum kartoshka piyoz shakar oziq ovqat',
+  kucha: 'shaurma lavash somsa burger kafe choyxona pizza hotdog fastfood kfc evos tushlik',
+  kofe: 'kofe coffee shirinlik tort muzqaymoq pishiriq kapuchino latte',
+  taksi: 'taksi taxi yandex mytaxi uklon',
+  aloqa: 'sim telefon internet beeline ucell mobiuz uzmobile obuna aloqa',
+  yol: 'metro avtobus yolkira marshrutka',
+  talim: 'kurs kitob dars ingliz talim',
+  sog: 'dori apteka dorixona shifokor klinika stomatolog',
+  uy: 'kommunal svet gaz suv ijara sovun idish uyga',
+  oylik: 'oylik maosh', avans: 'avans', kirim: 'sovga bonus',
+};
+const noteWords = s => s.toLowerCase().replace(/[ʻʼ’‘'`]/g, '').split(/[^a-z0-9а-яёўқғҳ]+/).filter(w => w.length >= 3);
+let learnCache = null;
+function noteCat(text, k) {
+  const words = noteWords(text);
+  if (!words.length) return '';
+  if (!learnCache || learnCache.ver !== ver) {
+    const map = {};
+    for (const x of db.tx) {
+      if (!x.n || !CATS[x.c] || CATS[x.c].hidden) continue;
+      for (const w of noteWords(x.n)) (map[w] ||= {})[x.c] = (map[w][x.c] || 0) + 1;
+    }
+    learnCache = { ver, map };
+  }
+  const score = {};
+  for (const w of words) {
+    for (const [c, n] of Object.entries(learnCache.map[w] || {})) score[c] = (score[c] || 0) + 3 * n;
+    for (const [c, list] of Object.entries(CAT_WORDS)) if (list.split(' ').some(kw => w.startsWith(kw))) score[c] = (score[c] || 0) + 2;
+  }
+  let best = '', top = 0;
+  for (const [c, v] of Object.entries(score)) if (CATS[c]?.k === k && v > top) { best = c; top = v; }
+  return best;
 }
 function pressKey(k) {
   const a = k === 'back' ? form.a.slice(0, -1) : (form.a + k).replace(/^0+/, '').slice(0, 9);
@@ -1330,18 +1640,19 @@ function saveForm() {
   const existing = f.id && db.tx.find(x => x.id === f.id);
   if (!t.p && !f.unlinked) t.p = autoLink(t);
   if (existing) updateTx(existing, t); else addTx(t);
-  if (t.k === 'out' && CATS[t.c]?.bad) { haptic.warn(); toast('Saqlandi — bu kun qoida buzilgan deb belgilandi'); } else { haptic.ok(); toast('Saqlandi'); }
+  if (!existing && t.k === 'in' && (t.c === 'oylik' || t.c === 'avans')) { toast(t.c === 'oylik' ? 'Oylik tushdi! 🎉' : 'Avans tushdi! 🎉'); confetti(); }
+  else if (t.k === 'out' && CATS[t.c]?.bad) { haptic.warn(); toast('Saqlandi — bu kun qoida buzilgan deb belgilandi'); } else { haptic.ok(); toast('Saqlandi'); }
   back();
 }
 
 // ===== Tarix =====
-const hist = { q: '', f: 'all', mode: 'tx' };
+const hist = { q: '', f: 'all', mode: 'tx', day: '' };
 const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'] };
 const histHTML = () => (hist.mode === 'log' ? logList() : histList(calc()));
 function viewTarix() {
   const C = calc();
   const m = clampMonth(C.t.slice(0, 7));
-  const inM = db.tx.filter(t => t.d.startsWith(m));
+  const inM = db.tx.filter(t => t.d.startsWith(m) && t.c !== 'tuz');
   const ins = sum(inM.filter(t => t.k === 'in'), t => t.a);
   const outs = sum(inM.filter(t => t.k === 'out'), t => t.a);
   const bads = sum(inM.filter(t => t.k === 'out' && CATS[t.c]?.bad), t => t.a);
@@ -1356,6 +1667,7 @@ function viewTarix() {
       <div class="col"><span class="small muted" style="font-weight:600">Chiqim</span><span class="num">−${fmt(outs)}</span></div>
       <div class="col"><span class="small muted" style="font-weight:600">Taqiqlangan</span><span class="num${bads ? ' c-bad' : ''}">${bads ? '−' : ''}${fmt(bads)}</span></div>
     </section>
+    ${hist.day ? `<div class="chips"><button class="chip" data-act="h-day-clear" aria-pressed="true" style="display:inline-flex;align-items:center;gap:6px">${ic('calendar', 14)}${longDate(hist.day)}${ic('x', 14)}</button></div>` : ''}
     <div id="h-list" style="display:flex;flex-direction:column;gap:12px">${histList(C)}</div>`}`;
 }
 // Jurnal: har bir o'zgarish vaqti bilan, eng yangisi tepada
@@ -1384,6 +1696,7 @@ function histList(C) {
     if (hist.f === 'tr' && t.k !== 'tr') return false;
     if (hist.f === 'bad' && !(t.k === 'out' && CATS[t.c]?.bad)) return false;
     if (hist.f === 'humo' && !t.h) return false;
+    if (hist.day && t.d !== hist.day) return false;
     if (!q) return true;
     const text = `${txTitle(t, C)} ${t.n} ${CATS[t.c]?.name || ''}`.toLowerCase();
     return text.includes(q) || (qd.length >= 3 && qd === q.replace(/\s/g, '') && String(t.a).includes(qd));
@@ -1395,14 +1708,18 @@ function histList(C) {
     groups[groups.length - 1].items.push(t);
   }
   if (!groups.length) return `<p class="empty">${db.tx.length ? "Bu filtr bo'yicha amal yo'q" : "Hali amal yo'q"}</p>`;
+  const swBg = `<span class="sw-bg" aria-hidden="true"><span class="c">${ic('copy', 18)}Nusxalash</span><span class="x">O'chirish${ic('trash', 18)}</span></span>`;
   return groups.map(g => {
-    const total = sum(g.items, txDelta);
+    const total = sum(g.items.filter(x => x.c !== 'tuz'), txDelta); // tuzatish haqiqiy kirim/chiqim emas
     const bad = (C.dayStat[g.d]?.bad || 0) > 0;
     const label = g.d === C.t ? `Bugun, ${longDate(g.d)}` : g.d === addDays(C.t, -1) ? `Kecha, ${longDate(g.d)}` : longDate(g.d);
+    const end = C.dayEnd.get(g.d);
+    const endText = ACC_IDS.filter(a => a !== 'save' || end.save).map(a => `${ACC[a].name} ${ui.hide ? '•••••' : fmt(end[a])}`).join(' · ');
     return `<section style="display:flex;flex-direction:column;gap:6px">
       <div class="dayhead"><span class="${bad ? 'c-bad' : ''}">${label} <span class="wd">· ${WEEKDAYS[dowOf(g.d)]}</span></span>
         <span class="${total > 0 ? 'c-in' : bad ? 'c-bad' : 'c-soft'}">${total ? signed(total) : '0'}</span></div>
-      <div class="group${bad ? ' bad' : ''}">${g.items.map(t => txRow(t, C, false, true)).join('')}</div></section>`;
+      <div class="dayend">Kun oxirida: ${endText}</div>
+      <div class="group sw-list${bad ? ' bad' : ''}">${g.items.map(t => `<div class="sw">${swBg}${txRow(t, C, false, true)}</div>`).join('')}</div></section>`;
   }).join('');
 }
 
@@ -1428,6 +1745,8 @@ function viewReja() {
   const nDays = new Date(Date.UTC(y, mo, 0)).getUTCDate();
   const lead = (new Date(Date.UTC(y, mo - 1, 1)).getUTCDay() + 6) % 7;
   const cells = [];
+  // Issiqlik xaritasi: kundalik xarajat (majburiy to'lovlarsiz) oyning eng ko'p kuniga nisbatan
+  const maxDisc = Math.max(1, ...days.map(d => C.dayStat[d.iso]?.disc || 0));
   for (let i = 0; i < lead; i++) cells.push('<span></span>');
   for (let dd = 1; dd <= nDays; dd++) {
     const iso = `${m}-${pad(dd)}`;
@@ -1437,8 +1756,10 @@ function viewReja() {
     const colors = { in: 'mint', out: 'amber', lock: 'blue' };
     const dots = evs.map(e => `<i class="${isPending(C, e) ? '' : 'done'}" style="--c:var(--${colors[e.kind]})"></i>`).join('');
     const bad = (C.dayStat[iso]?.bad || 0) > 0;
-    const cls = ['d', !isWorkday(day) && 'off', iso === t && 'today', bad && 'bad soft'].filter(Boolean).join(' ');
-    cells.push(`<button class="${cls}" data-act="r-sel" data-iso="${iso}" aria-pressed="${reja.sel === iso}" aria-label="${longDate(iso)}${evs.length ? `, ${evs.length} ta reja` : ''}"><b>${dd}</b><span class="dots">${dots}</span></button>`);
+    const disc = C.dayStat[iso]?.disc || 0;
+    const heat = disc && !bad ? ` style="--heat:${(disc / maxDisc).toFixed(2)}"` : '';
+    const cls = ['d', !isWorkday(day) && 'off', iso === t && 'today', bad && 'bad soft', heat && 'heat'].filter(Boolean).join(' ');
+    cells.push(`<button class="${cls}"${heat} data-act="r-sel" data-iso="${iso}" aria-pressed="${reja.sel === iso}" aria-label="${longDate(iso)}${evs.length ? `, ${evs.length} ta reja` : ''}${disc ? `, xarajat ${fmt(disc)}` : ''}"><b>${dd}</b><span class="dots">${dots}</span></button>`);
   }
   return `<header class="top"><h1 class="h1">Reja</h1>
       <div class="mnav"><button class="round sm" data-act="r-month" data-step="-1" aria-label="Oldingi oy"${mi === 0 ? ' disabled' : ''}>${ic('left', 18)}</button>
@@ -1456,7 +1777,8 @@ function viewReja() {
     <section class="card" style="padding:14px 10px;gap:6px">
       <div class="cal">${WD_SHORT.map(w => `<span class="wdh">${w}</span>`).join('')}${cells.join('')}</div>
       <div class="legend"><span><i style="--c:var(--mint)"></i>Kirim</span><span><i style="--c:var(--amber)"></i>To'lov</span>
-        <span><i style="--c:var(--blue)"></i>Qulflash</span><span><i style="--c:var(--coral)"></i>Qoida buzilgan</span></div></section>
+        <span><i style="--c:var(--blue)"></i>Qulflash</span><span><i style="--c:var(--coral)"></i>Qoida buzilgan</span>
+        <span><i style="--c:var(--accent);opacity:.5;border-radius:3px"></i>Ko'p xarajat</span></div></section>
     ${rejaDay(C, reja.sel)}
     <p class="note">«To'lash» yoki «Tushdi» bosilganda summa tanlangan hisobdan Tarixga yoziladi. Ish kunini dam olishga almashtirsangiz, o'sha kunning yo'lkirasi rejadan olib tashlanadi.</p>`;
 }
@@ -1588,7 +1910,8 @@ function recordDebtPay(id, amount) {
   addTx(t);
   closeModal();
   haptic.ok();
-  toast(s.left - a ? `${d.who}: ${fmt(a)} yozildi, ${fmt(s.left - a)} qoldi` : `${d.who}: qarz yopildi`);
+  toast(s.left - a ? `${d.who}: ${fmt(a)} yozildi, ${fmt(s.left - a)} qoldi` : `${d.who}: qarz yopildi 🎉`);
+  if (!(s.left - a)) confetti();
   rerender();
 }
 function saveDebt() {
@@ -1632,7 +1955,7 @@ function viewHisobot() {
   const m = rep.m, mi = MONTHS.indexOf(m);
   const days = DAYS.filter(d => d.month === m && d.iso <= t);
   const range = days.length ? `${monthName(m)} · ${days[0].day}–${days[days.length - 1].day}` : monthName(m);
-  const txs = db.tx.filter(x => x.d.startsWith(m));
+  const txs = db.tx.filter(x => x.d.startsWith(m) && x.c !== 'tuz'); // tuzatish — kirim/chiqim emas
   const ins = sum(txs.filter(x => x.k === 'in'), x => x.a);
   const outs = sum(txs.filter(x => x.k === 'out'), x => x.a);
   const net = ins - outs;
@@ -1645,7 +1968,9 @@ function viewHisobot() {
       <section class="kpi"><span class="lbl">Chiqim</span><span class="num">−${fmt(outs)}</span></section>
       <section class="kpi"><span class="lbl">Sof</span><span class="num ${net >= 0 ? 'c-in' : 'c-bad'}">${signed(net)}</span></section>
     </div>
-    ${donutCard(txs)}${barsCard(C, days)}${lineCard(C)}${limitsCard(C, m, txs)}${topCard(txs, C)}${dataCard()}`;
+    <button class="btn primary" data-act="wrap" data-m="${m}" style="background:linear-gradient(135deg,#2F6BFF,#7A4DFF);color:#FFFFFF">🎬 ${monthName(m)} yakunini ko'rish</button>
+    ${mapCard(C, t)}
+    ${donutCard(txs)}${barsCard(C, days)}${lineCard(C)}${limitsCard(C, m, txs)}${topCard(txs, C)}${settingsCard()}${dataCard()}`;
 }
 function donutCard(txs) {
   const out = txs.filter(x => x.k === 'out');
@@ -2013,7 +2338,16 @@ function viewHumo() {
       <textarea class="field" id="hu-text" data-input="hu-text" spellcheck="false" autocomplete="off" placeholder="To'lov&#10;− 25.000,00 UZS&#10;SHAURMA CAFE>Tos&#10;HUMOCARD *1234&#10;13:20 10.11.2026&#10;1.008.691,05 UZS">${esc(humo.text)}</textarea>
     </div>
     <div id="hu-res" style="display:flex;flex-direction:column;gap:12px">${humoResults()}</div>
+    ${lastImportCard()}
     <p class="note" style="text-align:center">Matn faqat shu telefonda tahlil qilinadi va hech qayerga yuborilmaydi.</p>`;
+}
+function lastImportCard() {
+  const imp = db.imp;
+  if (!imp) return '';
+  const n = db.tx.filter(x => imp.tx.includes(x.id)).length;
+  return `<section class="card rowcard">${iconTile('clipboard', 'teal', 'md')}
+      <span class="body"><span class="lbl">Oxirgi import · ${imp.t.slice(8, 10)}.${imp.t.slice(5, 7)}, ${imp.t.slice(11)}</span><span style="font-weight:800">${n} ta amal</span></span>
+      <button class="chip sm" data-act="imp-undo">Bekor qilish</button></section>`;
 }
 function humoResults() {
   if (!humo.text.trim()) return '';
@@ -2088,40 +2422,63 @@ function humoRowHTML(r, i) {
 }
 function importHumo(el) {
   const rows = humoRows().filter(r => r.on);
-  let n = 0;
+  const imp = { t: `${today()} ${nowHM()}`, tx: [], debts: [], h: [] };
   for (const r of rows) {
     const t = humoTx(r);
     if (t.newDebt) {
       const d = { id: nextId('d'), dir: 'lent', who: r.place === 'Noma\'lum' ? `P2P ${dm(r.d)}` : r.place.slice(0, 60), a: r.a, due: '', d: r.d };
       db.debts.push(d);
+      imp.debts.push(d.id);
       logEv('debt', `Yangi qarz (HUMO): ${d.who} — menga qarzdor, ${fmt(d.a)}`, d.id);
       t.debt = d.id;
       delete t.newDebt;
     }
     if (!t.p) t.p = autoLink(t);
-    addTx(t, { prefix: 'HUMO import' });
-    n++;
+    imp.tx.push(addTx(t, { prefix: 'HUMO import' }).id);
   }
+  const n = imp.tx.length;
   // Belgilanmagan "ehtimoliy takror"lar mavjud amalga bog'lanadi — keyingi importda aniq takror bo'ladi
   for (const r of humoRows()) {
-    if (r.status === 'maybe' && !r.on) { const t = db.tx.find(x => x.id === r.match); if (t && !t.h) { t.h = r.key; touch(tdoc(t.d)); } }
+    if (r.status === 'maybe' && !r.on) { const t = db.tx.find(x => x.id === r.match); if (t && !t.h) { t.h = r.key; imp.h.push(t.id); touch(tdoc(t.d)); } }
   }
   const fix = Number(el.dataset.fix);
   if (fix && humo.fix) {
-    addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' });
+    imp.tx.push(addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' }).id);
   }
+  db.imp = imp;
   touch('meta', 'debts');
   Object.assign(humo, { text: '', on: {}, choice: {}, cat: {}, note: {}, fix: true });
   haptic.ok();
-  toast(`${n} ta amal qo'shildi`);
   hist.f = 'humo';
   hist.q = '';
+  hist.day = '';
   go('tarix');
+  toast(`${n} ta amal qo'shildi`, () => undoImport(false));
+  if (db.tx.some(x => imp.tx.includes(x.id) && (x.c === 'oylik' || x.c === 'avans'))) confetti();
+}
+// Oxirgi HUMO importini to'liq qaytarish: qo'shilgan amallar va qarzlar o'chadi, takror bog'lanishlar bekor bo'ladi
+async function undoImport(ask) {
+  const imp = db.imp;
+  if (!imp) return;
+  const txs = db.tx.filter(x => imp.tx.includes(x.id));
+  if (ask && !(await confirmDialog(`Oxirgi HUMO import (${imp.t.slice(8, 10)}.${imp.t.slice(5, 7)} ${imp.t.slice(11)}) bekor qilinsinmi? ${txs.length} ta amal o'chiriladi.`))) return;
+  for (const x of txs) { db.tx.splice(db.tx.indexOf(x), 1); touch(tdoc(x.d)); }
+  db.debts = db.debts.filter(d => !imp.debts.includes(d.id) || db.tx.some(x => x.debt === d.id));
+  for (const x of db.tx) if (imp.h.includes(x.id) && x.h) { x.h = ''; touch(tdoc(x.d)); }
+  db.imp = null;
+  touch('meta', 'debts');
+  logEv('import', `HUMO import bekor qilindi: ${txs.length} ta amal o'chirildi`);
+  haptic.ok();
+  toast('Import bekor qilindi');
+  rerender();
 }
 
 // ===== Qurilma sozlamasi: balansni yashirish (faqat shu qurilmada) =====
-const ui = { hide: false };
-try { ui.hide = localStorage.getItem('byudjet:ui:hide') === '1'; } catch { /* saqlash yo'q */ }
+const ui = { hide: false, theme: 'auto' };
+try {
+  ui.hide = localStorage.getItem('byudjet:ui:hide') === '1';
+  ui.theme = ['light', 'dark'].includes(localStorage.getItem('byudjet:ui:theme')) ? localStorage.getItem('byudjet:ui:theme') : 'auto';
+} catch { /* saqlash yo'q */ }
 function toggleHide() {
   ui.hide = !ui.hide;
   try { localStorage.setItem('byudjet:ui:hide', ui.hide ? '1' : '0'); } catch { /* saqlash yo'q */ }
@@ -2340,9 +2697,467 @@ function closeModal() {
   if (tgAtLeast('6.1') && !stack.length) WA.BackButton.hide();
 }
 
+// ===== Jonli effektlar: konfetti, raqam sanash =====
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+function confetti(n = 140) {
+  haptic.ok();
+  if (reducedMotion()) return;
+  const cv = document.createElement('canvas');
+  cv.className = 'confetti';
+  const W = innerWidth, H = innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr;
+  document.body.append(cv);
+  const g = cv.getContext('2d');
+  g.scale(dpr, dpr);
+  const css = getComputedStyle(document.documentElement);
+  const colors = ['--accent', '--mint', '--amber', '--coral', '--purple', '--pink'].map(v => css.getPropertyValue(v).trim() || '#4F8BFF');
+  const P = Array.from({ length: n }, () => ({
+    x: W / 2 + (Math.random() - 0.5) * 120, y: H * 0.38, vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 5,
+    s: 6 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: colors[(Math.random() * colors.length) | 0],
+  }));
+  let last = performance.now();
+  const end = last + 4000;
+  const frame = () => {
+    const now = performance.now(); // rAF vaqt belgisi ba'zi WebView'larda boshqa soatdan keladi
+    const dt = Math.max(0, Math.min(32, now - last)) / 16;
+    last = now;
+    g.clearRect(0, 0, W, H);
+    let alive = 0;
+    for (const p of P) {
+      p.vy += 0.38 * dt; p.vx *= 0.99; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+      if (p.y < H + 20) alive++;
+      g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); g.restore();
+    }
+    if (alive && now < end) requestAnimationFrame(frame); else cv.remove();
+  };
+  requestAnimationFrame(frame);
+  setTimeout(() => cv.remove(), 4500); // kadrlar to'xtab qolsa ham (fon, eski WebView) ekranda qolib ketmasin
+}
+// Balans raqami eski qiymatdan yangisiga "sanab" o'tadi (birinchi ochilishda — noldan)
+let heroShown = null;
+function heroCount() {
+  const el = $('hero-num');
+  if (!el) return;
+  const to = Number(el.dataset.v), from = heroShown ?? 0;
+  heroShown = to;
+  if (from === to || reducedMotion()) return;
+  countTo(el, from, to, from === 0 ? 900 : 650);
+}
+function countTo(el, from, to, dur, pre = '') {
+  const t0 = performance.now();
+  const step = () => {
+    if (!el.isConnected) return;
+    const k = Math.max(0, Math.min(1, (performance.now() - t0) / dur)), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = pre + fmt(Math.round(from + (to - from) * e));
+    if (k < 1) requestAnimationFrame(step);
+  };
+  el.textContent = pre + fmt(from);
+  requestAnimationFrame(step);
+  setTimeout(() => { if (el.isConnected) el.textContent = pre + fmt(to); }, dur + 80); // kadr kelmasa ham yakuniy qiymat
+}
+// data-count="123" bo'lgan elementlar 0 dan sanaladi
+function countUpIn(root) {
+  root.querySelectorAll('[data-count]').forEach(el => {
+    const v = Number(el.dataset.count), pre = el.dataset.pre || '';
+    if (reducedMotion()) { el.textContent = pre + fmt(v); return; }
+    countTo(el, 0, v, 900, pre);
+  });
+}
+
+// ===== Moliyaviy salomatlik (0–100) va nishonlar =====
+function health(C, t) {
+  const past = DAYS.filter(d => d.iso <= t).slice(-14);
+  const ok = past.filter(d => !C.dayStat[d.iso]?.bad).length;
+  const overdue = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e)).length;
+  const lateDebts = db.debts.filter(d => d.dir === 'owe' && d.due && d.due < t && !debtState(C, d).closed).length;
+  const parts = [
+    { name: 'Intizom', max: 40, v: past.length ? Math.round((40 * ok) / past.length) : 40, sub: `So'nggi ${past.length || 14} kunning ${ok} tasida taqiqlangan xarajat yo'q`, tip: 'Ko\'cha ovqati, kofe va taksidan saqlaning' },
+    { name: 'Rejaga muvofiqlik', max: 30, v: C.dev >= 0 ? 30 : Math.round(30 * Math.max(0, 1 + C.dev / 500000)), sub: `Rejadan farq: ${C.dev ? signed(C.dev) : '±0'}`, tip: 'Rejadan tashqari xarajatni kamaytiring' },
+    { name: 'Reja bandlari', max: 15, v: Math.max(0, 15 - 5 * overdue), sub: overdue ? `${overdue} ta belgilanmagan band` : 'Hammasi belgilangan', tip: 'Belgilanmagan rejalarni belgilang' },
+    { name: 'Qarzlar', max: 15, v: Math.max(0, 15 - 8 * lateDebts), sub: lateDebts ? `${lateDebts} ta muddati o'tgan qarz` : "Muddati o'tgan qarz yo'q", tip: "Muddati o'tgan qarzni yoping" },
+  ];
+  const score = sum(parts, p => p.v);
+  const [level, color] = score >= 90 ? ["A'lo", 'mint'] : score >= 75 ? ['Yaxshi', 'blue'] : score >= 50 ? ["O'rtacha", 'amber'] : ['Xavf', 'coral'];
+  const weak = parts.reduce((a, b) => (b.max - b.v > a.max - a.v ? b : a));
+  return { score, level, color, parts, tip: weak.v < weak.max ? weak.tip : 'Hammasi zo\'r — shunday davom eting' };
+}
+const BADGES = [
+  ['first', 'Birinchi qadam', 'Birinchi amalni yozdingiz', 'check', 'mint'],
+  ['streak7', '7 kun taqiqsiz', 'Ketma-ket 7 kun qoidaga amal qildingiz', 'flame', 'amber'],
+  ['streak30', '30 kun taqiqsiz', 'Ketma-ket 30 kun — temir intizom', 'flame', 'coral'],
+  ['lockday', 'Oylik qulflandi', '20-sanada omonatga o\'sha kuni o\'tkazdingiz', 'lock', 'blue'],
+  ['nodebt', 'Qarzsiz', 'Barcha qarzlaringiz yopilgan', 'users', 'teal'],
+  ['planmonth', 'Reja ustasi', 'Bir oyning hamma reja bandlari bajarildi', 'calendar', 'purple'],
+  ['humo10', 'HUMO ustasi', '10 ta amal HUMO dan import qilindi', 'clipboard', 'teal'],
+  ['plus', 'Rejadan oldinda', 'Balansingiz rejadagidan ko\'p', 'chart', 'mint'],
+  ['half', "Yarim yo'l", 'Yakuniy maqsadning yarmi yig\'ildi', 'target', 'pink'],
+];
+function badges(C, t) {
+  let run = 0, best = 0;
+  for (const d of DAYS) { if (d.iso > t) break; run = C.dayStat[d.iso]?.bad ? 0 : run + 1; best = Math.max(best, run); }
+  const monthDone = MONTHS.some(m => {
+    const days = DAYS.filter(d => d.month === m);
+    if (!days.length || days[days.length - 1].iso >= t) return false;
+    return days.every(d => C.byIso[d.iso].every(e => e.id === 'yol' || !isPending(C, e)));
+  });
+  const has = {
+    first: db.tx.length > 0,
+    streak7: best >= 7,
+    streak30: best >= 30,
+    lockday: db.tx.some(x => x.p?.endsWith(':lock') && x.d === x.p.slice(0, 10)),
+    nodebt: db.debts.some(d => d.dir === 'owe') && db.debts.filter(d => d.dir === 'owe').every(d => debtState(C, d).closed),
+    planmonth: monthDone,
+    humo10: db.tx.filter(x => x.h).length >= 10,
+    plus: C.dev > 0,
+    half: C.final > 0 && C.total >= C.final / 2,
+  };
+  return BADGES.map(([id, name, desc, icon, color]) => ({ id, name, desc, icon, color, on: !!has[id] }));
+}
+// Yangi nishon — bir marta tabriklanadi (qurilmada eslab qolinadi)
+function checkBadges(C, t) {
+  const earned = badges(C, t).filter(b => b.on).map(b => b.id);
+  let seen = null;
+  try { seen = JSON.parse(localStorage.getItem('byudjet:ui:badges')); } catch { /* yo'q */ }
+  const all = [...new Set([...(Array.isArray(seen) ? seen : []), ...earned])];
+  try { localStorage.setItem('byudjet:ui:badges', JSON.stringify(all)); } catch { /* saqlash yo'q */ }
+  if (!Array.isArray(seen)) return;
+  const fresh = earned.filter(id => !seen.includes(id));
+  if (!fresh.length) return;
+  const b = BADGES.find(x => x[0] === fresh[0]);
+  setTimeout(() => { toast(`🏅 Yangi nishon: ${b[1]}`); confetti(); }, 900);
+}
+function scoreCard(C, t) {
+  const h = health(C, t), b = badges(C, t);
+  return `<button class="card rowcard" data-act="score" style="border:0;text-align:left;color:var(--text);width:100%">
+    ${ringHTML(h, 64)}<span class="body"><span class="lbl">Moliyaviy salomatlik</span><span class="big" style="color:var(--${h.color})">${h.level}</span>
+    <span class="small muted" style="line-height:1.4">${b.filter(x => x.on).length} / ${b.length} nishon · ${h.tip}</span></span><span class="c-muted" style="display:flex">${ic('right', 18)}</span></button>`;
+}
+function ringHTML(h, size) {
+  const R = size / 2 - 6, L = 2 * Math.PI * R;
+  return `<span class="ring${size > 64 ? ' lg' : ''}" style="--c:var(--${h.color})"><svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">`
+    + `<circle cx="${size / 2}" cy="${size / 2}" r="${R}" class="bg"/><circle cx="${size / 2}" cy="${size / 2}" r="${R}" class="fg" stroke-dasharray="${((L * h.score) / 100).toFixed(1)} ${L.toFixed(1)}"/></svg><b>${h.score}</b></span>`;
+}
+function scoreModal() {
+  const C = calc(), t = C.t, h = health(C, t), b = badges(C, t);
+  openModal(`<div class="col" style="align-items:center;gap:6px">${ringHTML(h, 120)}<span class="big" style="color:var(--${h.color})">${h.level}</span><span class="small muted">Moliyaviy salomatlik bali, 100 dan</span></div>
+    <div>${h.parts.map(p => `<div style="padding:10px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px">
+      <div class="spread"><span style="font-weight:700">${p.name}</span><span class="num">${p.v} / ${p.max}</span></div>
+      <div class="bar"><i style="width:${(p.v / p.max) * 100}%;--c:var(--${p.v === p.max ? 'mint' : p.v >= p.max / 2 ? 'amber' : 'coral'})"></i></div>
+      <span class="small muted">${p.sub}</span></div>`).join('')}</div>
+    <span class="h2">Nishonlar · ${b.filter(x => x.on).length} / ${b.length}</span>
+    <div class="bdgs">${b.map(x => `<div class="bdg${x.on ? ' on' : ''}" title="${esc(x.desc)}">${iconTile(x.icon, x.color, 'md')}<b>${x.name}</b><span>${x.desc}</span></div>`).join('')}</div>
+    <button class="btn sm" data-act="modal-close">Yopish</button>`);
+}
+
+// ===== Aqlli xulosalar =====
+function insights(C, t) {
+  const res = [];
+  const planned = x => x.p && C.byPlan.get(x.p) === x;
+  const free = x => x.k === 'out' && x.c !== 'tuz' && x.c !== 'yol' && !x.debt && !planned(x); // rejadan tashqari, ixtiyoriy
+  const byCat = (from, to) => {
+    const o = {};
+    for (const x of db.tx) if (free(x) && x.d >= from && x.d <= to) o[x.c] = (o[x.c] || 0) + x.a;
+    return o;
+  };
+  const cur = byCat(addDays(t, -6), t), prev = byCat(addDays(t, -13), addDays(t, -7));
+  let best = null;
+  for (const c of new Set([...Object.keys(cur), ...Object.keys(prev)])) {
+    const a = cur[c] || 0, b = prev[c] || 0;
+    if (Math.abs(a - b) >= 20000 && (!best || Math.abs(a - b) > Math.abs(best.a - best.b))) best = { c, a, b };
+  }
+  if (best && addDays(t, -13) >= PLAN.start) {
+    const name = CATS[best.c]?.name || 'Boshqa', more = best.a > best.b;
+    const text = !best.b ? `Bu hafta «${name}» uchun ${fmt(best.a)} sarfladingiz — o'tgan hafta umuman yo'q edi`
+      : !best.a ? `Bu hafta «${name}» uchun hech narsa sarflamadingiz — o'tgan hafta ${fmt(best.b)} edi 👏`
+      : `Bu hafta «${name}» uchun o'tgan haftadan <b>${Math.round((Math.abs(best.a - best.b) / best.b) * 100)}% ${more ? "ko'p" : 'kam'}</b> sarfladingiz (${fmt(best.a)} / ${fmt(best.b)})`;
+    res.push({ icon: more ? 'up' : 'down', color: more ? 'amber' : 'mint', text });
+  }
+  let quiet = 0;
+  for (let i = 0; i < 60; i++) {
+    const d = addDays(t, -i);
+    if (d < PLAN.start || db.tx.some(x => free(x) && x.d === d)) break;
+    quiet++;
+  }
+  if (quiet >= 3) res.push({ icon: 'check', color: 'mint', text: `<b>${quiet} kun</b>dan beri rejadan tashqari xarajat yo'q 👏` });
+  const m = t.slice(0, 7), dom = Number(t.slice(8)), dim = new Date(Date.UTC(Number(m.slice(0, 4)), Number(m.slice(5)), 0)).getUTCDate();
+  for (const c of LIMIT_CATS) {
+    const lim = db.lim[c];
+    if (!lim || dom < 5) continue;
+    const v = sum(db.tx.filter(x => x.k === 'out' && x.c === c && x.d.startsWith(m)), x => x.a);
+    const proj = Math.round((v / dom) * dim);
+    if (v < lim && proj > lim * 1.1) res.push({ icon: 'alert', color: 'amber', text: `Shu sur'atda oy oxirigacha «${CATS[c].name}» <b>${fmt(proj)}</b> bo'ladi — limit ${fmt(lim)}` });
+  }
+  const past = DAYS.filter(d => d.iso < t);
+  if (past.length >= 14) {
+    const spend = {};
+    for (const x of db.tx) if (free(x)) spend[x.d] = (spend[x.d] || 0) + x.a;
+    const tot = Array(7).fill(0), cnt = Array(7).fill(0);
+    for (const d of past) { tot[d.dow] += spend[d.iso] || 0; cnt[d.dow]++; }
+    const avg = tot.map((v, i) => (cnt[i] ? v / cnt[i] : 0));
+    const all = sum(tot, v => v) / past.length;
+    const i = avg.indexOf(Math.max(...avg));
+    if (avg[i] >= 10000 && avg[i] >= all * 1.5) res.push({ icon: 'calendar', color: 'purple', text: `<b>${WEEKDAYS[i]}</b> kunlari eng ko'p sarflaysiz — o'rtacha ${fmt(Math.round(avg[i]))}` });
+  }
+  const places = {};
+  for (const x of db.tx) {
+    if (!x.h || x.k !== 'out' || x.d < addDays(t, -29)) continue;
+    const p = x.n.split(' · ').pop();
+    if (p) { places[p] ||= { n: 0, a: 0 }; places[p].n++; places[p].a += x.a; }
+  }
+  const top = Object.entries(places).sort((a, b) => b[1].a - a[1].a)[0];
+  if (top && top[1].n >= 3) res.push({ icon: 'cart', color: 'teal', text: `Eng ko'p pul ketgan joy: <b>${esc(top[0])}</b> — ${top[1].n} marta, ${fmt(top[1].a)}` });
+  return res.slice(0, 3);
+}
+function insightsCard(C, t) {
+  const list = insights(C, t);
+  if (!list.length) return '';
+  return `<section class="card list"><div class="spread"><span class="h2" style="display:flex;align-items:center;gap:6px">${ic('bulb', 18)}Xulosalar</span></div>
+    ${list.map(x => `<div class="row" style="min-height:0"><span class="tile soft" style="--c:var(--${x.color})">${ic(x.icon, 18)}</span>`
+      + `<span class="body"><span class="t" style="white-space:normal;font-weight:600;line-height:1.4;display:block">${x.text}</span></span></div>`).join('')}</section>`;
+}
+
+// ===== «Agar…» simulyatori =====
+const simUI = { daily: 0, monthly: 0 };
+function simInfo() {
+  const C = calc(), t = C.t;
+  return { C, remDays: DAYS.filter(d => d.iso > t).length, remPay: DAYS.filter(d => d.iso > t && d.day === 20).length, base: C.final + C.dev };
+}
+function simResultHTML() {
+  const { C, remDays, remPay, base } = simInfo();
+  const res = base - simUI.daily * remDays + simUI.monthly * remPay;
+  const diff = res - C.final;
+  const pct = C.final > 0 ? Math.max(0, Math.min(100, (res / C.final) * 100)) : 0;
+  return `<div class="col" style="align-items:center;gap:4px;padding:4px 0"><span class="lbl">${dm(PLAN.end)}.${PLAN.end.slice(0, 4)} da bo'ladi</span>
+      <span class="big" style="font-size:30px">${fmt(res)} so'm</span>
+      <span class="num ${diff < 0 ? 'c-bad' : 'c-in'}">${diff ? `maqsaddan ${signed(diff)}` : 'aynan maqsadda'}</span></div>
+    <div class="bar lg"><i style="width:${pct.toFixed(1)}%;--c:var(--${diff < 0 ? 'coral' : 'mint'})"></i></div>
+    <span class="small muted" style="text-align:center">Maqsad: ${fmt(C.final)} · ${remDays} kun, ${remPay} ta oylik qoldi</span>`;
+}
+function openSim() {
+  Object.assign(simUI, { daily: 0, monthly: 0 });
+  const { base } = simInfo();
+  openModal(`<h2 class="h2">«Agar…» simulyatori</h2>
+    <p class="small muted" style="line-height:1.5">Hozirgi prognoz: <b style="color:var(--text)">${fmt(base)}</b>. Slayderlarni suring — natija darhol o'zgaradi.</p>
+    <label class="fl">Har kuni qo'shimcha sarflasam: <b id="sim-dv" style="color:var(--text);font-size:15px">0 so'm</b>
+      <input type="range" min="0" max="50000" step="1000" value="0" data-input="sim-daily"></label>
+    <label class="fl">Har oylikdan qo'shimcha tejasam: <b id="sim-mv" style="color:var(--text);font-size:15px">0 so'm</b>
+      <input type="range" min="0" max="1000000" step="50000" value="0" data-input="sim-monthly"></label>
+    <div id="sim-res" class="col" style="gap:8px">${simResultHTML()}</div>
+    <button class="btn sm" data-act="modal-close">Yopish</button>`);
+}
+
+// ===== 145 kunlik intizom xaritasi =====
+function mapHTML(C, t, days, cls = '') {
+  const lead = (days[0].dow + 6) % 7; // dushanbadan
+  const cells = Array.from({ length: lead }, () => '<i></i>');
+  for (const d of days) {
+    const st = d.iso > t ? 'f' : C.dayStat[d.iso]?.bad ? 'b' : 'g';
+    cells.push(cls ? `<span class="${st}"></span>` : `<button class="${st}${d.iso === t ? ' t' : ''}" data-act="map-day" data-iso="${d.iso}" aria-label="${longDate(d.iso)}: ${st === 'f' ? 'oldinda' : st === 'b' ? 'qoida buzilgan' : 'qoida bajarilgan'}"></button>`);
+  }
+  return `<div class="dmap ${cls}">${cells.join('')}</div>`;
+}
+function mapCard(C, t) {
+  const ok = DAYS.filter(d => d.iso <= t && !C.dayStat[d.iso]?.bad).length, bad = DAYS.filter(d => d.iso <= t && C.dayStat[d.iso]?.bad).length;
+  return `<section class="card"><div class="spread"><span class="h2">Intizom xaritasi</span><span class="small muted">${DAYS.length} kun</span></div>
+    ${mapHTML(C, t, DAYS)}
+    <div class="legend" style="padding:0"><span><i style="--c:var(--mint)"></i>Bajarildi · ${ok}</span><span><i style="--c:var(--coral)"></i>Buzildi · ${bad}</span>
+      <span><i style="--c:var(--line)"></i>Oldinda · ${DAYS.length - ok - bad}</span></div></section>`;
+}
+
+// ===== Bir qatorli tez yozish: «30k non karta», «+3.3m oylik», «kecha 12 000 taksi naqd» =====
+function parseLine(s) {
+  let x = ` ${s.toLowerCase().replace(/[ʻʼ’‘`]/g, "'").replace(/(\d)[ .](?=\d{3}(?!\d))/g, '$1')} `;
+  const r = { a: 0, k: '', acc: '', y: false, note: '' };
+  const am = x.match(/(\d+(?:[.,]\d+)?)\s*(k|ming|mln|million|m)?(?![a-z0-9'])/);
+  if (am) {
+    const mul = /^(k|ming)$/.test(am[2] || '') ? 1000 : am[2] ? 1e6 : 1;
+    r.a = Math.round(parseFloat(am[1].replace(',', '.')) * mul);
+    x = x.replace(am[0], ' ');
+  }
+  if (/(^|\s)\+/.test(x) || /\b(kirim|oylik|avans|tushdi|keldi|qaytdi)\b/.test(x)) r.k = 'in';
+  if (/\b(karta|kartadan|kartaga|card|humo)\b/.test(x)) r.acc = 'card';
+  else if (/\b(naqd|naqt|naqddan|naqdga|cash)\b/.test(x)) r.acc = 'cash';
+  r.y = /\bkecha\b/.test(x);
+  r.note = x.replace(/\b(karta|kartadan|kartaga|card|naqd|naqt|naqddan|naqdga|cash|kecha|bugun)\b/g, ' ').replace(/[+\-−]/g, ' ').replace(/\s+/g, ' ').trim();
+  return r;
+}
+function applyLine(s) {
+  if (!s.trim() || !form) return;
+  const r = parseLine(s);
+  if (!r.a) { toast('Summani topa olmadim — masalan: 30k non karta'); haptic.error(); return; }
+  const k = r.k || (form.k === 'in' ? 'in' : 'out');
+  const note = r.note ? r.note[0].toUpperCase() + r.note.slice(1) : '';
+  const c = noteCat(note, k);
+  Object.assign(form, { k, a: String(Math.min(r.a, 999999999)), acc: r.acc || (form.acc === 'save' ? 'card' : form.acc), to: '', n: note || form.n, debt: '', p: '' });
+  if (r.y) form.d = clampDate(addDays(today(), -1));
+  if (c) { form.c = c; form.catSet = false; } else if (!catOk(form.c, k)) form.c = '';
+  haptic.ok();
+  rerender();
+  toast(`Ajratildi: ${k === 'in' ? '+' : '−'}${fmt(digits(form.a))}${form.c ? ` · ${CATS[form.c].name}` : ''} · ${ACC[form.acc].name}`);
+}
+
+// ===== Oy yakuni («Wrapped»): story kabi to'liq ekranli kartalar =====
+const story = { m: '', i: 0, slides: [], data: null, img: '' };
+const STORY_BG = ['linear-gradient(160deg,#2F6BFF,#0B1638)', 'linear-gradient(160deg,#0E8F65,#06281F)', 'linear-gradient(160deg,#C2410C,#2B1206)',
+  'linear-gradient(160deg,#B8336A,#2A0A18)', 'linear-gradient(160deg,#6A48D7,#160D33)', 'linear-gradient(160deg,#0F766E,#04201E)',
+  'linear-gradient(160deg,#1D4ED8,#081433)', 'linear-gradient(160deg,#7A4DFF,#2F6BFF)'];
+function wrapSeen() { try { return JSON.parse(localStorage.getItem('byudjet:ui:wrap')) || []; } catch { return []; } }
+function wrapReady(t) {
+  const cur = t.slice(0, 7), day = Number(t.slice(8));
+  const prev = MONTHS[MONTHS.indexOf(cur) - 1] || (cur > PLAN.end.slice(0, 7) ? MONTHS[MONTHS.length - 1] : '');
+  if (day <= 5 && prev && !wrapSeen().includes(prev)) return prev;
+  if (addDays(t, 1).slice(0, 7) !== cur && MONTHS.includes(cur) && !wrapSeen().includes(cur)) return cur;
+  return '';
+}
+function wrapBanner(C, t) {
+  const m = wrapReady(t);
+  if (!m) return '';
+  return `<button class="card rowcard wrapb" data-act="wrap" data-m="${m}" style="border:0;text-align:left;width:100%">
+    <span style="font-size:30px;line-height:1">🎬</span><span class="body"><span class="lbl">Oy yakuni tayyor</span><span class="big">${monthName(m)} qanday o'tdi?</span>
+    <span class="small">Kirim, chiqim, rekordlar va nishonlar</span></span>${ic('right', 18)}</button>`;
+}
+function monthWrap(C, m) {
+  const t = C.t;
+  const days = DAYS.filter(d => d.month === m && d.iso <= t);
+  const txs = db.tx.filter(x => x.d.startsWith(m) && x.d <= t && x.c !== 'tuz');
+  const outs = txs.filter(x => x.k === 'out');
+  const byCat = {};
+  for (const x of outs) byCat[x.c] = (byCat[x.c] || 0) + x.a;
+  let run = 0, best = 0;
+  for (const d of days) { run = C.dayStat[d.iso]?.bad ? 0 : run + 1; best = Math.max(best, run); }
+  const bad = days.filter(d => C.dayStat[d.iso]?.bad).length;
+  const last = days.length ? days[days.length - 1].iso : t;
+  return {
+    m, days, count: txs.length, ins: sum(txs.filter(x => x.k === 'in'), x => x.a), outs: sum(outs, x => x.a),
+    cats: Object.entries(byCat).sort((a, b) => b[1] - a[1]), biggest: [...outs].sort((a, b) => b.a - a.a)[0] || null,
+    bad, ok: days.length - bad, best, locked: sum(txs.filter(x => x.k === 'tr' && x.to === 'save'), x => x.a),
+    last, endBal: totalOf(balOn(C, last)), planBal: C.planByIso[last] ?? PLAN.startBalance,
+  };
+}
+function storySlides(w, C) {
+  const name = `${monthName(w.m)} ${w.m.slice(0, 4)}`;
+  const h = health(C, C.t), b = badges(C, C.t);
+  const net = w.ins - w.outs, diff = w.endBal - w.planBal;
+  const top = w.cats[0], topPct = top && w.outs ? Math.round((top[1] / w.outs) * 100) : 0;
+  const s = [];
+  s.push(`<span class="st-k">Oy yakuni</span><span class="st-big">${name}</span>
+    <span class="st-p">${w.days.length} kun · ${w.count} ta amal. Keling, oyingiz qanday o'tganini ko'ramiz 👀</span>
+    <span class="st-p" style="font-size:13px;opacity:.7">Davom etish uchun ekranning o'ng tomonini bosing</span>`);
+  s.push(`<span class="st-k">Pul oqimi</span>
+    <div class="st-box"><span class="st-p">Kirim</span><span class="st-big" data-count="${w.ins}" data-pre="+">+${fmt(w.ins)}</span></div>
+    <div class="st-box"><span class="st-p">Chiqim</span><span class="st-big" data-count="${w.outs}" data-pre="−">−${fmt(w.outs)}</span></div>
+    <span class="st-mid">${net >= 0 ? `Sof ${signed(net)} — pul ko'paydi 💪` : `Sof ${signed(net)}`}</span>`);
+  s.push(top ? `<span class="st-k">Pul eng ko'p qayerga ketdi</span><span class="st-big">${CATS[top[0]]?.name || 'Boshqa'}</span>
+    <span class="st-mid">${fmt(top[1])} so'm · ${topPct}%</span>
+    <div class="st-box">${w.cats.slice(0, 4).map(([c, v]) => `<div class="st-row"><span>${CATS[c]?.name || c}</span><span>${fmt(v)}</span></div>
+      <div class="st-bar"><i style="width:${(v / top[1]) * 100}%"></i></div>`).join('')}</div>`
+    : `<span class="st-k">Xarajatlar</span><span class="st-big">Xarajat yo'q</span><span class="st-p">Bu oy hali birorta chiqim yozilmagan.</span>`);
+  if (w.biggest) {
+    s.push(`<span class="st-k">Eng katta xarajat</span><span class="st-big" data-count="${w.biggest.a}" data-pre="−">−${fmt(w.biggest.a)}</span>
+      <span class="st-mid">${esc(txTitle(w.biggest, C))}</span><span class="st-p">${longDate(w.biggest.d)}${w.biggest.n ? ` · ${esc(w.biggest.n)}` : ''}</span>`);
+  }
+  s.push(`<span class="st-k">Intizom</span><span class="st-big">${w.ok} / ${w.days.length} kun</span>
+    <span class="st-p">${w.bad ? `<b>${w.bad} kun</b> qoida buzildi.` : '<b>Bir kun ham</b> qoida buzilmadi! 🔥'} Eng uzun seriya: <b>${w.best} kun</b>.</span>
+    ${mapHTML(C, C.t, w.days, 'st-map')}`);
+  s.push(`<span class="st-k">Jamg'arma</span><span class="st-p">Oy oxiridagi balans</span><span class="st-big" data-count="${w.endBal}">${fmt(w.endBal)}</span>
+    <span class="st-p">Reja bo'yicha ${fmt(w.planBal)} edi — <b>${diff >= 0 ? `${fmt(diff)} oldindasiz` : `${fmt(-diff)} orqadasiz`}</b>.${w.locked ? ` Omonatga <b>${fmt(w.locked)}</b> qulflandi.` : ''}</span>`);
+  s.push(`<span class="st-k">Moliyaviy salomatlik</span><div style="display:flex;align-items:center;gap:18px">${ringHTML(h, 120)}
+    <span class="col"><span class="st-mid">${h.level}</span><span class="st-p">${b.filter(x => x.on).length} / ${b.length} nishon</span></span></div>
+    <span class="st-p">${h.tip}.</span>`);
+  s.push(`<span class="st-k">${name}</span><span class="st-big">${h.score >= 75 ? "Zo'r oy! 🎉" : h.score >= 50 ? 'Yaxshi oy! 👍' : 'Keyingi oy yanada yaxshi bo\'ladi 💪'}</span>
+    <span class="st-p">Maqsad: ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)} gacha <b>${fmt(C.final)}</b> so'm. Prognoz: <b>${fmt(C.final + C.dev)}</b>.</span>
+    <div class="st-act">${story.img ? `<img class="st-img" src="${story.img}" alt="${name} yakuni"><span class="st-p" style="text-align:center">Rasmni bosib turing va «Saqlash»ni tanlang</span>`
+      : `<button class="btn primary" data-act="st-save">${ic('download', 18)}Rasm sifatida saqlash</button>`}
+      <button class="btn" data-act="st-close">Yopish</button></div>`);
+  return s;
+}
+function openStory(m) {
+  if (!MONTHS.includes(m)) return;
+  const C = calc();
+  Object.assign(story, { m, i: 0, img: '', data: monthWrap(C, m) });
+  story.slides = storySlides(story.data, C);
+  try { localStorage.setItem('byudjet:ui:wrap', JSON.stringify([...new Set([...wrapSeen(), m])])); } catch { /* saqlash yo'q */ }
+  $('story').hidden = false;
+  renderStory();
+  if (tgAtLeast('6.1')) WA.BackButton.show();
+}
+function renderStory() {
+  const n = story.slides.length;
+  const el = $('story');
+  el.style.background = STORY_BG[story.i % STORY_BG.length];
+  el.innerHTML = `<div class="st-bars" aria-hidden="true">${story.slides.map((_, i) => `<i class="${i <= story.i ? 'on' : ''}"></i>`).join('')}</div>
+    <button class="round st-x" data-act="st-close" aria-label="Yopish">${ic('x')}</button>
+    <button class="st-nav prev" data-act="st-prev" aria-label="Oldingi"></button><button class="st-nav next" data-act="st-next" aria-label="Keyingi"></button>
+    <div class="st-slide" role="group" aria-label="${story.i + 1} / ${n}">${story.slides[story.i]}</div>`;
+  countUpIn(el);
+  if (story.i === n - 1) confetti(); else haptic.light();
+}
+function stepStory(d) {
+  const i = story.i + d;
+  if (i < 0) return;
+  if (i >= story.slides.length) { closeStory(); return; }
+  story.i = i;
+  renderStory();
+}
+function closeStory() {
+  $('story').hidden = true;
+  $('story').innerHTML = '';
+  if (tgAtLeast('6.1') && !stack.length && route !== 'reja') WA.BackButton.hide();
+  rerender();
+}
+// 1080×1350 rasm: oy yakuni xulosasi
+function wrapCanvas() {
+  const w = story.data, C = calc(), h = health(C, C.t);
+  const cv = document.createElement('canvas');
+  cv.width = 1080; cv.height = 1350;
+  const g = cv.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 1080, 1350);
+  grad.addColorStop(0, '#2F6BFF'); grad.addColorStop(1, '#0B1638');
+  g.fillStyle = grad; g.fillRect(0, 0, 1080, 1350);
+  const font = (wt, px) => `${wt} ${px}px "Manrope Variable", Manrope, system-ui, sans-serif`;
+  g.fillStyle = 'rgba(255,255,255,.7)'; g.font = font(700, 40); g.fillText('OY YAKUNI · BYUDJET TREKER', 80, 150);
+  g.fillStyle = '#FFFFFF'; g.font = font(800, 104); g.fillText(`${monthName(w.m)} ${w.m.slice(0, 4)}`, 80, 270);
+  const rows = [['Kirim', `+${fmt(w.ins)}`, '#8FF0C4'], ['Chiqim', `−${fmt(w.outs)}`, '#FFFFFF'],
+    ["Eng ko'p", w.cats[0] ? `${CATS[w.cats[0][0]]?.name || ''} · ${fmt(w.cats[0][1])}` : '—', '#FFFFFF'],
+    ['Qoida bajarilgan kunlar', `${w.ok} / ${w.days.length}`, '#FFFFFF'], ['Eng uzun seriya', `${w.best} kun`, '#FFFFFF'],
+    ['Oy oxiridagi balans', fmt(w.endBal), '#FFFFFF'], ['Moliyaviy salomatlik', `${h.score} / 100 · ${h.level}`, '#FFD27A']];
+  let y = 420;
+  for (const [k, v, col] of rows) {
+    g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(80, y - 70, 920, 1.5);
+    g.fillStyle = 'rgba(255,255,255,.75)'; g.font = font(600, 38); g.fillText(k, 80, y);
+    g.fillStyle = col; g.font = font(800, 46); g.textAlign = 'right'; g.fillText(v, 1000, y); g.textAlign = 'left';
+    y += 120;
+  }
+  g.fillStyle = 'rgba(255,255,255,.6)'; g.font = font(600, 32); g.fillText(`Maqsad ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)}: ${fmt(C.final)} so'm`, 80, 1270);
+  return cv;
+}
+async function saveWrapImage() {
+  const cv = wrapCanvas();
+  const name = `byudjet-${story.m}.png`;
+  const blob = await new Promise(res => cv.toBlob(res, 'image/png'));
+  if (blob && !inTelegram) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('Rasm saqlandi');
+    return;
+  }
+  if (blob && ['android', 'android_x', 'ios'].includes(WA.platform)) {
+    try {
+      const file = new File([blob], name, { type: 'image/png' });
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: name }); return; }
+    } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  // Ulashib bo'lmasa — rasm shu yerda ko'rsatiladi, bosib turib saqlanadi
+  story.img = cv.toDataURL('image/png');
+  story.slides = storySlides(story.data, calc());
+  renderStory();
+}
+
 // ===== Hodisalar =====
 const ACT = {
-  tab: el => go(el.dataset.to),
+  tab: el => { if (el.dataset.to === 'tarix') hist.day = ''; go(el.dataset.to); },
   back: () => back(),
   add: () => openAdd(),
   humo: () => push('humo'),
@@ -2392,11 +3207,12 @@ const ACT = {
   'f-type': el => {
     const k = el.dataset.k;
     if (k === form.k) return;
-    Object.assign(form, { k, c: '', debt: '', p: '', acc: 'card', to: form.acc === 'save' ? 'card' : 'save' });
+    Object.assign(form, { k, c: '', catSet: false, debt: '', p: '', acc: 'card', to: form.acc === 'save' ? 'card' : 'save' });
     rerender();
   },
   'f-cat': el => {
     form.c = el.dataset.c;
+    form.catSet = !!form.c;
     if (CATS[form.c]?.bad) haptic.warn(); else haptic.light();
     rerender();
   },
@@ -2408,13 +3224,49 @@ const ACT = {
     if (CATS[form.c]?.hidden) form.c = '';
     rerender();
   },
-  'f-delete': async () => {
+  'f-delete': () => {
     const t = db.tx.find(x => x.id === form.id);
-    if (!t || !(await confirmDialog("Bu amal o'chirilsinmi?"))) return;
-    removeTx(t);
-    toast("O'chirildi");
+    if (!t) return;
     back();
+    deleteTx(t);
+    rerender();
   },
+  'f-copy': () => {
+    const t = db.tx.find(x => x.id === form.id);
+    if (!t) return;
+    back();
+    copyTxToday(t);
+    rerender();
+  },
+  'f-quick': el => { form.a = el.dataset.v; haptic.light(); rerender(); },
+  'f-yday': () => {
+    const t = today(), y = addDays(t, -1);
+    form.d = clampDate(form.d === y ? t : y);
+    if (!form.id) form.tm = '';
+    haptic.light();
+    rerender();
+  },
+  undo: () => {
+    const fn = toastUndo;
+    toastUndo = null;
+    $('toast').classList.remove('show', 'act');
+    fn?.();
+  },
+  'today-tx': () => { Object.assign(hist, { mode: 'tx', f: 'all', q: '', day: calc().t }); go('tarix'); },
+  'h-day-clear': () => { hist.day = ''; rerender(); },
+  'dev-info': () => devInfo(),
+  theme: el => setTheme(el.dataset.v),
+  'home-move': el => moveHomeCard(el.dataset.id, Number(el.dataset.step)),
+  'imp-undo': () => undoImport(true),
+  score: () => scoreModal(),
+  sim: () => openSim(),
+  wrap: el => openStory(el.dataset.m),
+  'st-next': () => stepStory(1),
+  'st-prev': () => stepStory(-1),
+  'st-close': () => closeStory(),
+  'st-save': () => saveWrapImage(),
+  'map-day': el => { const iso = el.dataset.iso; reja.m = iso.slice(0, 7); reja.sel = iso; go('reja'); },
+  qline: () => applyLine($('qline').value),
   key: el => pressKey(el.dataset.k),
   save: () => saveForm(),
   // Tarix
@@ -2517,6 +3369,7 @@ const ACT = {
     const oldDocs = Object.keys(chunkCount).filter(d => d.startsWith('t_'));
     next.pin = db.pin;
     next.bio = db.bio;
+    next.home = db.home;
     db = next;
     logEv('import', `Zaxira import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz`);
     touch('meta', 'debts', 'log', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
@@ -2545,7 +3398,19 @@ function setBackupMsg(text, isError) {
 }
 let huTimer;
 const INPUT = {
-  'f-note': el => { form.n = el.value; },
+  'sim-daily': el => { simUI.daily = Number(el.value); $('sim-dv').textContent = `${fmt(simUI.daily)} so'm`; $('sim-res').innerHTML = simResultHTML(); },
+  'sim-monthly': el => { simUI.monthly = Number(el.value); $('sim-mv').textContent = `${fmt(simUI.monthly)} so'm`; $('sim-res').innerHTML = simResultHTML(); },
+  'f-note': el => {
+    form.n = el.value;
+    // Kategoriya qo'lda tanlanmagan yangi amalda — izohga qarab tanlanadi (fokus yo'qolmasligi uchun faqat shu bloklar yangilanadi)
+    if (form.id || form.catSet || form.k === 'tr' || form.debt) return;
+    const c = noteCat(el.value, form.k);
+    if (!c || c === form.c) return;
+    form.c = c;
+    $('f-cats').innerHTML = addCatsHTML(form, null);
+    $('f-save').outerHTML = addSaveHTML(form);
+    $('view').querySelector('.amount b')?.classList.toggle('c-bad', !!CATS[c].bad && form.k === 'out');
+  },
   'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histHTML(); },
   'd-who': el => { debtUI.form.who = el.value; },
   'hu-note': el => { humo.note[el.dataset.key] = el.value.trim(); },
@@ -2564,6 +3429,8 @@ const CHANGE = {
   'hu-on': el => { humo.on[el.dataset.key] = el.checked; $('hu-res').innerHTML = humoResults(); },
   'hu-cat': el => { humo.cat[el.dataset.key] = el.value; $('hu-res').innerHTML = humoResults(); },
   'hu-fix': el => { humo.fix = el.checked; $('hu-res').innerHTML = humoResults(); },
+  'home-on': el => toggleHomeCard(el.dataset.id, el.checked),
+  qline: el => applyLine(el.value),
 };
 document.addEventListener('click', ev => {
   // Kompyuterda sana tanlagich faqat ikonkadan ochiladi — butun tugmadan ochilsin
@@ -2576,12 +3443,69 @@ document.addEventListener('click', ev => {
   const fn = ACT[el.dataset.act];
   if (fn) { ev.preventDefault(); fn(el, ev); }
 });
+// Tarix: qatorni chapga surish — o'chirish, o'ngga — bugunga nusxalash (90px dan keyin)
+const swipe = { row: null, id: 0, x0: 0, y0: 0, dx: 0, on: false, block: false };
+const SWIPE_AT = 90;
+document.addEventListener('pointerdown', ev => {
+  const row = ev.target.closest?.('.sw > .row[data-id]');
+  if (!row || (ev.pointerType === 'mouse' && ev.button !== 0)) return;
+  Object.assign(swipe, { row, id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, dx: 0, on: false });
+});
+document.addEventListener('pointermove', ev => {
+  const s = swipe;
+  if (!s.row || ev.pointerId !== s.id) return;
+  const dx = ev.clientX - s.x0, dy = ev.clientY - s.y0;
+  if (!s.on) {
+    if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { s.row = null; return; }
+    if (Math.abs(dx) < 12) return;
+    s.on = true;
+    s.row.classList.add('swiping');
+    try { s.row.setPointerCapture(ev.pointerId); } catch { /* sintetik hodisa */ }
+  }
+  s.dx = Math.max(-140, Math.min(140, dx));
+  s.row.style.transform = `translateX(${s.dx}px)`;
+  const wrap = s.row.parentElement;
+  if (s.dx > 0) wrap.dataset.dir = 'r'; else wrap.dataset.dir = 'l';
+  if (Math.abs(s.dx) >= SWIPE_AT && !s.row.dataset.armed) { s.row.dataset.armed = '1'; haptic.light(); }
+  if (Math.abs(s.dx) < SWIPE_AT) delete s.row.dataset.armed;
+});
+function endSwipe(ev) {
+  const s = swipe;
+  if (!s.row || ev.pointerId !== s.id) return;
+  const { row, dx, on } = s;
+  s.row = null;
+  if (!on) return;
+  s.block = true; // keyingi "click" tahrirlashni ochmasin
+  setTimeout(() => { s.block = false; }, 350);
+  row.classList.remove('swiping');
+  const tx = db.tx.find(x => x.id === row.dataset.id);
+  if (ev.type === 'pointerup' && tx && Math.abs(dx) >= SWIPE_AT) {
+    if (dx < 0) deleteTx(tx); else copyTxToday(tx);
+    rerender();
+    return;
+  }
+  row.style.transform = '';
+  setTimeout(() => { delete row.parentElement?.dataset.dir; }, 200);
+}
+document.addEventListener('pointerup', endSwipe);
+document.addEventListener('pointercancel', endSwipe);
+document.addEventListener('click', ev => {
+  if (swipe.block && ev.target.closest?.('.sw')) { swipe.block = false; ev.stopPropagation(); ev.preventDefault(); }
+}, true);
 document.addEventListener('input', ev => { const k = ev.target.dataset?.input; if (k && INPUT[k]) INPUT[k](ev.target); });
 document.addEventListener('change', ev => { const k = ev.target.dataset?.change; if (k && CHANGE[k]) CHANGE[k](ev.target); });
 document.addEventListener('keydown', ev => {
   if (!$('lock').hidden) {
     if (/^\d$/.test(ev.key)) pinKey(ev.key);
     else if (ev.key === 'Backspace') pinKey('back');
+    else return;
+    ev.preventDefault();
+    return;
+  }
+  if (!$('story').hidden) {
+    if (ev.key === 'ArrowRight' || ev.key === ' ') stepStory(1);
+    else if (ev.key === 'ArrowLeft') stepStory(-1);
+    else if (ev.key === 'Escape') closeStory();
     else return;
     ev.preventDefault();
     return;
@@ -2634,10 +3558,8 @@ async function start() {
   if (db.pin) showLock('unlock', showApp); else showApp();
 }
 function showApp() {
-  $('fab').innerHTML = ic('plus', 28, 2.5);
   $('view').hidden = false;
   $('nav').hidden = false;
-  $('fab').hidden = false;
   render(0);
 }
 start();
