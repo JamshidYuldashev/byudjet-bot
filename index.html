@@ -119,6 +119,7 @@ body.sub #nav, body.sub #fab { display: none; }
 .row .s { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .end { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; }
 .end .num { font-size: 14px; }
+.end .bal { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .badge { font-size: 11px; font-weight: 800; color: var(--coral); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
 .tag { font-size: 10px; font-weight: 800; letter-spacing: .04em; color: var(--soft); padding: 2px 6px; border-radius: 6px; background: var(--surface2); flex: none; }
 .status { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800; padding: 6px 10px; border-radius: 12px; white-space: nowrap; flex: none; border: 0; }
@@ -550,9 +551,14 @@ function calc() {
   let expected = PLAN.startBalance;
   for (const key of byPlan.keys()) expected += delta(events.get(key));
   const total = bal.card + bal.cash + bal.save;
+  const sorted = [...db.tx].sort(txCmp);
+  // Har amaldan keyingi jami balans (vaqt tartibida, eng eskisidan)
+  const after = new Map();
+  let run = db.open.card + db.open.cash + db.open.save;
+  for (let i = sorted.length - 1; i >= 0; i--) after.set(sorted[i].id, (run += txDelta(sorted[i])));
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, total, byPlan, dayStat, debtPaid, debtMap,
-    expected, dev: total - expected, sorted: [...db.tx].sort(txCmp),
+    expected, dev: total - expected, sorted, after,
   };
   return cache;
 }
@@ -1010,14 +1016,15 @@ function amountHTML(t) {
   if (t.k === 'out') return `<span class="num${CATS[t.c]?.bad ? ' c-bad' : ''}">−${fmt(t.a)}</span>`;
   return `<span class="num c-soft">${fmt(t.a)}</span>`;
 }
-function txRow(t, C, withDate) {
+function txRow(t, C, withDate, withBal) {
   const look = txLook(t);
   const bad = t.k === 'out' && CATS[t.c]?.bad;
   return `<button class="row" data-act="edit-tx" data-id="${t.id}">`
     + `<span class="tile soft" style="--c:var(--${look.color})">${ic(look.icon)}</span>`
     + `<span class="body"><span class="t"><span>${esc(txTitle(t, C))}</span>${t.h ? '<span class="tag">HUMO</span>' : ''}</span>`
     + `<span class="s">${esc(txSub(t, C, withDate))}</span></span>`
-    + `<span class="end">${amountHTML(t)}${bad ? '<span class="badge soft">Qoida buzildi</span>' : ''}</span></button>`;
+    + `<span class="end">${amountHTML(t)}${bad ? '<span class="badge soft">Qoida buzildi</span>' : ''}`
+    + `${withBal ? `<span class="bal">Balans: ${ui.hide ? '•••••' : fmt(C.after.get(t.id))}</span>` : ''}</span></button>`;
 }
 const ACT_LABEL = { in: 'Tushdi', out: "To'lash", lock: 'Qulflash' };
 function evAmount(e) {
@@ -1397,7 +1404,7 @@ function histList(C) {
     return `<section style="display:flex;flex-direction:column;gap:6px">
       <div class="dayhead"><span class="${bad ? 'c-bad' : ''}">${label} <span class="wd">· ${WEEKDAYS[dowOf(g.d)]}</span></span>
         <span class="${total > 0 ? 'c-in' : bad ? 'c-bad' : 'c-soft'}">${total ? signed(total) : '0'}</span></div>
-      <div class="group${bad ? ' bad' : ''}">${g.items.map(t => txRow(t, C, false)).join('')}</div></section>`;
+      <div class="group${bad ? ' bad' : ''}">${g.items.map(t => txRow(t, C, false, true)).join('')}</div></section>`;
   }).join('');
 }
 
