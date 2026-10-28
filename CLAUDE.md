@@ -61,22 +61,26 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 
 - Hisoblar: `card` (Karta), `cash` (Naqd), `save` (Omonat — qulflangan). Boshlang'ich qoldiqlar `open` da
   (standart: Karta 1 000 000).
-- Amal: `{ id, d, tm, k: in|out|tr, a, acc, to, c, n, p, h, debt }`.
+- Amal: `{ id, d, tm, k: in|out|tr, a, acc, to, c, n, p, h, debt, b }`.
   - `p` — reja bandi kaliti (`2026-11-05:avans`): band bajarilgan deb hisoblanadi.
   - `h` — HUMO xabari izi (takror importdan himoya).
   - `debt` — qarz id si.
+  - `b` — HUMO xabaridagi 💰 karta qoldig'i (tiyin), shu amaldan keyin. «HUMO bilan solishtirish» (`reconcile`) shu bilan
+    trekerdagi karta qoldig'ini tekshiradi; tuzatish farqli xabardan bir daqiqa oldinga yoziladi.
 - Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
-- Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz = yakuniy reja + farq.
+- Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz (`C.prog`) = yakuniy reja + farq +
+  o'tib ketgan, yozilmagan yo'lkira (pulsiz borilgan kunlar). Erkin pul = `affordPath` minimumi (karta + naqd).
 - Xohishlar (`wish` hujjati): `{ id: w…, ts, a, c, n, acc, st: w|b|s, rd }` — «24 soat qoidasi». Zaxira eksportiga kiradi.
 - Jurnal (`log`): `{ t, k: add|edit|del|debt|plan|set|import|wish, m, r }`, oxirgi 500 ta yozuv. Har bir o'zgarish
   `addTx` / `updateTx` / `removeTx` / `logEv` orqali yoziladi — ma'lumotni to'g'ridan-to'g'ri o'zgartirmang.
 - PIN: `meta.pin = { s: salt, h: sha256(salt:pin) }` — ekran qulfi. Zaxira eksportiga kirmaydi.
-- `meta.home = { order, off }` — Asosiy ekran kartalari tartibi/yashirilganlari (`HOME_CARDS` id lari).
+- `meta.home = { order, off, v: 2 }` — Asosiy ekran kartalari tartibi/yashirilganlari (`HOME_CARDS` id lari).
+  `v` bo'lmagan eski tartib bir marta standartga qaytadi.
   `meta.imp = { t, tx, debts, h }` — oxirgi HUMO import, «Bekor qilish» uchun. Ikkalasi zaxira eksportiga kirmaydi.
 - Faqat qurilmada (localStorage): mavzu `byudjet:ui:theme`, summalarni yashirish `byudjet:ui:hide`,
   tabriklangan nishonlar `byudjet:ui:badges`, ko'rilgan oy yakunlari `byudjet:ui:wrap`.
 - Animatsiyalar `prefers-reduced-motion` ga bo'ysunadi; rAF to'xtasa ham `setTimeout` yakuniy holatni ko'rsatadi.
-- «Balans tuzatish» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Hisobot), lekin qoldiqqa kiradi.
+- «Balans tuzatish» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Tahlil), lekin qoldiqqa kiradi.
 - Biometrik ochish (BiometricManager, 7.2+): tasodifiy token qurilmaning xavfsiz xotirasida, bulutda faqat
   `meta.bio = { [deviceId]: sha256(token) }`. PIN bo'lmasa `bio` bo'sh. Zaxira eksportiga kirmaydi.
 - Saqlash: hujjatlar `meta`, `debts`, `log`, `wish`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
@@ -86,6 +90,13 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
   `__OWNER_HASH__` o'rniga joylaydi (bu satr `index.html` da aynan bir marta bo'lishi shart). Pages manbasi — GitHub Actions.
   Begona akkaunt yoki Telegram'siz brauzerda `load()` chaqirilmaydi, faqat «Bu shaxsiy ilova» chiqadi.
   `file:` va localhost — tekshiruvsiz (testlar uchun).
+
+## Tuzilma (UI)
+
+- Pastki menyu: `main` · `tarix` · «+» (`add`) · `reja` · `tahlil` (`TABS`). Boshqa sahifalar `push()` bilan ustiga ochiladi:
+  `add`, `humo`, `jurnal`, `sozlama`, `sz-home`, `sz-lim`, `sz-open`, `sz-backup` (`VIEWS`). Telegram BackButton — `stack` bo'yicha.
+- Reja ichida `reja.tab`: `cal` | `qarz` | `wish`. Asosiy kartalar: `HOME_CARDS` (wrap, pay, alerts, kpi, wish, goal, debts, recent).
+- «+» oynasida raqamlar paneli `#f-pad` `position: fixed` — telefonda matn yozilayotganda (`body.typing`) yashiriladi.
 
 ## Tekshirish
 
