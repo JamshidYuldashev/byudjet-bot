@@ -14,6 +14,7 @@
   --blue: #2563D9; --mint: #0E7A4D; --coral: #C7382B; --amber: #8A5A00; --teal: #0B7D73;
   --purple: #6A48D7; --pink: #B8336A; --gray: #5B6678;
   --hero: #18355E; --hero-muted: #B9CCEB; --shadow: rgba(14, 17, 22, .18);
+  --ch-plan: #2563D9; --ch-act: #0E7A4D;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --accent: #6EA8FE; --on-accent: #0B1220; --sel: #1E2A3D; --on-strong: #0B1220;
     --blue: #6EA8FE; --mint: #3DDC97; --coral: #FF7B6B; --amber: #F5B83D; --teal: #4FD1C5;
     --purple: #B69CFF; --pink: #FF8FB1; --gray: #AEB6C4; --shadow: rgba(0, 0, 0, .45);
+    --ch-plan: #4F8FEA; --ch-act: #22AE76;
     color-scheme: dark;
   }
 }
@@ -32,6 +34,7 @@
   --accent: #6EA8FE; --on-accent: #0B1220; --sel: #1E2A3D; --on-strong: #0B1220;
   --blue: #6EA8FE; --mint: #3DDC97; --coral: #FF7B6B; --amber: #F5B83D; --teal: #4FD1C5;
   --purple: #B69CFF; --pink: #FF8FB1; --gray: #AEB6C4; --shadow: rgba(0, 0, 0, .45);
+    --ch-plan: #4F8FEA; --ch-act: #22AE76;
   color-scheme: dark;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -177,8 +180,6 @@ textarea.field { padding: 12px; min-height: 150px; resize: vertical; font: 11.5p
 .acc > span { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--hero-muted); }
 .acc b { font-size: clamp(13px, 3.9vw, 15px); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hero hr { border: 0; height: 1px; background: rgba(255, 255, 255, .12); margin: 0; }
-.hero-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--hero-muted); }
-.hero-row b { color: #FFFFFF; }
 .dev-neg { color: #FFB4A8; font-weight: 800; white-space: nowrap; } .dev-pos { color: #8FF0C4; font-weight: 800; white-space: nowrap; }
 
 /* Qo'shish */
@@ -247,9 +248,6 @@ textarea.field { padding: 12px; min-height: 150px; resize: vertical; font: 11.5p
 .barlbl { display: flex; gap: 3px; font-size: 10px; font-weight: 700; color: var(--muted); }
 .barlbl > span { flex: 1; max-width: 24px; text-align: center; overflow: visible; white-space: nowrap; }
 .chart { width: 100%; height: auto; display: block; }
-.det summary { min-height: 44px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 800; color: var(--accent); list-style: none; }
-.det summary::-webkit-details-marker { display: none; }
-.det[open] summary { margin-bottom: 4px; }
 .formgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 
 /* HUMO */
@@ -336,7 +334,6 @@ body.sub #toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 .spark { display: block; width: 100%; height: 34px; overflow: visible; }
 .spark-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--hero-muted); margin-top: -6px; }
 .spark-row b { color: #FFFFFF; }
-.dev-btn { border: 0; background: rgba(255, 255, 255, .08); border-radius: 10px; padding: 2px 8px; margin: -2px 0; font-size: 13px; }
 /* Reja: xarajat issiqlik xaritasi */
 .cal .d.heat { position: relative; isolation: isolate; }
 .cal .d.heat::before { content: ""; position: absolute; inset: 0; border-radius: 10px; background: var(--accent); opacity: calc(var(--heat) * .5); z-index: -1; }
@@ -381,10 +378,8 @@ body.sub #toast { bottom: calc(24px + env(safe-area-inset-bottom)); }
 .dmap > i { background: transparent; }
 .dmap .g { background: var(--mint); } .dmap .b { background: var(--coral); }
 .dmap .t { outline: 2px solid var(--text); outline-offset: 1px; }
-/* Simulyator, tez yozish */
+/* Simulyator */
 input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
-.qline { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 6px 0 14px; border-radius: 14px; background: var(--surface); color: var(--muted); }
-.qline input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 14px; font-weight: 600; }
 /* Oy yakuni («Wrapped») */
 .wrapb { background: linear-gradient(135deg, #2F6BFF, #7A4DFF) !important; color: #FFFFFF !important; }
 .wrapb .lbl, .wrapb .small { color: rgba(255, 255, 255, .8) !important; }
@@ -422,6 +417,80 @@ input[type="range"] { width: 100%; accent-color: var(--accent); margin: 4px 0; }
 .dmap.st-map { grid-template-rows: repeat(7, 26px); grid-auto-columns: 26px; gap: 5px; justify-content: start; }
 .dmap.st-map > * { aspect-ratio: auto; border-radius: 6px; }
 .dmap.st-map .g { background: #6CF0B0; } .dmap.st-map .b { background: #FF8A7A; } .dmap.st-map > button, .dmap.st-map > span { background: rgba(255, 255, 255, .15); }
+
+/* ===== Yangi tuzilma ===== */
+.chip { display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+.opt2 { min-height: 52px; justify-content: flex-start; gap: 8px; padding: 0 10px; text-align: left; }
+.opt2 > span { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.opt2 small { font-size: 11px; font-weight: 700; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Asosiy: hero ko'rsatkichlari, tez amallar, kichik plitkalar */
+.hk { border: 0; border-radius: 14px; padding: 10px 12px; background: rgba(255, 255, 255, .1); color: #FFFFFF; text-align: left;
+  display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.hk > span { font-size: 12px; font-weight: 700; color: var(--hero-muted); }
+.hk b { font-size: 18px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hk small { font-size: 11px; font-weight: 600; color: var(--hero-muted); line-height: 1.35; }
+.qa-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.qa { border: 0; background: none; color: var(--text); display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; padding: 2px 0; min-height: 78px; }
+.qa .tile { width: 54px; height: 54px; border-radius: 18px; }
+.kpis .kpi { border: 0; text-align: left; color: var(--text); }
+.kpis .kpi .num { font-size: 17px; display: flex; align-items: center; gap: 4px; }
+.kpis .kpi .small { font-weight: 700; line-height: 1.3; }
+.grp-l { font-size: 11.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 10px 0 2px; }
+/* Qo'shish: raqamlar paneli va «Saqlash» doim pastda, bosh barmoq yetadigan joyda */
+.addhead { gap: 8px; }
+.seg.head { flex: 1; min-width: 0; }
+.seg.head button { font-size: 13px; min-height: 38px; }
+.pad { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; max-width: 560px; margin: 0 auto; background: var(--surface);
+  border-radius: 24px 24px 0 0; box-shadow: 0 -6px 24px rgba(14, 17, 22, .12); padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 10px; }
+.pad .keys button { min-height: 46px; }
+.save-row { display: flex; gap: 8px; }
+.save-row .btn.primary { flex: 1; min-width: 0; }
+.wishbtn { flex: none; min-height: 54px; border-radius: 16px; color: var(--purple); padding: 0 14px; }
+body.padded #view { padding-bottom: calc(var(--padh, 360px) + 20px); }
+body.padded #toast { bottom: calc(var(--padh, 360px) + 12px); }
+@media (pointer: coarse) {
+  body.typing .pad { display: none; }
+  body.typing.padded #view { padding-bottom: 24px; }
+}
+.cat { min-height: 68px; padding: 6px 2px 5px; }
+.cat .tile { width: 30px; height: 30px; border-radius: 10px; }
+/* Tarix: qidiruv va filtr tepada yopishib turadi */
+.stick { position: sticky; top: 0; z-index: 5; background: var(--bg); margin: -6px -16px 0; padding: 6px 16px 8px;
+  display: flex; flex-direction: column; gap: 10px; }
+/* Sozlamalar */
+.grp { font-size: 12px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding: 6px 4px 0; margin-bottom: -4px; }
+.setlist { background: var(--surface); border-radius: 20px; padding: 0 14px; display: flex; flex-direction: column; }
+.setlist > .setrow:first-child { border-top: 0; }
+.si { display: flex; align-items: center; gap: 12px; min-height: 58px; padding: 8px 0; border: 0; border-top: 1px solid var(--line);
+  background: none; color: var(--text); text-align: left; width: 100%; }
+.si:first-child { border-top: 0; }
+.si.col { flex-direction: column; align-items: stretch; gap: 8px; padding: 12px 0; }
+.si .tile { width: 34px; height: 34px; border-radius: 10px; }
+.si .tile .i { width: 18px; height: 18px; }
+.si .body b { font-size: 14px; font-weight: 700; }
+.si .body > span { font-size: 12px; color: var(--muted); font-weight: 600; line-height: 1.35; }
+.si .val { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+.si.danger .body b { color: var(--coral); }
+.tg { width: 46px; height: 28px; border-radius: 14px; background: var(--line); position: relative; flex: none; transition: background .2s; }
+.tg::after { content: ""; position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 11px; background: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: left .2s; }
+.tg.on { background: var(--accent); }
+.tg.on::after { left: 21px; }
+/* Tahlil */
+.fc { position: relative; }
+.fc svg { touch-action: pan-y; cursor: crosshair; }
+.fc-tip { position: absolute; top: -4px; left: 0; pointer-events: none; background: var(--text); color: var(--bg); border-radius: 10px;
+  padding: 6px 10px; font-size: 12px; font-weight: 600; line-height: 1.45; white-space: nowrap; box-shadow: 0 4px 14px var(--shadow); }
+.tool { min-height: 64px; border-radius: 16px; border: 0; background: var(--surface); color: var(--text); display: flex; align-items: center;
+  gap: 10px; padding: 0 12px; text-align: left; min-width: 0; }
+.tool .body b { font-size: 14px; }
+.tool .body span { font-size: 11px; color: var(--muted); font-weight: 600; }
+.vrow { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; border-top: 1px solid var(--line); }
+.vgrid { display: grid; grid-template-columns: 50px repeat(3, minmax(0, 1fr)); gap: 4px 8px; font-size: 12px; font-weight: 700; }
+.vgrid > :not(:nth-child(4n+1)) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vgrid.vhead { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -520,6 +589,9 @@ const ICON = {
   up: 'M6 15l6-6l6 6',
   down: 'M6 9l6 6l6-6',
   finger: 'M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3 M8 11a4 4 0 0 1 8 0v1a10.05 10.05 0 0 0 2 6 M12 11v2a14 14 0 0 0 2.5 8 M8 15a18 18 0 0 0 1.8 6 M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95',
+  gear: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543 .94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543 .826-3.31 2.37-2.37c1 .608 2.296 .07 2.572-1.065z M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0',
+  history: 'M12 8l0 4l2 2 M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5',
+  trend: 'M3 17l6-6l4 4l8-8 M14 7l7 0l0 7',
   faceId: 'M4 8v-2a2 2 0 0 1 2-2h2 M4 16v2a2 2 0 0 0 2 2h2 M16 4h2a2 2 0 0 1 2 2v2 M16 20h2a2 2 0 0 0 2-2v-2 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
 };
 const ic = (name, size = 20, sw) => `<svg class="i" width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"${sw ? ` stroke-width="${sw}"` : ''}><path d="${ICON[name]}"/></svg>`;
@@ -611,7 +683,7 @@ const MONTHS = [...new Set(DAYS.map(d => d.month))];
 const clampMonth = m => (m < MONTHS[0] ? MONTHS[0] : m > MONTHS[MONTHS.length - 1] ? MONTHS[MONTHS.length - 1] : m);
 
 // ===== Holat =====
-// db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt }
+// db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt, b (HUMO 💰 karta qoldig'i, tiyin) }
 // db.log: { t: "YYYY-MM-DD HH:MM", k: add|edit|del|debt|plan|set|import|wish, m: matn, r: qarz yoki amal id }
 // db.wish: { id, ts (ms), a, c, n, acc, st: w (kutilmoqda) | b (sotib olindi) | s (voz kechildi), rd: hal qilingan sana }
 let db = null;
@@ -619,7 +691,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], pin: null, bio: {}, home: { order: [], off: [] }, imp: null,
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null,
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -672,6 +744,9 @@ function calc() {
   let expected = PLAN.startBalance;
   for (const key of byPlan.keys()) expected += delta(events.get(key));
   const total = bal.card + bal.cash + bal.save;
+  // Prognoz: o'tib ketgan, yozilmagan yo'lkira hisobga olinmaydi — pulsiz borilgan kunlar ham bo'ladi
+  let pastYol = 0;
+  for (const e of events.values()) if (e.id === 'yol' && e.iso < t && !byPlan.has(e.key)) pastYol += e.amount;
   const sorted = [...db.tx].sort(txCmp);
   // Har amaldan keyingi hisob qoldig'i (vaqt tartibida, eng eskisidan) — HUMO xabaridagi 💰 bilan solishtiriladi
   const after = new Map(), dayEnd = new Map();
@@ -686,7 +761,7 @@ function calc() {
   }
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, total, byPlan, dayStat, debtPaid, debtMap,
-    expected, dev: total - expected, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
+    expected, dev: total - expected, prog: pb + total - expected + pastYol, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
   };
   return cache;
 }
@@ -804,13 +879,13 @@ async function getBatched(keys) {
   return out;
 }
 const packTx = t => {
-  const a = [t.id, t.d.slice(8), t.tm, t.k, t.a, t.acc, t.to, t.c, t.n, t.p, t.h, t.debt];
+  const a = [t.id, t.d.slice(8), t.tm, t.k, t.a, t.acc, t.to, t.c, t.n, t.p, t.h, t.debt, t.b];
   while (a.length > 5 && a[a.length - 1] === '') a.pop();
   return a;
 };
 const unpackTx = (a, m) => {
-  const [id, dd, tm, k, amt, acc, to, c, n, p, h, debt] = a;
-  return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt };
+  const [id, dd, tm, k, amt, acc, to, c, n, p, h, debt, b] = a;
+  return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt, b };
 };
 function serialize(doc) {
   if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp });
@@ -868,6 +943,7 @@ function cleanTx(o) {
   const t = {
     id: o.id, d: o.d, tm: o.tm || '', k: o.k, a: o.a, acc: o.acc, to: o.to || '', c: o.c || '',
     n: o.n || '', p: o.p || '', h: o.h || '', debt: o.debt || '',
+    b: Number.isInteger(o.b) && o.b >= 0 && o.b <= 1e14 ? o.b : '', // noto'g'ri qoldiq — shunchaki tashlanadi
   };
   const bad = what => new Error(`amal ${typeof t.id === 'string' ? t.id : '?'}: noto'g'ri ${what}`);
   if (typeof t.id !== 'string' || !ID_RE.test(t.id)) throw bad('id');
@@ -924,7 +1000,8 @@ function cleanMeta(o) {
   if (pin) for (const [k, v] of Object.entries(isObj(o.bio) ? o.bio : {})) if (/^[\w-]{1,128}$/.test(k) && /^[0-9a-f]{64}$/.test(v)) bio[k] = v;
   // Asosiy ekran kartalari tartibi va yashirilganlari
   const homeIds = v => [...new Set(Array.isArray(v) ? v.filter(id => HOME_IDS.includes(id)) : [])];
-  const home = { order: homeIds(o.home?.order), off: homeIds(o.home?.off) };
+  // v2 — yangi tuzilma: eski tartib bir marta standartga qaytadi
+  const home = { order: o.home?.v === 2 ? homeIds(o.home.order) : [], off: homeIds(o.home?.off), v: 2 };
   // Oxirgi HUMO import — bekor qilish uchun: qo'shilgan amallar, yangi qarzlar, takror deb bog'langanlar
   const ids = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string' && /^[a-z][0-9a-z]{1,12}$/.test(x)).slice(0, 500) : []);
   const imp = isObj(o.imp) && typeof o.imp.t === 'string' ? { t: o.imp.t.slice(0, 16), tx: ids(o.imp.tx), debts: ids(o.imp.debts), h: ids(o.imp.h) } : null;
@@ -1073,7 +1150,7 @@ function debtNote(t) {
   return s.closed ? ' · qarz yopildi' : ` · ${fmt(s.left)} qoldi`;
 }
 function addTx(t, how = {}) {
-  const tx = { id: nextId('t'), tm: '', to: '', c: '', n: '', p: '', h: '', debt: '', ...t };
+  const tx = { id: nextId('t'), tm: '', to: '', c: '', n: '', p: '', h: '', debt: '', b: '', ...t };
   db.tx.push(tx);
   if (how.quiet) { ver++; return tx; }
   touch('meta', tdoc(tx.d));
@@ -1158,8 +1235,9 @@ function setWorkday(iso, work) {
 }
 
 // ===== Navigatsiya =====
-// «+» menyu o'rtasida; Reja — Asosiy ekrandagi kalendar tugmasidan (Telegram «Orqaga» Asosiy'ga qaytaradi)
-const TABS = [['main', 'Asosiy', 'home'], ['tarix', 'Tarix', 'list'], ['add'], ['qarz', 'Qarzlar', 'users'], ['hisobot', 'Hisobot', 'chart']];
+// Pastki menyu: 4 bo'lim va markazda «+». Qolgan sahifalar (qo'shish, HUMO, sozlamalar) ustiga ochiladi — «Orqaga» qaytaradi.
+const TABS = [['main', 'Asosiy', 'home'], ['tarix', 'Tarix', 'list'], ['add'], ['reja', 'Reja', 'calendar'], ['tahlil', 'Tahlil', 'chart']];
+const TAB_IDS = TABS.map(x => x[0]).filter(id => id !== 'add');
 let route = 'main';
 const stack = [];
 let enterAnim = false; // bo'lim almashganda kartalar silliq paydo bo'ladi
@@ -1178,23 +1256,24 @@ function back() {
   if (!$('story').hidden) { closeStory(); return; }
   if (!$('modal').hidden) { closeModal(); return; }
   const prev = stack.pop();
-  if (!prev) { if (route === 'reja') go('main'); return; }
+  if (!prev) return;
   route = prev.route;
   render(prev.y);
 }
 function render(scrollY) {
-  const sub = route === 'add' || route === 'humo';
-  document.body.classList.toggle('sub', sub);
+  document.body.classList.toggle('sub', !TAB_IDS.includes(route));
+  document.body.classList.toggle('padded', route === 'add');
   const view = $('view');
   view.classList.remove('enter');
   view.innerHTML = VIEWS[route]();
   if (enterAnim) { void view.offsetWidth; view.classList.add('enter'); enterAnim = false; }
+  if (route === 'add') document.body.style.setProperty('--padh', `${$('f-pad').offsetHeight}px`);
   if (route === 'main') { heroCount(); const C = calc(); checkBadges(C, C.t); }
   $('nav').firstElementChild.innerHTML = TABS.map(([id, label, icon]) => (id === 'add'
     ? `<button class="nav-add" data-act="add" aria-label="Yangi amal qo'shish">${ic('plus', 28, 2.5)}</button>`
     : `<button data-act="tab" data-to="${id}"${route === id ? ' aria-current="page"' : ''}>${ic(icon, 22)}${label}</button>`)).join('');
   if (scrollY !== undefined) window.scrollTo(0, scrollY);
-  if (tgAtLeast('6.1')) { if (stack.length || route === 'reja') WA.BackButton.show(); else WA.BackButton.hide(); }
+  if (tgAtLeast('6.1')) { if (stack.length) WA.BackButton.show(); else WA.BackButton.hide(); }
 }
 const rerender = () => render();
 
@@ -1259,32 +1338,37 @@ function eventRow(e, C, withDate) {
 const iconTile = (icon, color, size = 'lg') => `<span class="tile ${size} soft" style="--c:var(--${color})">${ic(icon, size === 'lg' ? 24 : 22)}</span>`;
 
 // ===== Asosiy =====
+const QUICK_ACTS = [['qa-in', 'Kirim', 'income', 'mint'], ['qa-tr', "O'tkazma", 'transfer', 'gray'], ['humo', 'HUMO', 'clipboard', 'teal'], ['d-new', 'Yangi qarz', 'users', 'amber']];
 function viewMain() {
   const C = calc(), t = C.t;
   const day = DAY_BY_ISO.get(t);
   const chip = t < PLAN.start ? `Reja ${dm(PLAN.start)} dan` : t > PLAN.end ? 'Reja yakunlandi' : `Rejaning ${DAYS.indexOf(day) + 1}-kuni / ${DAYS.length}`;
   const hide = ui.hide;
   const show = v => (hide ? '•••••' : v);
+  const fm = freeMoney(C);
+  const fmSub = fm.v < 0 ? `${dm(fm.iso)} da yetmaydi` : fm.iso === t ? "bugungi to'lovlardan keyin" : `eng tig'iz kun — ${dm(fm.iso)}`;
+  const dev = C.dev ? signed(C.dev) : '±0';
   return `<header class="top">
       <div class="col"><span class="kicker">${WEEKDAYS[dowOf(t)]}, ${longDate(t)}</span><h1 class="h1">Byudjet</h1></div>
-      <div style="display:flex;gap:8px"><button class="round" data-act="tab" data-to="reja" aria-label="Reja kalendari">${ic('calendar', 18)}</button>
-        <button class="round" data-act="pin-lock" aria-label="${db.pin ? 'Hozir qulflash' : "PIN-kod o'rnatish"}">${ic('lock', 18)}</button>
-        <button class="pill-btn" data-act="humo">${ic('clipboard', 18)}HUMO</button></div>
+      <div style="display:flex;gap:8px">
+        <button class="round" data-act="eye" aria-pressed="${hide}" aria-label="${hide ? "Summalarni ko'rsatish" : 'Summalarni yashirish'}">${ic(hide ? 'eyeOff' : 'eye', 20)}</button>
+        <button class="round" data-act="sozlama" aria-label="Sozlamalar">${ic('gear', 20)}</button></div>
     </header>
     <section class="hero">
-      <div class="spread"><span class="lbl" style="display:flex;align-items:center;gap:8px">Jami balans
-        <button class="eye" data-act="eye" aria-pressed="${hide}" aria-label="${hide ? "Summalarni ko'rsatish" : 'Summalarni yashirish'}">${ic(hide ? 'eyeOff' : 'eye', 18)}</button></span>
-        <span class="hero-chip">${chip}</span></div>
+      <div class="spread"><span class="lbl">Jami balans</span><span class="hero-chip">${chip}</span></div>
       ${hide ? `<button class="hero-total" data-act="eye" aria-label="Summalarni ko'rsatish">•••••• <small>so'm</small></button>`
         : `<div class="hero-total"><span id="hero-num" data-v="${C.total}">${fmt(C.total)}</span> <small>so'm</small></div>${sparkHTML(C, t)}`}
       <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="${hide ? 'eye' : 'adjust'}" data-acc="${a}" aria-label="${hide ? `${ACC[a].name}: summani ko'rsatish` : `${ACC[a].name}: ${fmt(C.bal[a])} so'm, qoldiqni tuzatish`}">`
         + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}</span><b>${show(fmt(C.bal[a]))}</b></button>`).join('')}</div>
       <hr>
-      <div class="hero-row"><span>Reja bo'yicha hozir: <b>${show(fmt(C.expected))}</b></span>`
-      + (hide ? `<span class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}">•••••</span>`
-        : `<button class="dev-btn ${C.dev < 0 ? 'dev-neg' : 'dev-pos'}" data-act="dev-info" aria-label="Rejadan farq: ${C.dev ? signed(C.dev) : '±0'}, tafsilot">${C.dev ? signed(C.dev) : '±0'}</button>`)
-      + `</div>
+      <div class="grid2" style="gap:8px">
+        <button class="hk" data-act="${hide ? 'eye' : 'free-info'}" aria-label="Erkin pul: ${hide ? 'yashirilgan' : `${fmt(fm.v)} so'm`}, tafsilot">
+          <span>Erkin pul</span><b class="${fm.v < 0 ? 'dev-neg' : ''}">${show(fmt(fm.v))}</b><small>${fmSub}</small></button>
+        <button class="hk" data-act="${hide ? 'eye' : 'dev-info'}" aria-label="Rejadan farq: ${hide ? 'yashirilgan' : dev}, tafsilot">
+          <span>Rejadan farq</span><b class="${C.dev < 0 ? 'dev-neg' : 'dev-pos'}">${show(dev)}</b><small>Nimadan yig'ilgan ›</small></button>
+      </div>
     </section>
+    <div class="qa-row">${QUICK_ACTS.map(([act, label, icon, color]) => `<button class="qa" data-act="${act}"><span class="tile soft" style="--c:var(--${color})">${ic(icon, 24)}</span>${label}</button>`).join('')}</div>
     ${homeList().filter(x => x.on).map(x => x.fn(C, t)).join('')}`;
 }
 // Hero: so'nggi 7 kun oxiridagi jami balans chizig'i
@@ -1298,11 +1382,10 @@ function sparkHTML(C, t) {
   return `<svg class="spark" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/></svg>
       <div class="spark-row"><span>${dm(days[0])} – ${dm(days[6])}</span><span>7 kunda: <b>${ch ? signed(ch) : '±0'}</b></span></div>`;
 }
-// Asosiy ekran kartalari: tartib va ko'rinishi Hisobot → Ko'rinish'da sozlanadi
+// Asosiy ekran kartalari: tartib va ko'rinishi Sozlamalar → Asosiy ekran kartalari'da
 const HOME_CARDS = [
-  ['wrap', 'Oy yakuni', wrapBanner], ['alerts', 'Diqqat', alertsCard], ['score', 'Moliyaviy salomatlik', scoreCard],
-  ['today', 'Bugungi xarajat', todayCard], ['wish', 'Xohishlar', wishCard], ['insights', 'Xulosalar', insightsCard], ['overdue', 'Belgilanmagan rejalar', overdueCard],
-  ['next', "Keyingi to'lov", nextCard], ['goal', 'Yakuniy maqsad', goalCard], ['stats', 'Seriya va qoida', statCards],
+  ['wrap', 'Oy yakuni', wrapBanner], ['pay', "Yaqin to'lovlar", payCard], ['alerts', 'Diqqat', alertsCard],
+  ['kpi', 'Bugun, seriya va salomatlik', kpiCard], ['wish', 'Xohishlar', wishCard], ['goal', 'Yakuniy maqsad', goalCard],
   ['debts', 'Qarzlar', debtSummary], ['recent', 'Oxirgi amallar', recentCard],
 ];
 const HOME_IDS = HOME_CARDS.map(x => x[0]);
@@ -1355,21 +1438,15 @@ function setTheme(v) {
   haptic.light();
   rerender();
 }
-function settingsCard() {
-  const list = homeList();
-  return `<section class="card">
-      <span class="h2">Ko'rinish</span>
-      <div class="seg inset">${[['auto', 'Telegram'], ['light', "Yorug'"], ['dark', "Qorong'i"]].map(([v, l]) => `<button data-act="theme" data-v="${v}" aria-pressed="${ui.theme === v}">${l}</button>`).join('')}</div>
-      <span class="lbl" style="margin-top:4px">Asosiy ekran kartalari — belgini olib yashiring, strelkalar bilan tartiblang</span>
-      <div>${list.map((x, i) => `<div class="setrow">
-        <label class="check"><input type="checkbox" data-change="home-on" data-id="${x.id}"${x.on ? ' checked' : ''}>${x.label}</label>
-        <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="-1" aria-label="${x.label}: yuqoriga"${i === 0 ? ' disabled' : ''}>${ic('up', 16)}</button>
-        <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="1" aria-label="${x.label}: pastga"${i === list.length - 1 ? ' disabled' : ''}>${ic('down', 16)}</button></div>`).join('')}</div>
-    </section>`;
-}
-// Diqqat: qarz muddati, limitlar, bugungi qoida buzilishi, kechki yo'lkira, seriya
+// Diqqat: HUMO bilan farq, qarz muddati, limitlar, bugungi qoida buzilishi, xohishlar, seriya
 function alertsCard(C, t) {
   const items = [];
+  const rc = reconcile(C);
+  if (rc && !rc.ok) {
+    items.push({ lvl: 2, color: 'coral', icon: 'clipboard', act: 'data-act="recon"',
+      text: `Karta HUMO bilan mos emas: trekerda ${fmt(Math.abs(rc.bad.diff))} ${rc.bad.diff > 0 ? 'kam' : "ko'p"}`,
+      sub: `${dm(rc.bad.tx.d)}, ${rc.bad.tx.tm} holatiga · bosing — tafsilot va tuzatish` });
+  }
   for (const d of db.debts) {
     const s = debtState(C, d);
     if (s.closed || !d.due || d.due > addDays(t, 3)) continue;
@@ -1388,14 +1465,14 @@ function alertsCard(C, t) {
     if (v < lim * 0.8) continue;
     const over = v > lim;
     items.push({
-      lvl: over ? 2 : 1, color: over ? 'coral' : 'amber', icon: CATS[c].icon, act: 'data-act="tab" data-to="hisobot"',
+      lvl: over ? 2 : 1, color: over ? 'coral' : 'amber', icon: CATS[c].icon, act: 'data-act="tab" data-to="tahlil"',
       text: over ? `${CATS[c].name} limiti oshdi: ${fmt(v)} / ${fmt(lim)}` : `${CATS[c].name} limitining ${Math.round((v / lim) * 100)}% ishlatildi`,
       sub: over ? `${fmt(v - lim)} so'm ortiqcha` : `${fmt(lim - v)} so'm qoldi`,
     });
   }
   const bad = C.dayStat[t]?.bad || 0;
   if (bad) {
-    items.push({ lvl: 2, color: 'coral', icon: 'alert', act: 'data-act="tab" data-to="tarix"',
+    items.push({ lvl: 2, color: 'coral', icon: 'alert', act: 'data-act="today-tx"',
       text: `Bugun qoida buzildi: −${fmt(bad)}`, sub: "Ko'cha ovqati, kofe yoki taksi — prognoz shuncha kamaydi" });
   }
   for (const w of db.wish.filter(wishReady)) {
@@ -1417,65 +1494,69 @@ function alertsCard(C, t) {
         + `${x.act ? `<span class="c-muted" style="display:flex">${ic('right', 16)}</span>` : ''}</${tag}>`;
     }).join('')}</section>`;
 }
-// Yo'lkira Asosiy ekranda eslatilmaydi: pulsiz borilgan kunlar ham bo'ladi, kerak bo'lsa «+» orqali yoziladi
-function todayCard(C, t) {
-  const day = DAY_BY_ISO.get(t);
-  if (!day) return '';
+// Yaqin to'lovlar: o'tib ketgan belgilanmagan bandlar, eng yaqin to'lov kuni (kartada yetadimi) va undan keyingisi
+function payCard(C, t) {
+  const late = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e));
+  const groups = [];
+  for (const d of DAYS) {
+    if (d.iso < t || groups.length === 2) continue;
+    const list = C.byIso[d.iso].filter(e => e.id !== 'yol' && isPending(C, e));
+    if (list.length) groups.push({ day: d, list });
+  }
+  if (!late.length && !groups.length) return '';
+  const when = iso => { const n = daysBetween(t, iso); return n === 0 ? 'Bugun' : n === 1 ? 'Ertaga' : `${n} kundan keyin`; };
+  let body = '';
+  if (late.length) body += `<span class="grp-l c-bad">O'tib ketgan — bo'lgan bo'lsa belgilang</span>${late.map(e => eventRow(e, C, true)).join('')}`;
+  const g = groups[0];
+  if (g) {
+    const amt = kind => sum(g.list.filter(e => e.kind === kind), e => e.amount);
+    const need = amt('out') + amt('lock') - amt('in'), card = C.bal.card;
+    body += `<span class="grp-l c-warn">${when(g.day.iso)} · ${longDate(g.day.iso)}, ${WEEKDAYS[g.day.dow]}</span>${g.list.map(e => eventRow(e, C)).join('')}`;
+    if (need > 0 && card >= need) {
+      body += `<div class="msg soft c-in" style="margin:4px 0 10px">${ic('check', 16, 2.5)}Kartada ${ui.hide ? '•••••' : fmt(card)} bor — to'lovlarga yetadi</div>`;
+    } else if (need > 0) {
+      const move = Math.min(need - card, Math.max(0, C.bal.cash));
+      body += `<div class="msg soft c-bad" style="margin:4px 0 10px">${ic('alert', 16)}<span style="flex:1">Kartada ${fmt(need - card)} yetmaydi</span>`
+        + `${move > 0 ? `<button class="status" data-act="cash2card" data-a="${move}" style="background:var(--coral);color:var(--on-strong)">Naqddan o'tkazish</button>` : ''}</div>`;
+    }
+  }
+  const g2 = groups[1];
+  if (g2) {
+    const net = sum(g2.list, e => (e.kind === 'in' ? e.amount : -e.amount)); // kartaga ta'siri
+    body += `<button class="row" data-act="map-day" data-iso="${g2.day.iso}"><span class="body">`
+      + `<span class="grp-l" style="padding:0;color:var(--muted)">${longDate(g2.day.iso)}, ${WEEKDAYS[g2.day.dow]} · ${when(g2.day.iso).toLowerCase()}</span>`
+      + `<span class="t"><span>${esc(g2.list.map(e => e.title).join(', '))}</span></span></span>`
+      + `<span class="num ${net > 0 ? 'c-in' : ''}">${signed(net)}</span><span class="c-muted" style="display:flex">${ic('right', 16)}</span></button>`;
+  }
+  return `<section class="card list"><div class="spread"><span class="h2">Yaqin to'lovlar</span><button class="link-btn" data-act="reja-tab" data-t="cal">Reja</button></div>${body}</section>`;
+}
+// Bugun · seriya · salomatlik — uchta kichik plitka
+function kpiCard(C, t) {
+  if (!DAY_BY_ISO.has(t)) return '';
   const spent = sum(db.tx.filter(x => x.d === t && x.k === 'out' && x.c !== 'tuz'), x => x.a);
   const yol = C.byPlan.get(`${t}:yol`);
   const extra = (C.dayStat[t]?.disc || 0) - (yol ? yol.a : 0);
-  const sub = extra > 0
-    ? `<span class="small c-bad">Rejadan tashqari: −${fmt(extra)}</span>`
-    : `<span class="small muted">${spent ? "Rejadan tashqari xarajat yo'q" : "Hali xarajat yo'q"}</span>`;
-  const status = isWorkday(day) ? '' : '<span class="status soft c-soft">Dam olish</span>';
-  return `<button class="card rowcard" data-act="today-tx" style="border:0;text-align:left;color:var(--text);width:100%">${iconTile('chart', 'blue')}
-    <span class="body"><span class="lbl">Bugungi xarajat</span><span class="big">${fmt(spent)} so'm</span>${sub}</span>${status}<span class="c-muted" style="display:flex">${ic('right', 18)}</span></button>`;
-}
-function overdueCard(C, t) {
-  const late = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e));
-  if (!late.length) return '';
-  return `<section class="card warn-border">
-    <div class="spread"><span class="h2 c-warn" style="display:flex;align-items:center;gap:6px">${ic('alert', 18)}Belgilanmagan rejalar</span></div>
-    <div>${late.map(e => eventRow(e, C, true)).join('')}</div>
-    <p class="note" style="padding:0">Bo'lgan bo'lsa — belgilang.</p></section>`;
-}
-function nextCard(C, t) {
-  let day = null, list = [];
-  for (const d of DAYS) {
-    if (d.iso < t) continue;
-    list = C.byIso[d.iso].filter(e => e.id !== 'yol' && isPending(C, e));
-    if (list.length) { day = d; break; }
-  }
-  if (!day) return '';
-  const left = daysBetween(t, day.iso);
-  const when = left === 0 ? 'Bugun' : left === 1 ? 'Ertaga' : `${left} kundan keyin`;
-  const outs = sum(list.filter(e => e.kind === 'out'), e => e.amount);
-  const ins = sum(list.filter(e => e.kind === 'in'), e => e.amount);
-  const locks = sum(list.filter(e => e.kind === 'lock'), e => e.amount);
-  const head = outs ? `${fmt(outs)} so'm to'lov` : ins ? `+${fmt(ins)} so'm kirim` : `${fmt(locks)} so'm qulflash`;
-  const need = outs + locks - ins;
-  const card = C.bal.card;
-  const check = need <= 0 ? ''
-    : card >= need ? `<div class="msg soft c-in">${ic('check', 16, 2.5)}Kartada ${fmt(card)} bor — to'lovlarga yetadi</div>`
-    : `<div class="msg soft c-bad">${ic('alert', 16)}Kartada ${fmt(card)} — ${fmt(need - card)} yetmaydi</div>`;
-  return `<section class="card">
-    <div style="display:flex;align-items:center;gap:12px">${iconTile('calDue', 'amber')}
-      <div class="body"><span class="lbl c-warn" style="font-weight:700">${when} · ${longDate(day.iso)}, ${WEEKDAYS[day.dow]}</span><span class="big">${head}</span></div></div>
-    <div>${list.map(e => eventRow(e, C)).join('')}</div>${check}</section>`;
+  const badToday = (C.dayStat[t]?.bad || 0) > 0;
+  const h = health(C, t), nb = badges(C, t).filter(b => b.on).length;
+  return `<div class="grid3 kpis">
+    <button class="kpi" data-act="today-tx" aria-label="Bugungi xarajat: ${fmt(spent)} so'm"><span class="lbl">Bugun</span> <span class="num">${fmt(spent)}</span>
+      <span class="small ${extra > 0 ? 'c-bad' : 'muted'}">${extra > 0 ? `−${fmt(extra)} ortiqcha` : spent ? "rejadan tashqari yo'q" : "xarajat yo'q"}</span></button>
+    <button class="kpi" data-act="score" aria-label="Seriya: ${streakOf(C, t)} kun"><span class="lbl">Seriya</span> <span class="num"><span class="c-warn" style="display:flex">${ic('flame', 18)}</span>${streakOf(C, t)} kun</span>
+      <span class="small ${badToday ? 'c-bad' : 'muted'}">${badToday ? 'bugun buzildi' : 'qoida buzilmadi'}</span></button>
+    <button class="kpi" data-act="score" aria-label="Moliyaviy salomatlik: ${h.score}"><span class="lbl">Salomatlik</span> <span class="num" style="color:var(--${h.color})">${h.score}</span>
+      <span class="small muted">${h.level} · ${nb}/${BADGES.length} nishon</span></button>
+  </div>`;
 }
 function goalCard(C) {
   const pct = C.final > 0 ? Math.max(0, Math.min(100, Math.floor((C.total / C.final) * 100))) : 0;
-  const prog = C.final + C.dev;
-  const tail = C.dev < 0 ? `maqsaddan <b class="c-bad">${fmt(-C.dev)} kam</b>`
-    : C.dev > 0 ? `maqsaddan <b class="c-in">${fmt(C.dev)} ko'p</b>` : 'aynan maqsadda';
-  return `<section class="card">
-    <div class="spread"><span class="lbl" style="display:flex;align-items:center;gap:6px">${ic('target', 16)}Yakuniy maqsad · ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)}</span>
-      <span class="num c-acc">${pct}%</span></div>
+  const gap = C.prog - C.final;
+  const tail = gap < 0 ? `maqsaddan <b class="c-bad">${fmt(-gap)} kam</b>` : gap > 0 ? `maqsaddan <b class="c-in">${fmt(gap)} ko'p</b>` : 'aynan maqsadda';
+  return `<button class="card" data-act="tab" data-to="tahlil" style="border:0;text-align:left;color:var(--text);width:100%">
+    <span class="spread"><span class="lbl" style="display:flex;align-items:center;gap:6px">${ic('target', 16)}Yakuniy maqsad · ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)}</span>
+      <span class="num c-acc">${pct}%</span></span>
     <span class="big">${fmt(C.final)} so'm</span>
-    <div class="bar lg"><i style="width:${pct}%"></i></div>
-    <span class="lbl" style="line-height:1.45">Prognoz: shu tezlikda ${longDate(PLAN.end)}da <b style="color:var(--text)">${fmt(prog)}</b> bo'ladi — ${tail}</span>
-    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="sim">${ic('chart', 16)}«Agar…»</button>
-      <button class="btn sm" data-act="afford">${ic('calendar', 16)}Qachon olaman?</button></div></section>`;
+    <span class="bar lg" style="display:block"><i style="width:${pct}%"></i></span>
+    <span class="lbl" style="line-height:1.45">Prognoz: shu tezlikda ${longDate(PLAN.end)}da <b style="color:var(--text)">${fmt(C.prog)}</b> bo'ladi — ${tail}</span></button>`;
 }
 function streakOf(C, t) {
   let n = 0;
@@ -1486,16 +1567,6 @@ function streakOf(C, t) {
     n++;
   }
   return n;
-}
-function statCards(C, t) {
-  const m = clampMonth(t.slice(0, 7));
-  const bad = DAYS.filter(d => d.month === m && d.iso <= t && C.dayStat[d.iso]?.bad);
-  const badSum = sum(bad, d => C.dayStat[d.iso].bad);
-  return `<div class="grid2">
-    <section class="card" style="gap:6px"><span class="c-warn">${ic('flame', 24)}</span><span class="big">${streakOf(C, t)} kun</span>
-      <span class="small muted">ketma-ket qoidaga amal qildingiz</span></section>
-    <section class="card" style="gap:6px"><span class="${bad.length ? 'c-bad' : 'c-in'}">${ic(bad.length ? 'alert' : 'check', 24)}</span><span class="big">${bad.length} kun</span>
-      <span class="small muted">${bad.length ? `${MONTHS_UZ[Number(m.slice(5)) - 1]}da qoida buzildi (−${fmt(badSum)})` : `${MONTHS_UZ[Number(m.slice(5)) - 1]}da qoida buzilmadi`}</span></section></div>`;
 }
 function debtTotals(C, t) {
   const res = { owe: 0, lent: 0, nOwe: 0, nLent: 0, near: null };
@@ -1511,7 +1582,7 @@ function debtTotals(C, t) {
 function debtSummary(C, t) {
   const s = debtTotals(C, t);
   const nearText = s.near ? `${esc(s.near.who)} · ${s.near.due < t ? 'muddati o\'tdi' : `muddat ${relDay(s.near.due, t)}`}` : s.nOwe ? 'muddatsiz' : "qarz yo'q";
-  return `<button class="card" data-act="tab" data-to="qarz" style="flex-direction:row;align-items:center;gap:12px;border:0;text-align:left;color:var(--text)">
+  return `<button class="card" data-act="reja-tab" data-t="qarz" style="flex-direction:row;align-items:center;gap:12px;border:0;text-align:left;color:var(--text)">
     <span class="grid2" style="flex:1;gap:8px">
       <span class="col"><span class="small muted" style="font-weight:600">Men qarzdorman</span><span class="num c-bad" style="font-size:18px">${fmt(s.owe)}</span>
         <span class="small ${s.near && s.near.due <= addDays(t, 3) ? 'c-warn' : 'muted'}" style="font-weight:600">${nearText}</span></span>
@@ -1520,10 +1591,10 @@ function debtSummary(C, t) {
     </span><span class="c-muted">${ic('right')}</span></button>`;
 }
 function recentCard(C) {
-  const list = C.sorted.slice(0, 5);
+  const list = C.sorted.slice(0, 3);
   return `<section class="card list">
     <div class="spread"><span class="h2">Oxirgi amallar</span>${list.length ? '<button class="link-btn" data-act="tab" data-to="tarix">Hammasi</button>' : ''}</div>
-    ${list.length ? list.map(x => txRow(x, C, true)).join('') : '<p class="empty">Hali amal yo\'q. «+» tugmasi bilan birinchi amalni qo\'shing.</p>'}</section>`;
+    ${list.length ? list.map(x => txRow(x, C, true, true)).join('') : '<p class="empty">Hali amal yo\'q. «+» tugmasi bilan birinchi amalni qo\'shing.</p>'}</section>`;
 }
 
 // ===== Qo'shish / tahrirlash =====
@@ -1556,44 +1627,48 @@ function viewAdd() {
   const amount = digits(f.a);
   const ev = f.p ? C.events.get(f.p) : null;
   const types = [['out', 'Chiqim'], ['in', 'Kirim'], ['tr', "O'tkazma"]];
-  const amountLabel = f.k === 'in' ? 'Kirim summasi' : isTr ? "O'tkazma summasi" : 'Chiqim summasi';
+  const amountLabel = (f.id ? 'Tahrirlash · ' : '') + (f.k === 'in' ? 'Kirim summasi' : isTr ? "O'tkazma summasi" : 'Chiqim summasi');
   const amtColor = f.k === 'in' ? 'c-in' : forbidden ? 'c-bad' : '';
-  const dateLabel = f.d === t ? `Bugun, ${dm(f.d)}` : f.d === addDays(t, -1) ? `Kecha, ${dm(f.d)}` : dm(f.d) + '.' + f.d.slice(2, 4);
-  const dateBtn = `<label class="opt">${dateLabel}<input type="date" data-change="f-date" min="${PLAN.start}" max="${PLAN.end}" value="${f.d}" aria-label="Sana"></label>`;
-
-  let middle = '';
+  const dayName = f.d === t ? 'Bugun' : f.d === addDays(t, -1) ? 'Kecha' : WEEKDAYS[dowOf(f.d)];
+  const dateBtn = `<label class="opt opt2">${ic('calendar', 16)}<span><b>${dayName}</b><small>${dm(f.d)}.${f.d.slice(2, 4)}</small></span>`
+    + `<input type="date" data-change="f-date" min="${PLAN.start}" max="${PLAN.end}" value="${f.d}" aria-label="Sana"></label>`;
+  // Izoh maydoni summa bo'sh bo'lsa «30k non karta» kabi bir qatorli yozuvni ham tushunadi (Enter)
+  const smart = !f.id && !amount && !isTr;
+  const note = `<label class="notefield">${ic('edit', 16)}<span class="sr">Izoh</span><input id="f-note" data-input="f-note" data-change="f-note" value="${esc(f.n)}" maxlength="120"`
+    + ` placeholder="${smart ? 'Izoh yoki «30k non karta»' : 'Izoh: masalan non, sim karta'}" autocomplete="off" enterkeyhint="done"></label>`;
+  const planChip = ev ? `<div class="linkchip">${ic('calendar', 18)}<span class="body"><span>Reja: <b>${esc(ev.title)}</b></span><span class="muted">· ${dm(ev.iso)}</span></span>`
+    + `<button class="round sm" data-act="f-unplan" aria-label="Rejadan ajratish">${ic('x', 16)}</button></div>` : '';
+  let middle;
   if (isTr) {
     const pick = (field, other) => `<div class="grid3">${ACC_IDS.map(a => `<button class="opt" data-act="f-${field}" data-acc="${a}" aria-pressed="${f[field] === a}"${other === a ? ' disabled' : ''}>${ic(ACC[a].icon, 16)}${ACC[a].name}</button>`).join('')}</div>`;
     middle = `<div class="trrow"><span class="lbl">Qayerdan · ${fmt(C.bal[f.acc])}</span>${pick('acc', f.to)}</div>
       <div class="trrow"><span class="lbl">Qayerga</span>${pick('to', f.acc)}</div>
       ${f.to === 'save' ? '<p class="note">Omonatga o\'tkazma jami balansni o\'zgartirmaydi — pul faqat qulflanadi.</p>' : ''}
-      ${dateBtn}`;
+      <div class="grid3">${dateBtn}</div>${note}${planChip}`;
   } else {
-    middle = `<div id="f-cats" style="display:contents">${addCatsHTML(f, debt)}</div>
-      <div class="grid3">${['card', 'cash'].map(a => `<button class="opt" data-act="f-acc" data-acc="${a}" aria-pressed="${f.acc === a}">${ic(ACC[a].icon, 16)}${ACC[a].name}</button>`).join('')}${dateBtn}</div>`;
+    const bal = a => (ui.hide ? '•••••' : fmt(C.bal[a]));
+    middle = `<div class="grid3">${['card', 'cash'].map(a => `<button class="opt opt2" data-act="f-acc" data-acc="${a}" aria-pressed="${f.acc === a}">${ic(ACC[a].icon, 16)}`
+      + `<span><b>${ACC[a].name}</b><small>${bal(a)}</small></span></button>`).join('')}${dateBtn}</div>
+      ${note}${planChip}<div id="f-cats" style="display:contents">${addCatsHTML(f, debt)}</div>`;
   }
-  const planChip = ev ? `<div class="linkchip">${ic('calendar', 18)}<span class="body"><span>Reja: <b>${esc(ev.title)}</b></span><span class="muted">· ${dm(ev.iso)}</span></span>`
-    + `<button class="round sm" data-act="f-unplan" aria-label="Rejadan ajratish">${ic('x', 16)}</button></div>` : '';
   const keys = ['1', '2', '3', '+', '4', '5', '6', '−', '7', '8', '9', '×', '000', '0', 'back', '÷'];
   const hasOp = /[+−×÷]/.test(f.expr || '');
   const yest = addDays(t, -1);
   const quick = `<div class="chips quick">${yest >= PLAN.start ? `<button class="chip sm" data-act="f-yday" aria-pressed="${f.d === yest}">${ic('calendar', 14)}Kecha</button>` : ''}`
     + `${QUICK_AMOUNTS.map(v => `<button class="chip sm" data-act="f-quick" data-v="${v}">${fmt(v)}</button>`).join('')}</div>`;
-  return `<header class="top">
+  return `<header class="top addhead">
       <button class="round" data-act="back" aria-label="Yopish">${ic('x')}</button>
-      <h1 class="h2" style="font-size:17px">${f.id ? 'Amalni tahrirlash' : 'Yangi amal'}</h1>
-      ${f.id ? `<div style="display:flex;gap:8px"><button class="round" data-act="f-copy" aria-label="Bugunga nusxalash">${ic('copy')}</button>`
-        + `<button class="round" data-act="f-delete" aria-label="O'chirish" style="color:var(--coral)">${ic('trash')}</button></div>`
-        : `<button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO'dan</button>`}
+      <h1 class="h2 sr">${f.id ? 'Amalni tahrirlash' : 'Yangi amal'}</h1>
+      <div class="seg head" role="group" aria-label="Amal turi">${types.map(([k, label]) => `<button data-act="f-type" data-k="${k}" aria-pressed="${f.k === k}">${label}</button>`).join('')}</div>
+      ${f.id ? `<button class="round" data-act="f-copy" aria-label="Bugunga nusxalash">${ic('copy')}</button>`
+        + `<button class="round" data-act="f-delete" aria-label="O'chirish" style="color:var(--coral)">${ic('trash')}</button>`
+        : `<button class="round" data-act="humo" aria-label="HUMO xabaridan">${ic('clipboard')}</button>`}
     </header>
-    ${f.id ? '' : `<label class="qline">${ic('edit', 18)}<span class="sr">Tez yozish</span><input id="qline" data-change="qline" placeholder="Tez yozish: 30k non karta" autocomplete="off" enterkeyhint="done">`
-      + `<button class="round sm" data-act="qline" aria-label="Ajratish">${ic('check', 18)}</button></label>`}
-    <div class="seg">${types.map(([k, label]) => `<button data-act="f-type" data-k="${k}" aria-pressed="${f.k === k}">${label}</button>`).join('')}</div>
     <div class="amount"><span class="lbl">${hasOp ? `<span class="calc-expr">${exprText(f.expr)} =</span>` : amountLabel}</span><b class="${amtColor}${String(amount).length > 7 ? ' long' : ''}">${fmt(amount)} <small>so'm</small></b></div>
-    ${quick}${middle}${planChip}
-    <label class="notefield">Izoh<input data-input="f-note" value="${esc(f.n)}" maxlength="120" placeholder="masalan: non, sim karta" autocomplete="off"></label>
-    <div class="keys calc">${keys.map(k => `<button data-act="key" data-k="${k}"${OPS.includes(k) ? ` class="op soft" aria-label="${OP_NAMES[k]}"` : ` aria-label="${k === 'back' ? "O'chirish" : k}"`}>${k === 'back' ? ic('backspace', 24) : k}</button>`).join('')}</div>
-    ${addSaveHTML(f)}`;
+    ${middle}
+    <div class="pad" id="f-pad">${quick}
+      <div class="keys calc">${keys.map(k => `<button data-act="key" data-k="${k}"${OPS.includes(k) ? ` class="op soft" aria-label="${OP_NAMES[k]}"` : ` aria-label="${k === 'back' ? "O'chirish" : k}"`}>${k === 'back' ? ic('backspace', 24) : k}</button>`).join('')}</div>
+      ${addSaveHTML(f)}</div>`;
 }
 // ===== Klaviaturadagi kalkulyator: «25 000 + 12 000», «120 000 ÷ 3» =====
 const OPS = '+−×÷';
@@ -1640,8 +1715,8 @@ function addSaveHTML(f) {
   const label = !amount ? 'Summani kiriting' : needCat ? 'Kategoriyani tanlang' : forbidden ? 'Baribir saqlash' : 'Saqlash';
   // «24 soat qoidasi»: taqiqlangan yoki katta (30 000+) rejadan tashqari xarid — avval xohishlar ro'yxatiga
   const wish = !f.id && f.k === 'out' && !f.debt && !f.p && amount && !needCat && !CATS[f.c].hidden && (forbidden || amount >= 30000);
-  return `<div id="f-actions" class="col" style="gap:8px"><button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button>`
-    + `${wish ? `<button class="btn sm" data-act="f-wish" style="color:var(--accent)">${ic('hourglass', 16)}24 soat kutaman — xohishlar ro'yxatiga</button>` : ''}</div>`;
+  return `<div id="f-actions" class="save-row">${wish ? `<button class="btn wishbtn" data-act="f-wish" aria-label="24 soat kutaman — xohishlar ro'yxatiga">${ic('hourglass', 18)}24 soat</button>` : ''}`
+    + `<button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button></div>`;
 }
 
 // ===== Izohdan kategoriya: oldingi amallaringizdan o'rganadi + tayyor kalit so'zlar =====
@@ -1713,9 +1788,8 @@ function saveForm() {
 }
 
 // ===== Tarix =====
-const hist = { q: '', f: 'all', mode: 'tx', day: '' };
+const hist = { q: '', f: 'all', day: '' };
 const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'], wish: ['hourglass', 'purple'] };
-const histHTML = () => (hist.mode === 'log' ? logList() : histList(calc()));
 function viewTarix() {
   const C = calc();
   const m = clampMonth(C.t.slice(0, 7));
@@ -1724,22 +1798,31 @@ function viewTarix() {
   const outs = sum(inM.filter(t => t.k === 'out'), t => t.a);
   const bads = sum(inM.filter(t => t.k === 'out' && CATS[t.c]?.bad), t => t.a);
   const F = [['all', 'Hammasi'], ['out', 'Chiqim'], ['in', 'Kirim'], ['tr', "O'tkazma"], ['bad', 'Taqiq'], ['humo', 'HUMO']];
-  const isLog = hist.mode === 'log';
-  return `<header class="top"><h1 class="h1">Tarix</h1><button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO import</button></header>
-    <div class="seg"><button data-act="h-mode" data-m="tx" aria-pressed="${!isLog}">Amallar</button><button data-act="h-mode" data-m="log" aria-pressed="${isLog}">Jurnal (${db.log.length})</button></div>
-    <label class="search">${ic('search', 18)}<span class="sr">Qidiruv</span><input data-input="h-q" value="${esc(hist.q)}" placeholder="${isLog ? "Jurnaldan qidirish" : "Izoh, joy yoki summa bo'yicha qidirish"}" autocomplete="off"></label>
-    ${isLog ? `<div id="h-list" style="display:flex;flex-direction:column;gap:12px">${logList()}</div>` : `<div class="chips">${F.map(([id, label]) => `<button class="chip" data-act="h-f" data-f="${id}" aria-pressed="${hist.f === id}">${label}</button>`).join('')}</div>
+  return `<header class="top"><h1 class="h1">Tarix</h1><div style="display:flex;gap:8px">
+      <button class="round" data-act="jurnal" aria-label="O'zgarishlar jurnali">${ic('history', 20)}</button>
+      <button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO import</button></div></header>
+    <div class="stick">
+      <label class="search">${ic('search', 18)}<span class="sr">Qidiruv</span><input data-input="h-q" value="${esc(hist.q)}" placeholder="Izoh, joy yoki summa bo'yicha qidirish" autocomplete="off"></label>
+      <div class="chips">${F.map(([id, label]) => `<button class="chip" data-act="h-f" data-f="${id}" aria-pressed="${hist.f === id}">${label}</button>`).join('')}</div>
+    </div>
     <section class="card" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:14px 16px">
       <div class="col"><span class="small muted" style="font-weight:600">${monthName(m)} kirim</span><span class="num c-in">+${fmt(ins)}</span></div>
       <div class="col"><span class="small muted" style="font-weight:600">Chiqim</span><span class="num">−${fmt(outs)}</span></div>
       <div class="col"><span class="small muted" style="font-weight:600">Taqiqlangan</span><span class="num${bads ? ' c-bad' : ''}">${bads ? '−' : ''}${fmt(bads)}</span></div>
     </section>
-    ${hist.day ? `<div class="chips"><button class="chip" data-act="h-day-clear" aria-pressed="true" style="display:inline-flex;align-items:center;gap:6px">${ic('calendar', 14)}${longDate(hist.day)}${ic('x', 14)}</button></div>` : ''}
-    <div id="h-list" style="display:flex;flex-direction:column;gap:12px">${histList(C)}</div>`}`;
+    ${hist.day ? `<div class="chips"><button class="chip" data-act="h-day-clear" aria-pressed="true">${ic('calendar', 14)}${longDate(hist.day)}${ic('x', 14)}</button></div>` : ''}
+    <div id="h-list" style="display:flex;flex-direction:column;gap:12px">${histList(C)}</div>`;
 }
-// Jurnal: har bir o'zgarish vaqti bilan, eng yangisi tepada
+// ===== Jurnal: har bir o'zgarish vaqti bilan, eng yangisi tepada (Sozlamalar va Tarix'dan) =====
+const jr = { q: '' };
+function viewJurnal() {
+  return `${subHead("O'zgarishlar jurnali")}
+    <label class="search">${ic('search', 18)}<span class="sr">Qidiruv</span><input data-input="j-q" value="${esc(jr.q)}" placeholder="Jurnaldan qidirish" autocomplete="off"></label>
+    <p class="note">Har bir qo'shish, tahrir, o'chirish va sozlama o'zgarishi vaqti bilan yoziladi (oxirgi ${LOG_MAX} ta). Hozir: ${db.log.length} ta.</p>
+    <div id="j-list" style="display:flex;flex-direction:column;gap:12px">${logList()}</div>`;
+}
 function logList() {
-  const q = hist.q.trim().toLowerCase();
+  const q = jr.q.trim().toLowerCase();
   const list = db.log.filter(e => !q || e.m.toLowerCase().includes(q)).reverse();
   if (!list.length) return `<p class="empty">${db.log.length ? "Bu qidiruv bo'yicha yozuv yo'q" : "Jurnal bo'sh. Har bir o'zgarish shu yerda vaqti bilan ko'rinadi."}</p>`;
   const groups = [];
@@ -1791,9 +1874,23 @@ function histList(C) {
 }
 
 // ===== Reja =====
-const reja = { m: '', sel: '' };
+const reja = { m: '', sel: '', tab: 'cal' };
+function rejaSeg(C) {
+  const nd = db.debts.filter(d => !debtState(C, d).closed).length;
+  const nw = db.wish.filter(w => w.st === 'w').length;
+  const tabs = [['cal', 'Kalendar'], ['qarz', `Qarzlar${nd ? ` · ${nd}` : ''}`], ['wish', `Xohishlar${nw ? ` · ${nw}` : ''}`]];
+  return `<div class="seg">${tabs.map(([id, label]) => `<button data-act="reja-tab" data-t="${id}" aria-pressed="${reja.tab === id}">${label}</button>`).join('')}</div>`;
+}
 function viewReja() {
   const C = calc(), t = C.t;
+  if (reja.tab === 'qarz') {
+    return `<header class="top"><h1 class="h1">Reja</h1><button class="pill-btn primary" data-act="d-new">${ic('plus', 16, 2.5)}Yangi qarz</button></header>
+      ${rejaSeg(C)}${debtLists(C, t)}`;
+  }
+  if (reja.tab === 'wish') {
+    return `<header class="top"><h1 class="h1">Reja</h1><button class="pill-btn" data-act="afford">${ic('hourglass', 16)}Qachon olaman?</button></header>
+      ${rejaSeg(C)}${wishPage(C, t)}`;
+  }
   if (!reja.m) {
     reja.m = clampMonth(t.slice(0, 7));
     reja.sel = clampDate(t);
@@ -1832,6 +1929,7 @@ function viewReja() {
       <div class="mnav"><button class="round sm" data-act="r-month" data-step="-1" aria-label="Oldingi oy"${mi === 0 ? ' disabled' : ''}>${ic('left', 18)}</button>
         <span>${monthName(m)} ${y}</span>
         <button class="round sm" data-act="r-month" data-step="1" aria-label="Keyingi oy"${mi === MONTHS.length - 1 ? ' disabled' : ''}>${ic('right', 18)}</button></div></header>
+    ${rejaSeg(C)}
     <section class="card" style="gap:12px">
       <div class="spread"><span class="lbl">Oy rejasi</span><span class="num c-acc" style="font-size:13px">${done} / ${total} bajarildi</span></div>
       <div class="bar"><i style="width:${total ? (done / total) * 100 : 0}%"></i></div>
@@ -1873,8 +1971,7 @@ function rejaDay(C, iso) {
 // Ikki ro'yxat: "Men qarzdorman" va "Menga qarzdor". Qarz bosilganda oyna ochiladi — to'lov bir bosishda yoziladi.
 const debtUI = { form: null, open: '', acc: 'card' };
 const blankDebtForm = () => ({ id: '', dir: 'owe', who: '', a: '', due: '', flow: true });
-function viewQarz() {
-  const C = calc(), t = C.t;
+function debtLists(C, t) {
   const s = debtTotals(C, t);
   const section = (dir, title, total, cls) => {
     const list = db.debts.filter(d => d.dir === dir).map(d => ({ d, s: debtState(C, d) }))
@@ -1888,8 +1985,7 @@ function viewQarz() {
       ${list.length ? list.map(x => debtRow(C, x.d, x.s, t)).join('') : '<p class="empty" style="padding:16px 0">Hali yo\'q</p>'}
     </section>`;
   };
-  return `<header class="top"><h1 class="h1">Qarzlar</h1><button class="pill-btn primary" data-act="d-new">${ic('plus', 16, 2.5)}Yangi qarz</button></header>
-    ${section('owe', 'Men qarzdorman', s.owe, 'c-bad')}
+  return `${section('owe', 'Men qarzdorman', s.owe, 'c-bad')}
     ${section('lent', 'Menga qarzdor', s.lent, 'c-in')}
     <p class="note">Qarzni bosing — to'langanini yoki qaytganini bir bosishda belgilang. Har bir to'lov Tarixga yoziladi, muddati yaqin qarz Asosiy ekranda ko'rinadi.</p>`;
 }
@@ -2014,9 +2110,9 @@ function saveDebt() {
   rerender();
 }
 
-// ===== Hisobot =====
+// ===== Tahlil =====
 const rep = { m: '' };
-function viewHisobot() {
+function viewTahlil() {
   const C = calc(), t = C.t;
   if (!rep.m) rep.m = clampMonth(t.slice(0, 7));
   const m = rep.m, mi = MONTHS.indexOf(m);
@@ -2026,7 +2122,7 @@ function viewHisobot() {
   const ins = sum(txs.filter(x => x.k === 'in'), x => x.a);
   const outs = sum(txs.filter(x => x.k === 'out'), x => x.a);
   const net = ins - outs;
-  return `<header class="top"><h1 class="h1">Hisobot</h1>
+  return `<header class="top"><h1 class="h1">Tahlil</h1>
       <div class="mnav"><button class="round sm" data-act="h-month" data-step="-1" aria-label="Oldingi oy"${mi === 0 ? ' disabled' : ''}>${ic('left', 18)}</button>
         <span style="min-width:96px;font-size:13px">${range}</span>
         <button class="round sm" data-act="h-month" data-step="1" aria-label="Keyingi oy"${mi === MONTHS.length - 1 ? ' disabled' : ''}>${ic('right', 18)}</button></div></header>
@@ -2036,8 +2132,282 @@ function viewHisobot() {
       <section class="kpi"><span class="lbl">Sof</span><span class="num ${net >= 0 ? 'c-in' : 'c-bad'}">${signed(net)}</span></section>
     </div>
     <button class="btn primary" data-act="wrap" data-m="${m}" style="background:linear-gradient(135deg,#2F6BFF,#7A4DFF);color:#FFFFFF">🎬 ${monthName(m)} yakunini ko'rish</button>
-    ${mapCard(C, t)}
-    ${donutCard(txs)}${barsCard(C, days)}${lineCard(C)}${limitsCard(C, m, txs)}${topCard(txs, C)}${settingsCard()}${dataCard()}`;
+    ${forecastCard(C)}${reconCard(C)}${healthCard(C, t)}${anomalyCard(C, t)}${paceCard(C, t, m)}${varianceCard(C, t)}
+    <div class="grid2" style="gap:8px">
+      <button class="tool" data-act="sim">${iconTile('trend', 'blue', 'sm')}<span class="body"><b>«Agar…»</b><span>prognoz simulyatori</span></span></button>
+      <button class="tool" data-act="afford">${iconTile('hourglass', 'purple', 'sm')}<span class="body"><b>Qachon olaman?</b><span>xarid sanasi</span></span></button>
+    </div>
+    ${insightsCard(C, t)}${donutCard(txs)}${barsCard(C, days)}${limitsCard(C, m, txs)}${topCard(txs, C)}${mapCard(C, t)}`;
+}
+// Rejadan tashqari, ixtiyoriy xarajat: yo'lkira, reja bandi, qarz va tuzatishsiz
+const isFree = (C, x) => x.k === 'out' && x.c !== 'tuz' && x.c !== 'yol' && !x.debt && !(x.p && C.byPlan.get(x.p) === x);
+const mln = v => `${(v / 1e6).toFixed(1).replace('.', ',')} mln`;
+const kv = (k, v) => `<div class="spread" style="padding:10px 0;border-top:1px solid var(--line);font-size:13px;gap:12px"><span class="muted" style="font-weight:600">${k}</span><b style="text-align:right">${v}</b></div>`;
+
+// ===== Pul oqimi prognozi: bugungacha haqiqiy jami balans, keyin reja bandlari bo'yicha kunma-kun =====
+// O'tib ketgan, yozilmagan yo'lkira hisobga olinmaydi (affordPath va C.prog bilan bir xil qoida)
+function forecast(C) {
+  const t = C.t;
+  let s = C.total;
+  for (const e of C.events.values()) if (e.iso < t && e.id !== 'yol' && isPending(C, e)) s += delta(e);
+  return DAYS.map(d => {
+    const p = { iso: d.iso, plan: C.planByIso[d.iso], act: null, proj: null };
+    if (d.iso < t) { p.act = totalOf(balOn(C, d.iso)); return p; }
+    for (const e of C.byIso[d.iso]) if (isPending(C, e)) s += delta(e);
+    if (d.iso === t) p.act = C.total;
+    p.proj = s;
+    return p;
+  });
+}
+const FC_W = 326, FC_H = 120;
+let fcData = [];
+function forecastCard(C) {
+  const pts = forecast(C);
+  fcData = pts;
+  const n = pts.length - 1;
+  const vals = pts.flatMap(q => [q.plan, q.act, q.proj]).filter(v => v !== null);
+  const lo = Math.min(0, ...vals), hi = Math.max(1, ...vals);
+  const x = i => ((i / n) * FC_W).toFixed(1);
+  const y = v => (FC_H - ((v - lo) / (hi - lo)) * FC_H).toFixed(1);
+  const poly = list => list.map(([i, v]) => `${x(i)},${y(v)}`).join(' ');
+  const plan = pts.map((q, i) => [i, q.plan]);
+  const act = pts.map((q, i) => [i, q.act]).filter(([, v]) => v !== null);
+  const ti = pts.findIndex(q => q.proj !== null);
+  const proj = ti < 0 ? [] : [...(pts[ti].act !== null ? [[ti, pts[ti].act]] : []), ...pts.slice(ti).map((q, k) => [ti + k, q.proj])];
+  const last = act[act.length - 1];
+  const fm = freeMoney(C);
+  const gap = C.prog - C.final;
+  const mid = DAYS[Math.floor(n / 2)];
+  const txt = (tx, ty, text, anchor = 'start') => `<text x="${tx}" y="${ty}" text-anchor="${anchor}" style="fill:var(--muted)" font-size="10" font-weight="700">${text}</text>`;
+  const grid = [hi, (hi + lo) / 2, lo].map((v, i) => `<line x1="0" y1="${y(v)}" x2="${FC_W}" y2="${y(v)}" style="stroke:var(--line)"${i < 2 ? ' opacity=".5"' : ''}/>`).join('');
+  return `<section class="card">
+    <div class="col"><span class="h2">Pul oqimi prognozi</span><span class="small muted">Jami balans kunma-kun · kunni ko'rish uchun grafikni bosing</span></div>
+    <div class="fc"><svg class="chart" viewBox="0 -8 ${FC_W} ${FC_H + 26}" role="img" aria-label="Reja ${mln(C.final)} gacha ko'tariladi, prognoz ${mln(C.prog)}${C.t <= PLAN.end ? `, eng tig'iz kun ${longDate(fm.iso)}` : ''}">
+      ${grid}${lo < 0 ? `<line x1="0" y1="${y(0)}" x2="${FC_W}" y2="${y(0)}" style="stroke:var(--coral)" stroke-dasharray="2 3"/>` : ''}
+      <polyline fill="none" style="stroke:var(--ch-plan)" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round" opacity=".6" points="${poly(plan)}"/>
+      ${act.length > 1 ? `<polyline fill="none" style="stroke:var(--ch-act)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" points="${poly(act)}"/>` : ''}
+      ${proj.length > 1 ? `<polyline fill="none" style="stroke:var(--ch-act)" stroke-width="2" stroke-dasharray="1 4" stroke-linecap="round" stroke-linejoin="round" points="${poly(proj)}"/>` : ''}
+      ${last ? `<circle cx="${x(last[0])}" cy="${y(last[1])}" r="5" style="fill:var(--ch-act);stroke:var(--surface)" stroke-width="2"/>` : ''}
+      <line class="fc-g" x1="0" y1="0" x2="0" y2="${FC_H}" style="stroke:var(--soft);visibility:hidden" stroke-width="1"/>
+      ${txt(2, 10, mln(hi))}${txt(2, Number(y((hi + lo) / 2)) + 12, mln((hi + lo) / 2))}
+      ${txt(2, FC_H + 16, dm(PLAN.start))}${txt(FC_W / 2, FC_H + 16, MONTHS_UZ[Number(mid.iso.slice(5, 7)) - 1], 'middle')}${txt(FC_W - 2, FC_H + 16, dm(PLAN.end), 'end')}
+    </svg><div class="fc-tip" hidden></div></div>
+    <div class="legend" style="padding:0;gap:14px"><span><span style="width:16px;border-top:2px dashed var(--ch-plan)"></span>Reja</span>
+      <span><span style="width:16px;border-top:2px solid var(--ch-act)"></span>Haqiqiy</span>
+      <span><span style="width:16px;border-top:2px dotted var(--ch-act)"></span>Prognoz</span></div>
+    <div>${kv(`${longDate(PLAN.end)} prognozi`, `${fmt(C.prog)} <span class="${gap < 0 ? 'c-bad' : gap > 0 ? 'c-in' : 'muted'}">(${gap ? signed(gap) : '±0'})</span>`)}
+      ${C.t <= PLAN.end ? kv("Eng tig'iz kun",`<span class="${fm.v < 0 ? 'c-bad' : fm.v < 100000 ? 'c-warn' : ''}">${longDate(fm.iso)} · ${fm.v < 0 ? `${fmt(-fm.v)} yetmaydi` : `${fmt(fm.v)} qoladi`}</span>`) : ''}</div>
+  </section>`;
+}
+// Grafik ustida: tanlangan kunning reja, haqiqiy va prognoz qiymatlari
+function fcTip(ev) {
+  const svg = ev.target.closest?.('.fc svg');
+  if (!svg || !fcData.length) return;
+  const r = svg.getBoundingClientRect();
+  const n = fcData.length - 1;
+  const i = Math.max(0, Math.min(n, Math.round(((ev.clientX - r.left) / r.width) * n)));
+  const q = fcData[i];
+  const g = svg.querySelector('.fc-g');
+  const gx = ((i / n) * FC_W).toFixed(1);
+  g.setAttribute('x1', gx);
+  g.setAttribute('x2', gx);
+  g.style.visibility = 'visible';
+  const tip = svg.nextElementSibling;
+  tip.innerHTML = `<b>${longDate(q.iso)}</b><br>Reja: ${fmt(q.plan)}${q.act !== null ? `<br>Haqiqiy: ${fmt(q.act)}` : ''}${q.proj !== null && q.act === null ? `<br>Prognoz: ${fmt(q.proj)}` : ''}`;
+  tip.hidden = false;
+  tip.style.left = `${Math.max(0, Math.min(r.width - tip.offsetWidth, ev.clientX - r.left - tip.offsetWidth / 2))}px`;
+}
+
+// ===== HUMO bilan solishtirish: har HUMO xabaridagi 💰 karta qoldig'i ↔ trekerdagi karta qoldig'i =====
+// Farq birinchi paydo bo'lgan joy topiladi: oxirgi mos nuqtadan keyingi qo'lda yozilgan karta amallari — gumondorlar.
+const touchesCard = x => x.acc === 'card' || x.to === 'card';
+// Tuzatish HUMO xabaridan bir daqiqa oldinga yoziladi — o'sha xabardagi qoldiq bilan mos tushadi
+const minuteBefore = tm => {
+  if (!tm) return '';
+  const [hh, mm] = tm.split(':').map(Number);
+  const m = hh * 60 + mm - 1;
+  return m < 0 ? '' : `${pad(Math.floor(m / 60))}:${pad(m % 60)}`;
+};
+function reconcile(C) {
+  const pts = [];
+  let card = db.open.card;
+  for (let i = C.sorted.length - 1; i >= 0; i--) {
+    const x = C.sorted[i];
+    if (x.k === 'in' && x.acc === 'card') card += x.a;
+    else if (x.k === 'out' && x.acc === 'card') card -= x.a;
+    else if (x.k === 'tr') { if (x.acc === 'card') card -= x.a; if (x.to === 'card') card += x.a; }
+    if (Number.isInteger(x.b)) pts.push({ tx: x, i, app: card, humo: x.b, diff: Math.round(x.b / 100) - card, ok: Math.abs(card * 100 - x.b) < 100 });
+  }
+  if (!pts.length) return null;
+  const last = pts[pts.length - 1];
+  if (last.ok) return { pts, last, ok: true };
+  // Oxirgi farq bilan bir xil farqli nuqtalar — bitta sabab; farq o'zgargan joy — paydo bo'lgan oraliq
+  let k = pts.length - 1;
+  while (k > 0 && !pts[k - 1].ok && pts[k - 1].diff === last.diff) k--;
+  const bad = pts[k], from = pts[k - 1] || null;
+  const upTo = from ? from.i : C.sorted.length;
+  const suspects = C.sorted.filter((x, i) => i > bad.i && i < upTo && !x.h && x.c !== 'tuz' && touchesCard(x));
+  return { pts, last, ok: false, bad, from, suspects };
+}
+const humoBal = tiyin => `${fmt(Math.floor(tiyin / 100))},${pad(tiyin % 100)}`;
+function reconHTML(C) {
+  const r = reconcile(C);
+  if (!r) {
+    return `<p class="small muted" style="line-height:1.5">HUMO'dan import qilinganda har xabardagi 💰 karta qoldig'i trekerdagi karta qoldig'i bilan solishtiriladi va farq qayerda paydo bo'lgani ko'rsatiladi. Hali qoldiqli HUMO xabari import qilinmagan.</p>
+      <button class="btn sm" data-act="humo">${ic('clipboard', 16)}HUMO import</button>`;
+  }
+  const at = q => `${dm(q.tx.d)}, ${q.tx.tm || '—'}`;
+  if (r.ok) {
+    return `<div class="msg soft c-in">${ic('check', 16, 2.5)}Karta qoldig'i HUMO bilan mos</div>
+      <div>${kv(`Oxirgi tekshiruv (${at(r.last)})`, humoBal(r.last.humo))}${kv('Tekshirilgan HUMO xabarlari', `${r.pts.length} ta`)}</div>`;
+  }
+  const b = r.bad;
+  return `<div class="msg soft c-bad">${ic('alert', 16)}<span>Trekerda ${fmt(Math.abs(b.diff))} so'm ${b.diff > 0 ? 'kam' : "ko'p"} (${at(b)} holatiga)</span></div>
+    <div>${kv('HUMO: 💰 karta qoldig\'i', humoBal(b.humo))}${kv('Trekerda karta', fmt(b.app))}</div>
+    <p class="small muted" style="line-height:1.5">${r.from ? `Farq ${at(r.from)} va ${at(b)} oralig'idagi amallarda paydo bo'lgan.` : `Farq ${at(b)} gacha bo'lgan amallarda — boshlang'ich qoldiqni ham tekshiring.`}
+      ${b.diff > 0 ? 'Yozilmagan kirim yoki ortiqcha yozilgan chiqim bor.' : "Yozilmagan chiqim (masalan, kartadan to'lov) yoki ortiqcha kirim bor."}</p>
+    ${r.suspects.length ? `<div class="col" style="gap:0"><span class="small" style="font-weight:800">Shu oraliqda qo'lda yozilgan karta amallari:</span>${r.suspects.slice(0, 5).map(x => txRow(x, C, true)).join('')}</div>` : ''}
+    <button class="btn sm fill-warn" data-act="recon-fix">Farqni tuzatish (${signed(b.diff)})</button>`;
+}
+function reconCard(C) {
+  return `<section class="card"><span class="h2">HUMO bilan solishtirish</span>${reconHTML(C)}</section>`;
+}
+function reconModal() {
+  openModal(`<div class="spread"><span class="h2" style="font-size:18px">HUMO bilan solishtirish</span><button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>${reconHTML(calc())}`);
+}
+// Tuzatish farq paydo bo'lgan HUMO xabaridan bir daqiqa oldin yoziladi — keyingi tekshiruvlar ham to'g'rilanadi
+function fixRecon() {
+  const r = reconcile(calc());
+  if (!r || r.ok) return;
+  const b = r.bad;
+  addTx({ d: b.tx.d, tm: minuteBefore(b.tx.tm), k: b.diff > 0 ? 'in' : 'out', a: Math.abs(b.diff),
+    acc: 'card', c: 'tuz', n: "HUMO qoldig'i bo'yicha" }, { prefix: 'Balans tuzatildi' });
+  closeModal();
+  haptic.ok();
+  toast(`Karta: ${signed(b.diff)} so'm tuzatildi`);
+  rerender();
+}
+
+// ===== Moliyaviy salomatlik (Tahlil) =====
+function healthCard(C, t) {
+  const h = health(C, t), b = badges(C, t);
+  const col = q => (q.v === q.max ? 'mint' : q.v >= q.max / 2 ? 'amber' : 'coral');
+  return `<button class="card" data-act="score" style="border:0;text-align:left;color:var(--text);width:100%">
+    <span style="display:flex;align-items:center;gap:14px">${ringHTML(h, 64)}<span class="body"><span class="lbl">Moliyaviy salomatlik</span>
+      <span class="big" style="color:var(--${h.color})">${h.level}</span><span class="small muted" style="line-height:1.4">${b.filter(x => x.on).length} / ${b.length} nishon · ${h.tip}</span></span></span>
+    <span class="col" style="gap:10px">${h.parts.map(q => `<span class="col" style="gap:4px"><span class="spread small" style="font-weight:700"><span>${q.name}</span><span class="muted">${q.v} / ${q.max}</span></span>`
+      + `<span class="bar" style="display:block"><i style="width:${(q.v / q.max) * 100}%;--c:var(--${col(q)})"></i></span></span>`).join('')}</span></button>`;
+}
+
+// ===== G'ayrioddiy xarajatlar: odatdagi chek, haftalik va kunlik o'rtachaga nisbatan =====
+function anomalies(C, t) {
+  const list = db.tx.filter(x => isFree(C, x) && x.d <= t);
+  const span = Math.max(0, daysBetween(PLAN.start, t) + 1);
+  const rat = v => v.toFixed(1).replace('.', ',').replace(',0', '');
+  const res = [];
+  if (list.length >= 8) {
+    const amts = list.map(x => x.a).sort((a, b) => a - b);
+    const med = amts[Math.floor(amts.length / 2)];
+    for (const x of list.filter(z => z.d >= addDays(t, -13)).sort((a, b) => b.a - a.a).slice(0, 2)) {
+      if (x.a < 50000 || x.a < med * 3) continue;
+      res.push({ icon: CATS[x.c]?.icon || 'dots', color: 'amber', act: `data-act="edit-tx" data-id="${x.id}"`,
+        text: `${longDate(x.d)}: «${esc(txTitle(x, C))}» <b>${fmt(x.a)}</b> — odatdagi xariddan ${rat(x.a / med)} barobar katta`, sub: `Odatdagi (o'rta) xarid: ${fmt(med)}` });
+    }
+  }
+  const weeks = Math.floor((span - 7) / 7);
+  if (weeks >= 3) {
+    const cur = {}, prev = {};
+    const from = addDays(t, -6), pFrom = addDays(t, -6 - 7 * weeks);
+    for (const x of list) {
+      if (x.d >= from) cur[x.c] = (cur[x.c] || 0) + x.a;
+      else if (x.d >= pFrom) prev[x.c] = (prev[x.c] || 0) + x.a;
+    }
+    for (const [c, v] of Object.entries(cur)) {
+      const avg = (prev[c] || 0) / weeks;
+      if (v < 30000 || v < avg * 2) continue;
+      res.push({ icon: 'up', color: 'coral', act: '',
+        text: `Bu hafta «${CATS[c]?.name || 'Boshqa'}» odatdagidan ${avg ? `<b>${rat(v / avg)} barobar</b>` : '<b>ancha</b>'} ko'p: ${fmt(v)}`, sub: `Oldingi ${weeks} hafta o'rtachasi: ${fmt(Math.round(avg))} / hafta` });
+    }
+  }
+  if (span >= 15) {
+    const tday = sum(list.filter(x => x.d === t), x => x.a);
+    const avg = sum(list.filter(x => x.d < t), x => x.a) / (span - 1);
+    if (tday >= 30000 && tday >= avg * 3) {
+      res.push({ icon: 'alert', color: 'coral', act: 'data-act="today-tx"',
+        text: `Bugun rejadan tashqari <b>${fmt(tday)}</b> — kunlik o'rtachadan ${avg ? `${rat(tday / avg)} barobar` : 'ancha'} ko'p`, sub: `Kunlik o'rtacha: ${fmt(Math.round(avg))}` });
+    }
+  }
+  return { res: res.slice(0, 4), need: Math.max(0, 28 - span) };
+}
+function anomalyCard(C, t) {
+  const { res, need } = anomalies(C, t);
+  return `<section class="card list"><div class="spread"><span class="h2">G'ayrioddiy xarajatlar</span>${res.length ? `<span class="small muted">${res.length} ta</span>` : ''}</div>
+    ${res.map(x => {
+      const tag = x.act ? 'button' : 'div';
+      return `<${tag} class="row" ${x.act}><span class="tile soft" style="--c:var(--${x.color})">${ic(x.icon, 18)}</span>`
+        + `<span class="body"><span class="t" style="white-space:normal;font-weight:600;line-height:1.4;display:block">${x.text}</span><span class="s">${x.sub}</span></span></${tag}>`;
+    }).join('')}
+    ${res.length ? '' : `<div class="msg soft c-in" style="margin:4px 0 10px">${ic('check', 16, 2.5)}Hozircha g'ayrioddiy xarajat yo'q</div>`}
+    ${need ? `<p class="small muted" style="padding:0 0 10px;line-height:1.5">Haftalik taqqoslash uchun ma'lumot yig'ilmoqda — yana ${need} kun.</p>` : ''}</section>`;
+}
+
+// ===== Oy oxiri prognozi: shu oydagi rejadan tashqari xarajat sur'ati bo'yicha =====
+function paceCard(C, t, m) {
+  if (m !== t.slice(0, 7) || !inPeriod(t)) return '';
+  const mDays = DAYS.filter(d => d.month === m);
+  const passed = mDays.filter(d => d.iso <= t).length, left = mDays.length - passed;
+  const head = `<div class="spread"><span class="h2">Oy oxiri prognozi</span><span class="small muted">${passed} / ${mDays.length} kun</span></div>`;
+  if (passed < 5) return `<section class="card">${head}<p class="small muted" style="line-height:1.5">Ma'lumot yig'ilmoqda — prognoz oyning 5-kunidan chiqadi.</p></section>`;
+  const by = {};
+  for (const x of db.tx) if (isFree(C, x) && x.d.startsWith(m) && x.d <= t) by[x.c] = (by[x.c] || 0) + x.a;
+  const rows = Object.entries(by).map(([c, v]) => ({ c, v, proj: Math.round((v / passed) * mDays.length), lim: CATS[c]?.bad ? 0 : db.lim[c] || null }))
+    .sort((a, b) => b.proj - a.proj);
+  if (!rows.length) return `<section class="card">${head}<div class="msg soft c-in">${ic('check', 16, 2.5)}Bu oy rejadan tashqari xarajat yo'q</div></section>`;
+  const line = r => {
+    let status = '', cls = 'muted', pct = null;
+    if (r.lim === 0) { status = "taqiqlangan — 0 bo'lishi kerak"; cls = 'c-bad'; }
+    else if (r.lim) {
+      pct = Math.min(100, Math.round((r.proj / r.lim) * 100));
+      if (r.v >= r.lim) { status = `limit ${fmt(r.lim)} tugadi`; cls = 'c-bad'; }
+      else if (r.proj > r.lim) { status = `limit ${fmt(r.lim)} dan oshadi — kuniga ${fmt(Math.floor((r.lim - r.v) / Math.max(1, left)))} dan oshmang`; cls = 'c-warn'; }
+      else { status = `limit ${fmt(r.lim)} ichida`; cls = 'c-in'; }
+    }
+    const color = { 'c-in': 'mint', 'c-warn': 'amber', 'c-bad': 'coral' }[cls];
+    return `<div class="col" style="gap:4px;padding:8px 0;border-top:1px solid var(--line)">
+      <div class="spread" style="font-size:13px"><span style="font-weight:700">${CATS[r.c]?.name || 'Boshqa'}</span><span class="num">${fmt(r.v)} → ${fmt(r.proj)}</span></div>
+      ${pct !== null ? `<div class="bar"><i style="width:${pct}%;--c:var(--${color})"></i></div>` : ''}
+      ${status ? `<span class="small ${cls}" style="font-weight:700">${status}</span>` : ''}</div>`;
+  };
+  return `<section class="card" style="gap:8px">${head}
+    <span class="small muted" style="line-height:1.5">Rejadan tashqari xarajat hozir <b style="color:var(--text)">${fmt(sum(rows, r => r.v))}</b>, shu sur'atda ${MONTHS_UZ[Number(m.slice(5)) - 1]} oxirida <b style="color:var(--text)">~${fmt(sum(rows, r => r.proj))}</b> bo'ladi.</span>
+    <div>${rows.slice(0, 6).map(line).join('')}</div></section>`;
+}
+
+// ===== Reja va haqiqat oylar bo'yicha (joriy oy — bugungacha) =====
+function varianceCard(C, t) {
+  const rows = [];
+  for (const m of MONTHS) {
+    const all = DAYS.filter(d => d.month === m);
+    const days = all.filter(d => d.iso <= t);
+    if (!days.length) break;
+    let pIn = 0, pOut = 0;
+    for (const d of days) for (const e of C.byIso[d.iso]) { if (e.kind === 'in') pIn += e.amount; else if (e.kind === 'out') pOut += e.amount; }
+    const txs = db.tx.filter(x => x.d.startsWith(m) && x.d <= t && x.c !== 'tuz');
+    rows.push({ m, part: days.length < all.length ? `${days[0].day}–${days[days.length - 1].day}` : '', pIn, pOut,
+      aIn: sum(txs.filter(x => x.k === 'in'), x => x.a), aOut: sum(txs.filter(x => x.k === 'out'), x => x.a) });
+  }
+  if (!rows.length) return '';
+  const diff = (p, a, good) => { const d = a - p; return `<span class="${!d ? 'muted' : (d > 0) === good ? 'c-in' : 'c-bad'}">${d ? signed(d) : '±0'}</span>`; };
+  return `<section class="card" style="gap:4px">
+    <div class="col" style="margin-bottom:6px"><span class="h2">Reja va haqiqat</span><span class="small muted">Oylar bo'yicha · joriy oy bugungacha · o'tkazmalarsiz</span></div>
+    <div class="vgrid vhead"><span></span><span>Reja</span><span>Haqiqat</span><span>Farq</span></div>
+    ${rows.map(r => {
+      const f = r.aIn - r.aOut - (r.pIn - r.pOut);
+      return `<div class="vrow"><div class="spread"><span style="font-weight:800">${monthName(r.m)}${r.part ? ` <span class="small muted">${r.part}</span>` : ''}</span>`
+        + `<span class="num ${f < 0 ? 'c-bad' : f > 0 ? 'c-in' : 'muted'}">${f ? signed(f) : '±0'}</span></div>`
+        + `<div class="vgrid"><span class="muted">Kirim</span><span>${fmt(r.pIn)}</span><span>${fmt(r.aIn)}</span>${diff(r.pIn, r.aIn, true)}`
+        + `<span class="muted">Chiqim</span><span>${fmt(r.pOut)}</span><span>${fmt(r.aOut)}</span>${diff(r.pOut, r.aOut, false)}</div></div>`;
+    }).join('')}</section>`;
 }
 function donutCard(txs) {
   const out = txs.filter(x => x.k === 'out');
@@ -2082,42 +2452,6 @@ function barsCard(C, days) {
     <div class="legend" style="padding:0;gap:14px"><span><i style="--c:var(--blue);border-radius:3px"></i>Limit ichida</span><span><i style="--c:var(--coral);border-radius:3px"></i>Limitdan oshgan</span>
       <span><span style="width:14px;border-top:1.5px dashed var(--amber)"></span>Limit</span></div></section>`;
 }
-function lineCard(C) {
-  const W = 326, H = 120;
-  const net = {};
-  for (const x of db.tx) net[x.d] = (net[x.d] || 0) + txDelta(x);
-  let run = db.open.card + db.open.cash + db.open.save;
-  const act = [];
-  for (const d of DAYS) {
-    if (d.iso > C.t) break;
-    run += net[d.iso] || 0;
-    act.push(run);
-  }
-  const plan = DAYS.map(d => C.planByIso[d.iso]);
-  const maxV = Math.max(C.final, ...plan, ...act, 1);
-  const x = i => ((i / (DAYS.length - 1)) * W).toFixed(1);
-  const y = v => (H - Math.max(0, v / maxV) * H).toFixed(1);
-  const pts = arr => arr.map((v, i) => `${x(i)},${y(v)}`).join(' ');
-  const mln = v => `${(v / 1e6).toFixed(1).replace('.', ',')} mln`;
-  const mid = DAYS[Math.floor(DAYS.length / 2)];
-  const last = act.length - 1;
-  return `<section class="card">
-    <div class="spread" style="align-items:baseline"><span class="h2">Reja va haqiqiy balans</span><span class="num small ${C.dev < 0 ? 'c-bad' : 'c-in'}">${C.dev ? signed(C.dev) : '±0'}</span></div>
-    <svg class="chart" viewBox="0 -6 ${W} 146" role="img" aria-label="Reja chizig'i ${mln(C.final)} so'mgacha ko'tariladi; haqiqiy balans rejadan ${fmt(Math.abs(C.dev))} ${C.dev < 0 ? 'orqada' : 'oldinda'}">
-      <line x1="0" y1="${H}" x2="${W}" y2="${H}" style="stroke:var(--line)"/><line x1="0" y1="${H / 2}" x2="${W}" y2="${H / 2}" style="stroke:var(--line)" opacity=".5"/>
-      <line x1="0" y1="0" x2="${W}" y2="0" style="stroke:var(--line)" opacity=".5"/>
-      <polyline fill="none" style="stroke:var(--blue)" stroke-width="2" stroke-dasharray="5 4" stroke-linejoin="round" points="${pts(plan)}"/>
-      ${act.length ? `<polyline fill="none" style="stroke:var(--mint)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${pts(act)}"/>
-      <circle cx="${x(last)}" cy="${y(act[last])}" r="4.5" style="fill:var(--mint)"/>` : ''}
-      <text x="2" y="12" style="fill:var(--muted)" font-size="10" font-weight="700">${mln(maxV)}</text>
-      <text x="2" y="${H / 2 + 12}" style="fill:var(--muted)" font-size="10" font-weight="700">${mln(maxV / 2)}</text>
-      <text x="2" y="136" style="fill:var(--muted)" font-size="10" font-weight="700">${dm(PLAN.start)}</text>
-      <text x="${W / 2}" y="136" text-anchor="middle" style="fill:var(--muted)" font-size="10" font-weight="700">${MONTHS_UZ[Number(mid.iso.slice(5, 7)) - 1]}</text>
-      <text x="${W - 2}" y="136" text-anchor="end" style="fill:var(--muted)" font-size="10" font-weight="700">${dm(PLAN.end)}</text>
-    </svg>
-    <div class="legend" style="padding:0;gap:14px"><span><span style="width:14px;border-top:2px dashed var(--blue)"></span>Reja</span>
-      <span><span style="width:14px;border-top:3px solid var(--mint)"></span>Haqiqiy</span></div></section>`;
-}
 function limitsCard(C, m, txs) {
   const spent = c => sum(txs.filter(x => x.k === 'out' && x.c === c), x => x.a);
   const row = (name, status, statusCls, pct, color, detail) => `<div class="col" style="gap:6px">
@@ -2142,10 +2476,7 @@ function limitsCard(C, m, txs) {
     rows.push(row(CATS[c].name, v > lim ? 'Oshdi' : `${p}%`, v > lim ? 'c-bad' : p >= 80 ? 'c-warn' : 'c-acc', Math.min(100, p), v > lim ? 'coral' : p >= 80 ? 'amber' : 'blue',
       `${fmt(v)} / ${fmt(lim)} · ${v > lim ? `${fmt(v - lim)} oshib ketdi` : `${fmt(lim - v)} qoldi`}`));
   }
-  return `<section class="card" style="gap:12px"><span class="h2">Kategoriya limitlari</span>${rows.join('')}
-    <details class="det"><summary>${ic('adjust', 16)}Oylik limitlarni sozlash</summary>
-      <div class="formgrid">${LIMIT_CATS.map(c => `<label class="fl">${CATS[c].name}<input class="field r" data-lim="${c}" data-change="fmt-num" value="${db.lim[c] ? fmt(db.lim[c]) : ''}" inputmode="numeric" placeholder="limitsiz" autocomplete="off"></label>`).join('')}</div>
-      <button class="btn sm" data-act="save-lim" style="margin-top:10px;width:100%">Limitlarni saqlash</button></details></section>`;
+  return `<section class="card" style="gap:12px"><div class="spread"><span class="h2">Kategoriya limitlari</span><button class="link-btn" data-act="page" data-to="sz-lim">Sozlash</button></div>${rows.join('')}</section>`;
 }
 function topCard(txs, C) {
   const out = txs.filter(x => x.k === 'out');
@@ -2158,23 +2489,85 @@ function topCard(txs, C) {
     ${items.slice(0, 5).map((it, i) => `<div class="row" style="min-height:0"><span class="tag" style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px">${i + 1}</span>
       <span class="body"><span class="t"><span>${esc(it.title)}</span></span><span class="s">${esc(it.sub)}</span></span><span class="num ${it.bad ? 'c-bad' : ''}">−${fmt(it.a)}</span></div>`).join('')}</section>`;
 }
-function dataCard() {
-  return `<section class="card">
-      <span class="h2">Xavfsizlik</span>
-      <p class="small muted" style="line-height:1.5">PIN-kod o'rnatilsa, treker har ochilganda va 1 daqiqadan ko'p fonda turgandan keyin PIN so'raydi.</p>
-      ${db.pin ? `<div class="msg soft c-in">${ic('lock', 16)}PIN-kod o'rnatilgan</div>
-        <div class="grid2" style="gap:8px"><button class="btn sm" data-act="pin-change">PIN'ni o'zgartirish</button><button class="btn sm danger" data-act="pin-off">PIN'ni o'chirish</button></div>
-        ${bioSettings()}`
-        : `<button class="btn sm" data-act="pin-set">${ic('lock', 16)}PIN-kod o'rnatish</button>`}
+// ===== Sozlamalar =====
+const subHead = title => `<header class="top" style="justify-content:flex-start;gap:10px"><button class="round" data-act="back" aria-label="Orqaga">${ic('left')}</button>`
+  + `<h1 class="h1" style="font-size:20px">${title}</h1></header>`;
+function setItem(act, icon, color, title, sub = '', val = '', attrs = '') {
+  return `<button class="si${color === 'coral' ? ' danger' : ''}" data-act="${act}"${attrs}>${iconTile(icon, color, 'sm')}`
+    + `<span class="body"><b>${title}</b>${sub ? `<span>${sub}</span>` : ''}</span>${val ? `<span class="val">${val}</span>` : ''}`
+    + `<span class="c-muted" style="display:flex">${ic('right', 16)}</span></button>`;
+}
+function setSwitch(act, icon, color, title, sub, on) {
+  return `<button class="si" data-act="${act}" role="switch" aria-checked="${on}">${iconTile(icon, color, 'sm')}`
+    + `<span class="body"><b>${title}</b><span>${sub}</span></span><span class="tg${on ? ' on' : ''}" aria-hidden="true"></span></button>`;
+}
+// Barmoq izi / yuzni tanish: faqat PIN bor va qurilma qo'llasa
+function bioRow() {
+  if (!db.pin || !bioAvailable()) return '';
+  const name = bioName();
+  if (!bioOn() && BM.isAccessRequested && !BM.isAccessGranted) return setItem('bio-settings', bioIcon(), 'mint', `${name} bilan ochish`, 'Telegram sozlamalarida ruxsat bering');
+  return setSwitch(bioOn() ? 'bio-off' : 'bio-on', bioIcon(), 'mint', `${name} bilan ochish`, "Shu qurilmada, PIN-kod o'rniga", bioOn());
+}
+function viewSozlama() {
+  const shown = homeList().filter(x => x.on).length;
+  const lims = Object.entries(db.lim);
+  const imp = db.imp;
+  const pinSub = "Ochilganda va 1 daqiqa fonda turgach so'raladi";
+  return `${subHead('Sozlamalar')}
+    <span class="grp">Ko'rinish</span>
+    <section class="setlist">
+      <div class="si col"><b style="font-size:14px">Mavzu</b>
+        <div class="seg inset">${[['auto', 'Telegram'], ['light', "Yorug'"], ['dark', "Qorong'i"]].map(([v, l]) => `<button data-act="theme" data-v="${v}" aria-pressed="${ui.theme === v}">${l}</button>`).join('')}</div></div>
+      ${setItem('page', 'home', 'blue', 'Asosiy ekran kartalari', "Tartib va ko'rinish", `${shown} / ${HOME_CARDS.length}`, ' data-to="sz-home"')}
+      ${setSwitch('eye', 'eyeOff', 'gray', 'Summalarni yashirish', "Balanslar ••••• bo'lib turadi, bosilsa ochiladi", ui.hide)}
     </section>
+    <span class="grp">Xavfsizlik</span>
+    <section class="setlist">${db.pin
+      ? setItem('pin-change', 'lock', 'blue', "PIN-kodni o'zgartirish", pinSub, '<span class="c-in">Yoqilgan</span>') + bioRow()
+        + setItem('pin-lock', 'lock', 'gray', 'Hozir qulflash') + setItem('pin-off', 'x', 'coral', "PIN-kodni o'chirish")
+      : setItem('pin-set', 'lock', 'blue', "PIN-kod o'rnatish", pinSub)}
+    </section>
+    <span class="grp">Reja va hisoblar</span>
+    <section class="setlist">
+      ${setItem('page', 'card', 'teal', "Boshlang'ich qoldiqlar", ACC_IDS.filter(a => db.open[a]).map(a => `${ACC[a].name} ${fmt(db.open[a])}`).join(' · ') || "Hammasi 0", '', ' data-to="sz-open"')}
+      ${setItem('page', 'adjust', 'amber', 'Oylik limitlar', lims.length ? lims.map(([c, v]) => `${CATS[c].name} ${fmt(v)}`).join(' · ') : "O'rnatilmagan", '', ' data-to="sz-lim"')}
+      ${setItem('reja-tab', 'calendar', 'purple', 'Ish kunlari va bayramlar', 'Reja kalendarida kunni bosib almashtiring', '', ' data-t="cal"')}
+    </section>
+    <span class="grp">Ma'lumotlar</span>
+    <section class="setlist">
+      ${setItem('humo', 'clipboard', 'teal', 'HUMO import', imp ? `Oxirgi: ${imp.t.slice(8, 10)}.${imp.t.slice(5, 7)}, ${imp.t.slice(11)}` : 'Xabarlarni nusxalab joylang')}
+      ${setItem('jurnal', 'history', 'blue', "O'zgarishlar jurnali", "Har bir qo'shish, tahrir va o'chirish", String(db.log.length))}
+      ${setItem('page', 'download', 'gray', 'Zaxira va eksport', 'CSV (Excel), JSON zaxira, tiklash', '', ' data-to="sz-backup"')}
+    </section>
+    <p class="note" style="text-align:center">${store.label} Treker faqat sizning Telegram akkauntingizda ochiladi.</p>`;
+}
+function viewSzHome() {
+  const list = homeList();
+  return `${subHead('Asosiy ekran kartalari')}
+    <p class="note">Belgini olib kartani yashiring, strelkalar bilan tartibini o'zgartiring. Karta faqat ko'rsatadigan narsasi bo'lganda chiqadi.</p>
+    <section class="setlist">${list.map((x, i) => `<div class="setrow">
+      <label class="check"><input type="checkbox" data-change="home-on" data-id="${x.id}"${x.on ? ' checked' : ''}>${x.label}</label>
+      <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="-1" aria-label="${x.label}: yuqoriga"${i === 0 ? ' disabled' : ''}>${ic('up', 16)}</button>
+      <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="1" aria-label="${x.label}: pastga"${i === list.length - 1 ? ' disabled' : ''}>${ic('down', 16)}</button></div>`).join('')}</section>
+    <button class="btn sm" data-act="home-reset">Standart tartibga qaytarish</button>`;
+}
+function viewSzLim() {
+  return `${subHead('Oylik limitlar')}
+    <p class="note">Kategoriya bo'yicha oylik chegara. 80% ga yetganda va oshganda Asosiy ekranda ogohlantiriladi, Tahlil'da oy oxiri prognozi ko'rsatiladi. Bo'sh qoldirilsa — limitsiz.</p>
+    <section class="card"><div class="formgrid">${LIMIT_CATS.map(c => `<label class="fl">${CATS[c].name}<input class="field r" data-lim="${c}" data-change="fmt-num" value="${db.lim[c] ? fmt(db.lim[c]) : ''}" inputmode="numeric" placeholder="limitsiz" autocomplete="off"></label>`).join('')}</div>
+      <button class="btn primary" data-act="save-lim">Limitlarni saqlash</button></section>`;
+}
+function viewSzOpen() {
+  return `${subHead("Boshlang'ich qoldiqlar")}
+    <p class="note">Reja ${dm(PLAN.start)}.${PLAN.start.slice(0, 4)} da ${fmt(PLAN.startBalance)} so'mdan boshlanadi. Shu kuni pul qaysi hisobda bo'lganini kiriting. Keyingi farqlarni Asosiy ekrandagi hisobni bosib tuzating.</p>
+    <section class="card"><div class="grid3">${ACC_IDS.map(a => `<label class="fl">${ACC[a].name}<input class="field r" data-open="${a}" data-change="fmt-num" value="${fmt(db.open[a])}" inputmode="numeric" autocomplete="off"></label>`).join('')}</div>
+      <button class="btn primary" data-act="save-open">Saqlash</button></section>`;
+}
+function viewSzBackup() {
+  return `${subHead('Zaxira va eksport')}
     <div class="grid2" style="gap:8px">
       <button class="btn" data-act="csv">${ic('download', 16)}CSV (Excel)</button>
       <button class="btn" data-act="b-export">${ic('download', 16)}JSON zaxira</button></div>
-    <section class="card">
-      <span class="h2">Boshlang'ich qoldiqlar · ${dm(PLAN.start)}.${PLAN.start.slice(0, 4)}</span>
-      <p class="small muted" style="line-height:1.5">Reja ${fmt(PLAN.startBalance)} so'mdan boshlanadi. Shu kuni pul qaysi hisobda bo'lganini kiriting. Keyingi farqlarni Asosiy ekrandagi hisobni bosib tuzating.</p>
-      <div class="grid3">${ACC_IDS.map(a => `<label class="fl">${ACC[a].name}<input class="field r" data-open="${a}" data-change="fmt-num" value="${fmt(db.open[a])}" inputmode="numeric" autocomplete="off"></label>`).join('')}</div>
-      <button class="btn sm" data-act="save-open">Saqlash</button></section>
     <section class="card" id="backup">
       <span class="h2">Zaxira nusxa</span>
       <p class="small muted" style="line-height:1.5">Eksport — barcha ma'lumotni JSON ko'rinishida oling va xavfsiz joyga saqlang. Import — saqlangan JSON ni joylab tiklang (joriy ma'lumotlar almashtiriladi).</p>
@@ -2376,7 +2769,7 @@ const P2P_CHOICES = {
 };
 function humoTx(x) {
   const n = [humo.note[x.key], x.place === 'Noma\'lum' ? '' : x.place].filter(Boolean).join(' · ').slice(0, 120);
-  const base = { d: x.d, tm: x.tm, a: x.a, n, p: x.link, h: x.key, debt: x.debt, to: '', c: '' };
+  const base = { d: x.d, tm: x.tm, a: x.a, n, p: x.link, h: x.key, debt: x.debt, to: '', c: '', b: x.bal === null ? '' : x.bal };
   if (x.tr) return { ...base, k: 'tr', ...x.tr, debt: '' };
   if (x.ask || x.forceChoice) {
     const ch = x.choice;
@@ -2452,7 +2845,7 @@ function humoResults() {
   return `<div class="spread" style="padding:4px 4px 0;align-items:baseline"><span class="h2">Topildi: ${rows.length} ta amal</span>
       <span class="small muted" style="font-weight:700">${cards.length ? cards.map(c => `Karta *${c}`).join(', ') : ''}</span></div>
     ${rows.map((r, i) => humoRowHTML(r, i)).join('')}${check}
-    <button class="btn primary" data-act="hu-import"${missing || !n ? ' disabled' : ''} data-fix="${fixDiff}" data-date="${lastBal ? lastBal.d : ''}">${cta}</button>`;
+    <button class="btn primary" data-act="hu-import"${missing || !n ? ' disabled' : ''} data-fix="${fixDiff}" data-date="${lastBal ? lastBal.d : ''}" data-tm="${lastBal ? lastBal.tm : ''}">${cta}</button>`;
 }
 function humoRowHTML(r, i) {
   const C = calc();
@@ -2507,11 +2900,12 @@ function importHumo(el) {
   const n = imp.tx.length;
   // Belgilanmagan "ehtimoliy takror"lar mavjud amalga bog'lanadi — keyingi importda aniq takror bo'ladi
   for (const r of humoRows()) {
-    if (r.status === 'maybe' && !r.on) { const t = db.tx.find(x => x.id === r.match); if (t && !t.h) { t.h = r.key; imp.h.push(t.id); touch(tdoc(t.d)); } }
+    if (r.status === 'maybe' && !r.on) { const t = db.tx.find(x => x.id === r.match); if (t && !t.h) { t.h = r.key; if (r.bal !== null) t.b = r.bal; imp.h.push(t.id); touch(tdoc(t.d)); } }
   }
   const fix = Number(el.dataset.fix);
   if (fix && humo.fix) {
-    imp.tx.push(addTx({ d: el.dataset.date && inPeriod(el.dataset.date) ? el.dataset.date : clampDate(today()), tm: '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' }).id);
+    const inside = el.dataset.date && inPeriod(el.dataset.date);
+    imp.tx.push(addTx({ d: inside ? el.dataset.date : clampDate(today()), tm: inside ? minuteBefore(el.dataset.tm) : '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' }).id);
   }
   db.imp = imp;
   touch('meta', 'debts');
@@ -2532,7 +2926,7 @@ async function undoImport(ask) {
   if (ask && !(await confirmDialog(`Oxirgi HUMO import (${imp.t.slice(8, 10)}.${imp.t.slice(5, 7)} ${imp.t.slice(11)}) bekor qilinsinmi? ${txs.length} ta amal o'chiriladi.`))) return;
   for (const x of txs) { db.tx.splice(db.tx.indexOf(x), 1); touch(tdoc(x.d)); }
   db.debts = db.debts.filter(d => !imp.debts.includes(d.id) || db.tx.some(x => x.debt === d.id));
-  for (const x of db.tx) if (imp.h.includes(x.id) && x.h) { x.h = ''; touch(tdoc(x.d)); }
+  for (const x of db.tx) if (imp.h.includes(x.id) && x.h) { x.h = ''; x.b = ''; touch(tdoc(x.d)); }
   db.imp = null;
   touch('meta', 'debts');
   logEv('import', `HUMO import bekor qilindi: ${txs.length} ta amal o'chirildi`);
@@ -2709,18 +3103,6 @@ function bioDisable() {
   toast(`${bioName()} bilan ochish o'chirildi`);
   rerender();
 }
-function bioSettings() {
-  if (!db.pin || !bioAvailable()) return '';
-  const name = bioName();
-  if (bioOn()) {
-    return `<div class="msg soft c-in">${ic(bioIcon(), 16)}${name} bilan ochish yoqilgan</div>
-      <button class="btn sm" data-act="bio-off">${name} bilan ochishni o'chirish</button>`;
-  }
-  if (BM.isAccessRequested && !BM.isAccessGranted) {
-    return `<button class="btn sm" data-act="bio-settings">${ic(bioIcon(), 16)}${name}: Telegram sozlamalarida ruxsat bering</button>`;
-  }
-  return `<button class="btn sm" data-act="bio-on">${ic(bioIcon(), 16)}${name} bilan ochishni yoqish</button>`;
-}
 // ===== Egasi tekshiruvi: treker faqat bot egasining Telegram akkauntida ochiladi =====
 // OWNER_HASH ni pages workflow'i joylaydi: sha256("byudjet-bot:" + CHAT_ID secret). ID kodda turmaydi.
 // Lokal fayl va localhost — tekshirish uchun ochiq.
@@ -2894,12 +3276,6 @@ function checkBadges(C, t) {
   const b = BADGES.find(x => x[0] === fresh[0]);
   setTimeout(() => { toast(`🏅 Yangi nishon: ${b[1]}`); confetti(); }, 900);
 }
-function scoreCard(C, t) {
-  const h = health(C, t), b = badges(C, t);
-  return `<button class="card rowcard" data-act="score" style="border:0;text-align:left;color:var(--text);width:100%">
-    ${ringHTML(h, 64)}<span class="body"><span class="lbl">Moliyaviy salomatlik</span><span class="big" style="color:var(--${h.color})">${h.level}</span>
-    <span class="small muted" style="line-height:1.4">${b.filter(x => x.on).length} / ${b.length} nishon · ${h.tip}</span></span><span class="c-muted" style="display:flex">${ic('right', 18)}</span></button>`;
-}
 function ringHTML(h, size) {
   const R = size / 2 - 6, L = 2 * Math.PI * R;
   return `<span class="ring${size > 64 ? ' lg' : ''}" style="--c:var(--${h.color})"><svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" aria-hidden="true">`
@@ -2988,7 +3364,7 @@ function insightsCard(C, t) {
 const simUI = { daily: 0, monthly: 0 };
 function simInfo() {
   const C = calc(), t = C.t;
-  return { C, remDays: DAYS.filter(d => d.iso > t).length, remPay: DAYS.filter(d => d.iso > t && d.day === 20).length, base: C.final + C.dev };
+  return { C, remDays: DAYS.filter(d => d.iso > t).length, remPay: DAYS.filter(d => d.iso > t && d.day === 20).length, base: C.prog };
 }
 function simResultHTML() {
   const { C, remDays, remPay, base } = simInfo();
@@ -3076,26 +3452,39 @@ function wishAsk(id) {
     <div class="grid2" style="gap:8px"><button class="btn sm" data-act="wish-later" data-id="${w.id}">Yana 24 soat</button>
       <button class="btn sm danger" data-act="wish-del" data-id="${w.id}">Ro'yxatdan o'chirish</button></div>`);
 }
+function wishRow(C, w) {
+  const ready = wishReady(w);
+  const left = Math.max(1, Math.ceil((w.ts + WISH_MS - Date.now()) / 3600000));
+  const af = whenAfford(C, w.a);
+  const when = af.now ? 'hozir olsa bo\'ladi' : af.iso ? `${dm(af.iso)} dan olsa bo'ladi` : "davr oxirigacha imkon yo'q";
+  return `<button class="wrow" data-act="wish-ask" data-id="${w.id}" style="width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:var(--text)">
+    <span class="tile soft" style="--c:var(--${CATS[w.c].color})">${ic(CATS[w.c].icon, 18)}</span>
+    <span class="body"><span style="font-weight:700;font-size:14px">${esc(w.n || CATS[w.c].name)}</span>
+      <span class="small ${ready ? 'c-acc' : 'muted'}" style="font-weight:${ready ? 800 : 600}">${ready ? '24 soat o\'tdi — hali ham kerakmi?' : `${left} soatdan keyin so'rayman`} · ${when}</span></span>
+    <span class="num">${fmt(w.a)}</span></button>`;
+}
+const savedMsg = (saved, style = '') => (saved.length ? `<div class="msg soft c-in"${style}>${ic('check', 16, 2.5)}Voz kechib tejalgan: ${fmt(sum(saved, w => w.a))} so'm (${saved.length} ta)</div>` : '');
 function wishCard(C, t) {
   const wait = db.wish.filter(w => w.st === 'w').sort((a, b) => a.ts - b.ts);
   const saved = wishSaved();
   if (!wait.length && !saved.length) return '';
-  const rows = wait.map(w => {
-    const ready = wishReady(w);
-    const left = Math.max(1, Math.ceil((w.ts + WISH_MS - Date.now()) / 3600000));
-    const af = whenAfford(C, w.a);
-    const when = af.now ? 'hozir olsa bo\'ladi' : af.iso ? `${dm(af.iso)} dan olsa bo'ladi` : "davr oxirigacha imkon yo'q";
-    return `<button class="wrow" data-act="wish-ask" data-id="${w.id}" style="width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:var(--text)">
-      <span class="tile soft" style="--c:var(--${CATS[w.c].color})">${ic(CATS[w.c].icon, 18)}</span>
-      <span class="body"><span style="font-weight:700;font-size:14px">${esc(w.n || CATS[w.c].name)}</span>
-        <span class="small ${ready ? 'c-acc' : 'muted'}" style="font-weight:${ready ? 800 : 600}">${ready ? '24 soat o\'tdi — hali ham kerakmi?' : `${left} soatdan keyin so'rayman`} · ${when}</span></span>
-      <span class="num">${fmt(w.a)}</span></button>`;
-  }).join('');
+  const rows = wait.map(w => wishRow(C, w)).join('');
   return `<section class="card list">
     <div class="spread"><span class="h2" style="display:flex;align-items:center;gap:6px">${ic('hourglass', 18)}Xohishlar</span>
       <button class="link-btn" data-act="afford">Qachon olaman?</button></div>
     ${rows || '<p class="small muted" style="padding:8px 0">Kutayotgan xarid yo\'q.</p>'}
-    ${saved.length ? `<div class="msg soft c-in" style="margin:6px 0 8px">${ic('check', 16, 2.5)}Voz kechib tejalgan: ${fmt(sum(saved, w => w.a))} so'm (${saved.length} ta)</div>` : ''}</section>`;
+    ${savedMsg(saved, ' style="margin:6px 0 8px"')}</section>`;
+}
+function wishPage(C, t) {
+  const wait = db.wish.filter(w => w.st === 'w').sort((a, b) => a.ts - b.ts);
+  const done = db.wish.filter(w => w.st !== 'w').sort((a, b) => b.rd.localeCompare(a.rd) || b.ts - a.ts);
+  return `<section class="card list"><div class="spread"><span class="h2">Kutilmoqda</span><span class="small muted">${wait.length} ta</span></div>
+      ${wait.length ? wait.map(w => wishRow(C, w)).join('') : `<p class="small muted" style="padding:6px 0 12px;line-height:1.5">Kutayotgan xarid yo'q. Rejadan tashqari katta xaridni yozayotganda «⏳ 24 soat» tugmasini bosing — xarid darrov yozilmaydi, 24 soatdan keyin «hali ham kerakmi?» deb so'rayman.</p>`}</section>
+    ${savedMsg(wishSaved())}
+    ${done.length ? `<section class="card list"><span class="h2" style="margin-bottom:4px">Hal qilinganlar</span>${done.map(w => `<div class="row" style="min-height:52px">`
+      + `<span class="tile soft" style="--c:var(--${w.st === 's' ? 'mint' : 'gray'})">${ic(w.st === 's' ? 'check' : 'cart', 18)}</span>`
+      + `<span class="body"><span class="t"><span>${esc(w.n || CATS[w.c].name)}</span></span><span class="s">${w.st === 's' ? 'Voz kechildi — tejaldi' : 'Sotib olindi'}${w.rd ? ` · ${dm(w.rd)}` : ''}</span></span>`
+      + `<span class="num ${w.st === 's' ? 'c-in' : ''}">${fmt(w.a)}</span></div>`).join('')}</section>` : ''}`;
 }
 
 // ===== «Qachon sotib ola olaman?»: rejani buzmasdan qaysi kundan pul yetadi =====
@@ -3115,6 +3504,25 @@ function affordPath(C) {
   for (let i = path.length - 1, m = Infinity; i >= 0; i--) { m = Math.min(m, path[i].s); path[i].min = m; }
   return path;
 }
+// Erkin pul: rejadagi barcha to'lovlardan keyin karta + naqddan hozir sarflash mumkin bo'lgan summa
+function freeMoney(C) {
+  const path = affordPath(C);
+  const low = path.find(x => x.s === path[0].min) || path[0];
+  return { v: path[0].min, iso: low.iso };
+}
+function freeInfo() {
+  const C = calc(), fm = freeMoney(C);
+  const next = DAYS.find(d => d.iso > C.t && C.byIso[d.iso].some(e => e.kind === 'in' && isPending(C, e)));
+  const inc = next ? sum(C.byIso[next.iso].filter(e => e.kind === 'in' && isPending(C, e)), e => e.amount) : 0;
+  openModal(`<div class="spread"><span class="h2" style="font-size:18px">Erkin pul: <span class="${fm.v < 0 ? 'c-bad' : 'c-in'}">${fmt(fm.v)}</span></span>
+      <button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    <p class="small muted" style="line-height:1.55">Rejadagi barcha kelgusi to'lovlar, qulflash va yo'lkira hisobga olingach, karta va naqddan hozir shuncha sarflasangiz ham hech qaysi kunda pul yetmay qolmaydi. Omonatdagi pul hisobga olinmaydi.</p>
+    <div>${kv('Karta + naqd hozir', fmt(C.bal.card + C.bal.cash))}${kv("Eng tig'iz kun", `${longDate(fm.iso)} · ${fm.v < 0 ? `${fmt(-fm.v)} yetmaydi` : `${fmt(fm.v)} qoladi`}`)}
+      ${next ? kv('Keyingi kirim', `${longDate(next.iso)} · +${fmt(inc)}`) : ''}</div>
+    ${fm.v < 0 ? `<div class="msg soft c-bad">${ic('alert', 16)}<span>${longDate(fm.iso)} da ${fmt(-fm.v)} so'm yetmaydi — rejadan tashqari xarajatni to'xtating yoki to'lovni boshqa kunga suring.</span></div>` : ''}
+    <div class="grid2" style="gap:8px"><button class="btn sm" data-act="modal-close">Yopish</button>
+      <button class="btn sm" data-act="afford" style="color:var(--accent)">${ic('hourglass', 16)}Qachon olaman?</button></div>`);
+}
 function whenAfford(C, price) {
   const p = affordPath(C);
   const i = p.findIndex(x => x.min >= price);
@@ -3125,7 +3533,7 @@ function affordResultHTML(price) {
   const C = calc();
   if (!price) return '<p class="small muted" style="text-align:center">Narxni kiriting</p>';
   const r = whenAfford(C, price);
-  const prog = C.final + C.dev;
+  const prog = C.prog;
   const main = r.now ? `<div class="msg soft c-in">${ic('check', 18, 2.5)}Hozir olsangiz ham bo'ladi — rejadagi to'lovlarga pul yetadi.</div>`
     : r.iso ? `<div class="msg soft c-warn">${ic('calendar', 18)}<span><b>${longDate(r.iso)}</b> dan keyin oling. Hozir olsangiz, ${dm(r.low.iso)} da ${fmt(price - r.low.s)} so'm yetmay qoladi.</span></div>`
     : `<div class="msg soft c-bad">${ic('alert', 18)}<span>Davr oxirigacha rejani buzmasdan olib bo'lmaydi. Hozir rejaga zarar qilmasdan sarflash mumkin bo'lgani: <b>${fmt(r.max)}</b> so'm.</span></div>`;
@@ -3262,7 +3670,7 @@ function storySlides(w, C) {
     <span class="col"><span class="st-mid">${h.level}</span><span class="st-p">${b.filter(x => x.on).length} / ${b.length} nishon</span></span></div>
     <span class="st-p">${h.tip}.</span>`);
   s.push(`<span class="st-k">${name}</span><span class="st-big">${h.score >= 75 ? "Zo'r oy! 🎉" : h.score >= 50 ? 'Yaxshi oy! 👍' : 'Keyingi oy yanada yaxshi bo\'ladi 💪'}</span>
-    <span class="st-p">Maqsad: ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)} gacha <b>${fmt(C.final)}</b> so'm. Prognoz: <b>${fmt(C.final + C.dev)}</b>.</span>
+    <span class="st-p">Maqsad: ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)} gacha <b>${fmt(C.final)}</b> so'm. Prognoz: <b>${fmt(C.prog)}</b>.</span>
     <div class="st-act">${story.img ? `<img class="st-img" src="${story.img}" alt="${name} yakuni"><span class="st-p" style="text-align:center">Rasmni bosib turing va «Saqlash»ni tanlang</span>`
       : `<button class="btn primary" data-act="st-save">${ic('download', 18)}Rasm sifatida saqlash</button>`}
       <button class="btn" data-act="st-close">Yopish</button></div>`);
@@ -3299,7 +3707,7 @@ function stepStory(d) {
 function closeStory() {
   $('story').hidden = true;
   $('story').innerHTML = '';
-  if (tgAtLeast('6.1') && !stack.length && route !== 'reja') WA.BackButton.hide();
+  if (tgAtLeast('6.1') && !stack.length) WA.BackButton.hide();
   rerender();
 }
 // 1080×1350 rasm: oy yakuni xulosasi
@@ -3358,6 +3766,26 @@ const ACT = {
   back: () => back(),
   add: () => openAdd(),
   humo: () => push('humo'),
+  sozlama: () => push('sozlama'),
+  page: el => { if (VIEWS[el.dataset.to]) push(el.dataset.to); },
+  jurnal: () => push('jurnal'),
+  'reja-tab': el => {
+    reja.tab = el.dataset.t;
+    if (route === 'reja') { haptic.light(); rerender(); } else go('reja');
+  },
+  'qa-in': () => openAdd({ k: 'in' }),
+  'qa-tr': () => openAdd({ k: 'tr', acc: 'card', to: 'cash' }),
+  cash2card: el => openAdd({ k: 'tr', acc: 'cash', to: 'card', a: el.dataset.a }),
+  'free-info': () => freeInfo(),
+  recon: () => reconModal(),
+  'recon-fix': () => fixRecon(),
+  'home-reset': () => {
+    db.home = { order: [], off: [], v: 2 };
+    touch('meta');
+    logEv('set', 'Asosiy ekran kartalari standart holatga qaytarildi');
+    toast('Standart tartib tiklandi');
+    rerender();
+  },
   'edit-tx': el => openEdit(el.dataset.id),
   plan: el => openFromEvent(el.dataset.key),
   adjust: el => {
@@ -3449,7 +3877,7 @@ const ACT = {
     $('toast').classList.remove('show', 'act');
     fn?.();
   },
-  'today-tx': () => { Object.assign(hist, { mode: 'tx', f: 'all', q: '', day: calc().t }); go('tarix'); },
+  'today-tx': () => { Object.assign(hist, { f: 'all', q: '', day: calc().t }); go('tarix'); },
   'h-day-clear': () => { hist.day = ''; rerender(); },
   'dev-info': () => devInfo(),
   theme: el => setTheme(el.dataset.v),
@@ -3462,8 +3890,7 @@ const ACT = {
   'st-prev': () => stepStory(-1),
   'st-close': () => closeStory(),
   'st-save': () => saveWrapImage(),
-  'map-day': el => { const iso = el.dataset.iso; reja.m = iso.slice(0, 7); reja.sel = iso; go('reja'); },
-  qline: () => applyLine($('qline').value),
+  'map-day': el => { const iso = el.dataset.iso; Object.assign(reja, { m: iso.slice(0, 7), sel: iso, tab: 'cal' }); go('reja'); },
   'f-wish': () => {
     const a = digits(form.a);
     if (!a || !catOk(form.c, 'out')) return;
@@ -3495,7 +3922,6 @@ const ACT = {
     document.querySelectorAll('[data-act="h-f"]').forEach(b => b.setAttribute('aria-pressed', String(b === el)));
     $('h-list').innerHTML = histList(calc());
   },
-  'h-mode': el => { hist.mode = el.dataset.m; hist.q = ''; rerender(); },
   // Reja
   'r-month': el => {
     const i = MONTHS.indexOf(reja.m) + Number(el.dataset.step);
@@ -3559,14 +3985,14 @@ const ACT = {
     touch('meta');
     logEv('set', Object.keys(lim).length ? `Oylik limitlar: ${Object.entries(lim).map(([c, v]) => `${CATS[c].name} ${fmt(v)}`).join(', ')}` : 'Oylik limitlar olib tashlandi');
     toast('Limitlar saqlandi');
-    rerender();
+    if (route === 'sz-lim') back(); else rerender();
   },
   'save-open': () => {
     document.querySelectorAll('[data-open]').forEach(i => { db.open[i.dataset.open] = digits(i.value); });
     touch('meta');
     logEv('set', `Boshlang'ich qoldiqlar: ${ACC_IDS.map(a => `${ACC[a].name} ${fmt(db.open[a])}`).join(', ')}`);
     toast("Boshlang'ich qoldiqlar saqlandi");
-    rerender();
+    if (route === 'sz-open') back(); else rerender();
   },
   csv: () => exportData('csv'),
   'b-export': () => exportData('json'),
@@ -3632,7 +4058,8 @@ const INPUT = {
     $('f-actions').outerHTML = addSaveHTML(form);
     $('view').querySelector('.amount b')?.classList.toggle('c-bad', !!CATS[c].bad && form.k === 'out');
   },
-  'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histHTML(); },
+  'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histList(calc()); },
+  'j-q': el => { jr.q = el.value; $('j-list').innerHTML = logList(); },
   'd-who': el => { debtUI.form.who = el.value; },
   'hu-note': el => { humo.note[el.dataset.key] = el.value.trim(); },
   'd-a': el => { debtUI.form.a = el.value; },
@@ -3651,7 +4078,8 @@ const CHANGE = {
   'hu-cat': el => { humo.cat[el.dataset.key] = el.value; $('hu-res').innerHTML = humoResults(); },
   'hu-fix': el => { humo.fix = el.checked; $('hu-res').innerHTML = humoResults(); },
   'home-on': el => toggleHomeCard(el.dataset.id, el.checked),
-  qline: el => applyLine(el.value),
+  // Summa hali kiritilmagan bo'lsa, izoh «30k non karta» kabi bir qatorli yozuv sifatida ajratiladi
+  'f-note': el => { if (!form.id && form.k !== 'tr' && !digits(form.a) && parseLine(el.value).a >= 500) applyLine(el.value); },
 };
 document.addEventListener('click', ev => {
   // Kompyuterda sana tanlagich faqat ikonkadan ochiladi — butun tugmadan ochilsin
@@ -3713,6 +4141,20 @@ document.addEventListener('pointercancel', endSwipe);
 document.addEventListener('click', ev => {
   if (swipe.block && ev.target.closest?.('.sw')) { swipe.block = false; ev.stopPropagation(); ev.preventDefault(); }
 }, true);
+// Prognoz grafigi: sichqoncha yoki barmoq bilan kun tanlanadi
+document.addEventListener('pointermove', fcTip);
+document.addEventListener('pointerdown', fcTip);
+document.addEventListener('pointerout', ev => {
+  if (ev.pointerType !== 'mouse' || !ev.target.closest?.('.fc svg') || ev.relatedTarget?.closest?.('.fc svg')) return;
+  const fc = ev.target.closest('.fc');
+  fc.querySelector('.fc-tip').hidden = true;
+  fc.querySelector('.fc-g').style.visibility = 'hidden';
+});
+// Telefonda matn yozilayotganda raqamlar paneli klaviaturani to'smasin
+document.addEventListener('focusin', ev => {
+  document.body.classList.toggle('typing', !!ev.target.matches?.('#view input:not([type]), #view input[type="text"], #view textarea'));
+});
+document.addEventListener('focusout', () => document.body.classList.remove('typing'));
 document.addEventListener('input', ev => { const k = ev.target.dataset?.input; if (k && INPUT[k]) INPUT[k](ev.target); });
 document.addEventListener('change', ev => { const k = ev.target.dataset?.change; if (k && CHANGE[k]) CHANGE[k](ev.target); });
 document.addEventListener('keydown', ev => {
@@ -3748,7 +4190,10 @@ document.addEventListener('keydown', ev => {
   ev.preventDefault();
 });
 
-const VIEWS = { main: viewMain, tarix: viewTarix, reja: viewReja, qarz: viewQarz, hisobot: viewHisobot, add: viewAdd, humo: viewHumo };
+const VIEWS = {
+  main: viewMain, tarix: viewTarix, reja: viewReja, tahlil: viewTahlil, add: viewAdd, humo: viewHumo, jurnal: viewJurnal,
+  sozlama: viewSozlama, 'sz-home': viewSzHome, 'sz-lim': viewSzLim, 'sz-open': viewSzOpen, 'sz-backup': viewSzBackup,
+};
 
 // ===== Ishga tushirish =====
 async function start() {
