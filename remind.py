@@ -1,21 +1,26 @@
 #!/usr/bin/env python3
 """Byudjet rejasi bo'yicha Telegram eslatmalari (faqat Python stdlib).
 
-Muhit o'zgaruvchilari: BOT_TOKEN, CHAT_ID, WEBAPP_URL.
+Muhit o'zgaruvchilari: BOT_TOKEN, CHAT_ID, WEBAPP_URL, PLAN_JSON (reja — GitHub Secret).
+Kompyuterda: PLAN_FILE=plan.local.json (git'ga kirmaydi). Reja kodda saqlanmaydi — repo ochiq.
 TODAY=YYYY-MM-DD bilan sanani almashtirish mumkin (sinov uchun).
 --slot morning  — 08:00: bugungi kun (ish kuni / to'lovlar), oyning 1-sanasida oy rejasi.
---slot evening  — 20:00: ertangi to'lovlar, 20-sanada qulflash, yakshanba — keyingi hafta.
---dry-run xabarlarni yubormasdan chop etadi.
+--slot evening  — 20:00: ertangi to'lovlar, qulflash kuni, yakshanba — keyingi hafta.
+--slot plan     — rejani trekerga joylash uchun botga matn qilib yuboradi.
+--dry-run xabarlarni yubormasdan chop etadi (GitHub Actions'da matn chiqarilmaydi — loglar ochiq).
 
 Reja bandi bor xabarlarda har band uchun «✅ To'ladim» tugmasi bo'ladi: u trekerni
 WEBAPP_URL?plan=YYYY-MM-DD:id bilan ochadi va shu to'lov tayyor holda chiqadi.
 """
 import argparse
+import html
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 from urllib.parse import quote
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -31,47 +36,87 @@ class Event:
     title: str
 
 
-LOCK = 2_500_000  # har 20-sanada omonatga
+# Moliyaviy reja PLAN_JSON dan yuklanadi (format index.html dagi `cleanPlan` bilan bir xil — CLAUDE.md).
+PLAN: dict = {}
+EVENT_ID = re.compile(r"^[a-z]{2,12}$")  # trekerdagi ?plan=ISO:id kaliti bilan bir xil
 
-# Moliyaviy reja — index.html dagi PLAN bilan bir xil bo'lishi shart (CLAUDE.md ga qarang).
-PLAN = {
-    "start": date(2026, 10, 27),
-    "end": date(2027, 3, 20),
-    "monthly": {
-        5: [
-            Event("avans", "in", 523_691, "Oylik avans"),
-            Event("ingliz", "out", 600_000, "Ingliz tili kursi"),
-        ],
-        14: [
-            Event("claude", "out", 410_000, "Claude obunasi"),
-        ],
-        20: [
-            Event("oylik", "in", 3_325_200, "Asosiy oylik"),
-            Event("telefon", "out", 52_000, "Telefon"),
-            Event("lock", "lock", LOCK, "Omonatga qulflash"),
-        ],
-    },
-    "once": {
-        date(2026, 11, 5): [
-            Event("qarz", "in", 300_000, "Qarz qaytishi"),
-        ],
-        date(2026, 11, 14): [
-            Event("uzum", "out", 430_000, "Uzum qarzini yopish"),
-        ],
-    },
-    "start_balance": 1_000_000,
-    "transport": 10_000,  # har ish kuni: 5 000 borish + 5 000 kelish
-    "holidays": {
-        date(2026, 12, 8): "Konstitutsiya kuni",
-        date(2027, 1, 1): "Yangi yil",
-        date(2027, 3, 8): "Xotin-qizlar kuni",
-    },
-}
+
+def _int(v, what: str, lo: int = 0) -> int:
+    if not isinstance(v, int) or isinstance(v, bool) or v < lo or v > 999_999_999:
+        raise ValueError(f"{what}: butun son kerak")
+    return v
+
+
+def _event(o: dict, where: str) -> Event:
+    if not isinstance(o, dict):
+        raise ValueError(f"{where}: band obyekt emas")
+    eid, kind, title = o.get("id"), o.get("kind"), o.get("title")
+    if not isinstance(eid, str) or not EVENT_ID.match(eid) or eid == "yol":
+        raise ValueError(f"{where}: id 2–12 ta kichik lotin harfi bo'lishi kerak")
+    if kind not in ("in", "out", "lock"):
+        raise ValueError(f"{where}: kind in/out/lock bo'lishi kerak")
+    if not isinstance(title, str) or not title.strip() or len(title) > 40:
+        raise ValueError(f"{where}: title kerak (40 belgigacha)")
+    return Event(eid, kind, _int(o.get("amount"), f"{where}: amount", 1), title.strip())
+
+
+def parse_plan(raw: str) -> dict:
+    """PLAN_JSON → ichki reja. Xatoda ValueError (matnda summalar chiqmaydi)."""
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON xato ({e.lineno}-qator)") from None
+    if not isinstance(data, dict):
+        raise ValueError("obyekt kutilgan")
+    try:
+        start, end = date.fromisoformat(data["start"]), date.fromisoformat(data["end"])
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("start/end YYYY-MM-DD bo'lishi kerak") from None
+    if start > end or (end - start).days > 731:
+        raise ValueError("davr noto'g'ri (ko'pi bilan 2 yil)")
+    monthly = {}
+    for k, items in (data.get("monthly") or {}).items():
+        if not str(k).isdigit() or not 1 <= int(k) <= 31 or not isinstance(items, list):
+            raise ValueError(f"monthly[{k}] noto'g'ri")
+        monthly[int(k)] = [_event(o, f"monthly[{k}]") for o in items]
+    once = {}
+    for k, items in (data.get("once") or {}).items():
+        try:
+            d = date.fromisoformat(k)
+        except ValueError:
+            raise ValueError(f"once[{k}]: sana noto'g'ri") from None
+        if not isinstance(items, list):
+            raise ValueError(f"once[{k}] noto'g'ri")
+        once[d] = [_event(o, f"once[{k}]") for o in items]
+    holidays = {}
+    for k, name in (data.get("holidays") or {}).items():
+        try:
+            holidays[date.fromisoformat(k)] = str(name)[:40]
+        except ValueError:
+            raise ValueError(f"holidays[{k}]: sana noto'g'ri") from None
+    transport = data.get("transport") or {}
+    return {
+        "start": start,
+        "end": end,
+        "start_balance": _int(data.get("startBalance", 0), "startBalance", -999_999_999),
+        "transport": _int(transport.get("amount", 0), "transport.amount"),
+        "monthly": monthly,
+        "once": once,
+        "holidays": holidays,
+        "raw": json.dumps(data, ensure_ascii=False, separators=(",", ":")),
+    }
+
+
+def set_plan(plan: dict) -> None:
+    PLAN.clear()
+    PLAN.update(plan)
+
 
 @dataclass
 class Message:
     text: str
     plan: list[tuple[date, Event]] = field(default_factory=list)  # «To'ladim» tugmalari
+    html: bool = False
 
 
 SIGNS = {"in": "+", "out": "−", "lock": "→ "}
@@ -85,7 +130,7 @@ API_URL = "https://api.telegram.org/bot{token}/sendMessage"
 
 
 def fmt(n: int) -> str:
-    """3325200 -> '3 325 200'."""
+    """1234567 -> '1 234 567'."""
     return f"{n:,}".replace(",", " ")
 
 
@@ -180,7 +225,7 @@ def build_morning(today: date) -> list[Message]:
         if work:
             lines = [
                 f"{head} — ish kuni.",
-                f"Faqat {fmt(PLAN['transport'])} so'm yo'lkira (5 000 + 5 000), tushlik uydan. "
+                f"Faqat {fmt(PLAN['transport'])} so'm yo'lkira, tushlik uydan. "
                 "Ko'chada ovqat, kofe, shirinlik, taksi — 0 so'm.",
             ]
         else:
@@ -208,20 +253,29 @@ def build_messages(today: date) -> list[Message]:
             "Ko'chada ovqat, kofe, shirinlik, taksi — 0 so'm.",
         ]
         messages.append(Message("\n".join(lines), [(tomorrow, e) for e in events]))
-    if today.day == 20 and in_period(today):
-        lock = [e for e in events_on(today) if e.kind == "lock"]
+    for lock in [e for e in events_on(today) if e.kind == "lock"]:
         messages.append(Message(
-            f"🔒 Bugun 20-sana. {fmt(LOCK)} so'm omonatga "
+            f"🔒 Bugun {today.day}-sana. {fmt(lock.amount)} so'm omonatga "
             "(yoki valyutaga) o'tkazildimi?\n\n"
             "Hali bo'lmasa — hoziroq o'tkazing va tugmani bosib belgilang. "
             "Qulflangan pulga umuman tegilmaydi.",
-            [(today, e) for e in lock],
+            [(today, lock)],
         ))
     if today.weekday() == 6:
         digest = week_digest(today)
         if digest:
             messages.append(Message(digest))
     return messages
+
+
+def build_plan_message() -> Message:
+    """Rejani trekerga joylash uchun: matnni bosib nusxalab, trekerda «Buferdan joylash»."""
+    return Message(
+        "📋 <b>Reja</b> — trekerga joylash uchun.\n"
+        "Pastdagi matnni bosing (nusxalanadi), keyin trekerni oching va «Buferdan joylash» → «Saqlash».\n\n"
+        f"<code>{html.escape(PLAN['raw'])}</code>",
+        html=True,
+    )
 
 
 def plan_url(webapp_url: str, d: date, e: Event) -> str:
@@ -246,8 +300,27 @@ def get_today() -> date:
         raise SystemExit(f"Xato: TODAY noto'g'ri formatda: {raw!r} (kerak: YYYY-MM-DD)")
 
 
+def load_plan() -> str | None:
+    """Rejani PLAN_JSON (yoki PLAN_FILE) dan yuklaydi; xato bo'lsa — matnini qaytaradi."""
+    raw = os.environ.get("PLAN_JSON", "").strip()
+    if not raw and os.environ.get("PLAN_FILE"):
+        try:
+            raw = Path(os.environ["PLAN_FILE"]).read_text(encoding="utf-8")
+        except OSError:
+            return "PLAN_FILE o'qilmadi"
+    if not raw:
+        return "PLAN_JSON topilmadi (GitHub Secret yoki PLAN_FILE=plan.local.json)"
+    try:
+        set_plan(parse_plan(raw))
+    except ValueError as e:
+        return f"reja noto'g'ri: {e}"
+    return None
+
+
 def send(token: str, chat_id: str, msg: Message, webapp_url: str) -> None:
     payload = {"chat_id": chat_id, "text": msg.text, "reply_markup": keyboard(msg, webapp_url)}
+    if msg.html:
+        payload["parse_mode"] = "HTML"
     req = urllib.request.Request(
         API_URL.format(token=token),
         data=json.dumps(payload).encode(),
@@ -272,19 +345,30 @@ def send(token: str, chat_id: str, msg: Message, webapp_url: str) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Byudjet eslatmalari")
     parser.add_argument("--dry-run", action="store_true", help="yubormasdan chop etish")
-    parser.add_argument("--slot", choices=["evening", "morning"], default="evening",
-                        help="morning — 08:00 xabarlari, evening — 20:00 xabarlari")
+    parser.add_argument("--slot", choices=["evening", "morning", "plan"], default="evening",
+                        help="morning — 08:00, evening — 20:00, plan — rejani botga yuborish")
     args = parser.parse_args(argv)
     # Windows konsolida emoji va belgilar chop etilishi uchun.
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+    err = load_plan()
+    if err:
+        print(f"Xato: {err}", file=sys.stderr)
+        return 2
     today = get_today()
-    messages = build_morning(today) if args.slot == "morning" else build_messages(today)
+    if args.slot == "plan":
+        messages = [build_plan_message()]
+    else:
+        messages = build_morning(today) if args.slot == "morning" else build_messages(today)
 
     if args.dry_run:
         url = os.environ.get("WEBAPP_URL") or "<WEBAPP_URL>"
         print(f"[dry-run] Bugun: {today:%d.%m.%Y}, {args.slot}, xabarlar: {len(messages)}")
+        # Ochiq repoda Actions loglari hammaga ko'rinadi — u yerda summalar chop etilmaydi.
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("Matnlar ko'rsatilmaydi: GitHub Actions logi ochiq.")
+            return 0
         for msg in messages:
             print("-" * 40)
             print(msg.text)
