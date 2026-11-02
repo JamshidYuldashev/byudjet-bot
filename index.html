@@ -504,6 +504,12 @@ body.padded #toast { bottom: calc(var(--padh, 360px) + 12px); }
 .kcols { display: flex; gap: 10px; flex-wrap: wrap; }
 .kcol { width: 34px; height: 34px; border-radius: 17px; border: 3px solid transparent; background: var(--c); padding: 0; }
 .kcol[aria-pressed="true"] { border-color: var(--text); }
+/* O'zim qo'shgan to'lovlar */
+.evlink { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; text-align: left; color: var(--text); }
+.ev .evlink .tile { width: 36px; height: 36px; border-radius: 12px; }
+.dchip { position: relative; cursor: pointer; }
+.dchip input[type="date"] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; cursor: pointer; }
+.dues-add { display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 12px; border-radius: 17px; border: 0; background: var(--sel); color: var(--accent); font-size: 13px; font-weight: 800; }
 </style>
 </head>
 <body>
@@ -604,6 +610,7 @@ const ICON = {
   finger: 'M18.9 7a8 8 0 0 1 1.1 5v1a6 6 0 0 0 .8 3 M8 11a4 4 0 0 1 8 0v1a10.05 10.05 0 0 0 2 6 M12 11v2a14 14 0 0 0 2.5 8 M8 15a18 18 0 0 0 1.8 6 M4.9 19a22 22 0 0 1-.9-7v-1a8 8 0 0 1 12-6.95',
   gear: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543 .94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543 .826-3.31 2.37-2.37c1 .608 2.296 .07 2.572-1.065z M9 12a3 3 0 1 0 6 0a3 3 0 0 0-6 0',
   history: 'M12 8l0 4l2 2 M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5',
+  bell: 'M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6 M9 17v1a3 3 0 0 0 6 0v-1',
   trend: 'M3 17l6-6l4 4l8-8 M14 7l7 0l0 7',
   faceId: 'M4 8v-2a2 2 0 0 1 2-2h2 M4 16v2a2 2 0 0 0 2 2h2 M16 4h2a2 2 0 0 1 2 2v2 M16 20h2a2 2 0 0 0 2-2v-2 M9 10l.01 0 M15 10l.01 0 M9.5 15a3.5 3.5 0 0 0 5 0',
 };
@@ -733,6 +740,7 @@ const clampMonth = m => (m < MONTHS[0] ? MONTHS[0] : m > MONTHS[MONTHS.length - 
 // db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt, b (HUMO 💰 karta qoldig'i, tiyin),
 //          cd (karta — acc === 'card'), tc (qabul qiluvchi karta — to === 'card') }
 // db.cards: [{ id: k…, n, l4, ty: humo|uzcard|visa|mc, col, main, off }] — bo'sh bo'lsa bitta umumiy «Karta»
+// db.due: [{ id: u…, n, a, k: out|in, d (keyingi sana), rp: ''|w|m|y, dd (oy kuni), acc, cd, st: ''|d, ld, la }] — o'zim qo'shgan to'lovlar
 // db.log: { t: "YYYY-MM-DD HH:MM", k: add|edit|del|debt|plan|set|import|wish, m: matn, r: qarz yoki amal id }
 // db.wish: { id, ts (ms), a, c, n, acc, st: w (kutilmoqda) | b (sotib olindi) | s (voz kechildi), rd: hal qilingan sana }
 let db = null;
@@ -740,7 +748,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null, cards: [],
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], due: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null, cards: [],
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -804,6 +812,15 @@ function calc() {
   // Prognoz: o'tib ketgan, yozilmagan yo'lkira hisobga olinmaydi — pulsiz borilgan kunlar ham bo'ladi
   let pastYol = 0;
   for (const e of events.values()) if (e.id === 'yol' && e.iso < t && !byPlan.has(e.key)) pastYol += e.amount;
+  // O'zim qo'shgan to'lovlar: davr oxirigacha barcha takrorlari (o'tib ketgani ham — hali to'lanmagan)
+  const dueByIso = {};
+  let dueNet = 0;
+  for (const u of db.due) {
+    for (const iso of dueDates(u)) {
+      (dueByIso[iso] ||= []).push({ key: `u:${u.id}:${iso}`, iso, title: u.n, kind: u.k, amount: u.a, due: u, first: iso === u.d });
+      dueNet += u.k === 'in' ? u.a : -u.a;
+    }
+  }
   const sorted = [...db.tx].sort(txCmp);
   // Har amaldan keyingi hisob qoldig'i (vaqt tartibida, eng eskisidan) — HUMO xabaridagi 💰 bilan solishtiriladi
   const after = new Map(), dayEnd = new Map();
@@ -820,7 +837,7 @@ function calc() {
   }
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, cardBal, total, byPlan, dayStat, debtPaid, debtMap,
-    expected, dev: total - expected, prog: pb + total - expected + pastYol, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
+    expected, dev: total - expected, prog: pb + total - expected + pastYol + dueNet, dueByIso, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
   };
   return cache;
 }
@@ -899,7 +916,7 @@ function applyTheme() {
 // ===== Saqlash: CloudStorage (6.9+) yoki localStorage; hujjatlar 3500 belgilik bo'laklarga bo'linadi =====
 // Kalitlar: meta_N, debts_N, log_N, t_YYYY-MM_N. Birinchi bo'lak "bo'laklar_soni|" bilan boshlanadi.
 const CHUNK = 3500; // CloudStorage qiymati 4096 belgigacha
-const DOC_RE = /^(meta|debts|log|wish|t_\d{4}-\d{2})_(\d{1,3})$/;
+const DOC_RE = /^(meta|debts|log|wish|due|t_\d{4}-\d{2})_(\d{1,3})$/;
 const V1_RE = /^m_(\d{4}-\d{2})$/;
 function createStore() {
   if (tgAtLeast('6.9') && WA.CloudStorage) {
@@ -951,6 +968,7 @@ function serialize(doc) {
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
   if (doc === 'wish') return JSON.stringify(db.wish.map(w => [w.id, w.ts, w.a, w.c, w.n, w.acc, w.st, w.rd]));
+  if (doc === 'due') return JSON.stringify(db.due.map(u => [u.id, u.n, u.a, u.k, u.d, u.rp, u.dd, u.acc, u.cd, u.st, u.ld, u.la]));
   const m = doc.slice(2);
   return JSON.stringify(db.tx.filter(t => t.d.startsWith(m)).map(packTx));
 }
@@ -1080,6 +1098,17 @@ function cleanMeta(o) {
   return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio, home, imp, cards };
 }
 const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import', 'wish'];
+function cleanDue(o) {
+  if (Array.isArray(o)) o = { id: o[0], n: o[1], a: o[2], k: o[3], d: o[4], rp: o[5], dd: o[6], acc: o[7], cd: o[8], st: o[9], ld: o[10], la: o[11] };
+  if (!isObj(o)) throw new Error("to'lov obyekt emas");
+  const u = { id: o.id, n: typeof o.n === 'string' ? o.n.trim().slice(0, 60) : '', a: o.a, k: o.k, d: o.d, rp: o.rp || '', dd: o.dd, acc: o.acc,
+    cd: CARD_ID.test(o.cd || '') ? o.cd : '', st: o.st === 'd' ? 'd' : '', ld: validISO(o.ld) ? o.ld : '', la: isAmt(o.la) ? o.la : 0 };
+  if (typeof u.id !== 'string' || !/^u[0-9a-z]{1,10}$/.test(u.id) || !u.n || !isAmt(u.a)) throw new Error("to'lov: noto'g'ri");
+  if (!['in', 'out'].includes(u.k) || !validISO(u.d) || !['', 'w', 'm', 'y'].includes(u.rp) || !['card', 'cash'].includes(u.acc)) throw new Error(`to'lov ${u.id}: noto'g'ri`);
+  if (!Number.isInteger(u.dd) || u.dd < 1 || u.dd > 31) u.dd = Number(u.d.slice(8));
+  if (u.acc !== 'card') u.cd = '';
+  return u;
+}
 function cleanWish(o) {
   if (Array.isArray(o)) o = { id: o[0], ts: o[1], a: o[2], c: o[3], n: o[4], acc: o[5], st: o[6], rd: o[7] };
   if (!isObj(o)) throw new Error('xohish obyekt emas');
@@ -1100,7 +1129,7 @@ function finishDb(meta, debts, tx, log = meta.log) {
   const ids = new Set();
   const uniq = list => list.filter(x => (ids.has(x.id) ? false : ids.add(x.id)));
   const out = { ...meta, debts: uniq(debts), tx: uniq(tx), log: cleanLog(log) };
-  out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), ...(out.wish || []).map(w => idNum(w.id)), ...(out.cards || []).map(k => idNum(k.id)), 0);
+  out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), ...(out.wish || []).map(w => idNum(w.id)), ...(out.cards || []).map(k => idNum(k.id)), ...(out.due || []).map(u => idNum(u.id)), 0);
   return out;
 }
 
@@ -1160,7 +1189,7 @@ async function load() {
     try { meta = cleanMeta(docs.meta); } catch { broken.push('meta'); }
   }
   if (meta) {
-    db = { ...meta, debts: [], tx: [], log: [], wish: [] };
+    db = { ...meta, debts: [], tx: [], log: [], wish: [], due: [] };
   } else {
     db = blankDb();
     db.mig = v1Keys.length ? 0 : 1;
@@ -1176,6 +1205,11 @@ async function load() {
   if (Array.isArray(docs.wish)) {
     for (const a of docs.wish) {
       try { db.wish.push(cleanWish(a)); } catch { skipped++; }
+    }
+  }
+  if (Array.isArray(docs.due)) {
+    for (const a of docs.due) {
+      try { db.due.push(cleanDue(a)); } catch { skipped++; }
     }
   }
   for (const [doc, list] of Object.entries(docs)) {
@@ -1416,6 +1450,107 @@ function eventRow(e, C, withDate) {
 }
 const iconTile = (icon, color, size = 'lg') => `<span class="tile ${size} soft" style="--c:var(--${color})">${ic(icon, size === 'lg' ? 24 : 22)}</span>`;
 
+// ===== O'zim qo'shgan to'lovlar: «Yaqin to'lovlar» va Reja kalendarida ko'rinadi =====
+const RP_NAMES = { '': 'Bir marta', w: 'Har hafta', m: 'Har oy', y: 'Har yil' };
+const clampDay = (y, m, dd) => `${y}-${pad(m)}-${pad(Math.min(dd, new Date(Date.UTC(y, m, 0)).getUTCDate()))}`;
+function nextDue(u, iso) {
+  if (u.rp === 'w') return addDays(iso, 7);
+  const [y, m] = iso.split('-').map(Number);
+  if (u.rp === 'y') return clampDay(y + 1, m, u.dd);
+  return m === 12 ? clampDay(y + 1, 1, u.dd) : clampDay(y, m + 1, u.dd);
+}
+// Keyingi sanadan davr oxirigacha (bir martalik — bitta)
+function dueDates(u) {
+  const out = [];
+  if (u.st) return out;
+  for (let iso = u.d; iso <= PLAN.end && out.length < 200; iso = nextDue(u, iso)) {
+    out.push(iso);
+    if (!u.rp) break;
+  }
+  return out;
+}
+const dueDelta = o => (o.kind === 'in' ? o.amount : -o.amount);
+const dueCard = u => (u.acc === 'card' ? cardOf({ acc: 'card', cd: u.cd }) : '');
+const dueWhen = (iso, t) => { const n = daysBetween(t, iso); return n < 0 ? `${-n} kun o'tdi` : n === 0 ? 'Bugun' : n === 1 ? 'Ertaga' : `${n} kun qoldi`; };
+function dueRow(o, C, withDate) {
+  const u = o.due;
+  const sub = [withDate ? longDate(o.iso) : '', RP_NAMES[u.rp], accName(u.acc, dueCard(u))].filter(Boolean).join(' · ');
+  const btn = o.first ? `<button class="act ${u.k}" data-act="due-pay" data-id="${u.id}">${u.k === 'in' ? 'Tushdi' : "To'ladim"}</button>` : '';
+  return `<div class="ev"><button class="evlink" data-act="due-open" data-id="${u.id}"><span class="tile soft" style="--c:var(--purple)">${ic('bell', 18)}</span>`
+    + `<span class="body"><span class="t">${esc(u.n)}</span><span class="s">${esc(sub)}</span></span></button>`
+    + `<span class="num ${u.k === 'in' ? 'c-in' : ''}">${u.k === 'in' ? '+' : '−'}${fmt(u.a)}</span>${btn}</div>`;
+}
+const pendRow = (e, C, withDate) => (e.due ? dueRow(e, C, withDate) : eventRow(e, C, withDate));
+const dueUI = { f: null };
+function blankDue() {
+  const t = clampDate(today());
+  return { id: '', k: 'out', n: '', a: '', d: addDays(t, 1) > PLAN.end ? t : addDays(t, 1), rp: '', acc: 'card', cd: '' };
+}
+function dueFormHTML() {
+  const f = dueUI.f, t = clampDate(today()), C = calc();
+  const monthEnd = clampDay(Number(t.slice(0, 4)), Number(t.slice(5, 7)), 31);
+  const quick = [['Ertaga', addDays(t, 1)], ['1 haftadan keyin', addDays(t, 7)], ['Oy oxiri', monthEnd === t ? nextDue({ rp: 'm', dd: 31 }, t) : monthEnd]].filter(([, d]) => d <= PLAN.end);
+  const accs = [...(db.cards.length ? activeCards().map(k => ({ acc: 'card', cd: k.id, n: k.n, v: C.cardBal[k.id], col: k.col })) : [{ acc: 'card', cd: '', n: 'Karta', v: C.bal.card }]),
+    { acc: 'cash', cd: '', n: 'Naqd', v: C.bal.cash }];
+  const selCd = f.acc === 'card' ? dueCard(f) : '';
+  return `<div class="spread"><span class="h2" style="font-size:18px">${f.id ? "To'lovni tahrirlash" : "Yangi to'lov"}</span>
+      <button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    <div class="seg inset">${[['out', "To'lashim kerak"], ['in', 'Pul kelishi kerak']].map(([k, l]) => `<button data-act="u-k" data-k="${k}" aria-pressed="${f.k === k}">${l}</button>`).join('')}</div>
+    <label class="fl">Nima uchun?<input class="field" id="u-n" data-input="u-n" value="${esc(f.n)}" maxlength="60" placeholder="${f.k === 'in' ? 'masalan: Ali qarzni qaytaradi' : "masalan: Kommunal to'lov"}" autocomplete="off"></label>
+    <label class="fl">Summa<input class="field r big-in" data-input="u-a" data-change="fmt-num" value="${f.a ? fmt(digits(f.a)) : ''}" inputmode="numeric" placeholder="0" autocomplete="off"></label>
+    <div class="fl">Qachon<div style="display:flex;flex-wrap:wrap;gap:6px">${quick.map(([l, d]) => `<button class="chip sm" data-act="u-date" data-d="${d}" aria-pressed="${f.d === d}">${l}</button>`).join('')}
+      <label class="chip sm dchip" aria-pressed="${!quick.some(([, d]) => d === f.d)}">${ic('calendar', 14)}${longDate(f.d)}<input type="date" data-change="u-d" min="${t}" max="${PLAN.end}" value="${f.d}" aria-label="Sana"></label></div></div>
+    <div class="fl">Takrorlansinmi?<div class="seg inset">${Object.entries(RP_NAMES).map(([r, l]) => `<button data-act="u-rp" data-r="${r}" aria-pressed="${f.rp === r}">${l}</button>`).join('')}</div></div>
+    <div class="fl">${f.k === 'in' ? 'Qayerga tushadi' : 'Qayerdan to\'lanadi'}<div class="kgrid">${accs.map(x => `<button class="opt opt2" data-act="u-acc" data-acc="${x.acc}" data-cd="${x.cd}" aria-pressed="${f.acc === x.acc && (x.acc === 'cash' || !db.cards.length || selCd === x.cd)}">`
+      + `${x.col ? `<span class="kdot" style="--c:var(--${x.col})"></span>` : ic(ACC[x.acc].icon, 16)}<span><b>${esc(x.n)}</b><small>${ui.hide ? '•••••' : fmt(x.v)}</small></span></button>`).join('')}</div></div>
+    <button class="btn primary" data-act="u-save" data-enter>${f.id ? 'Saqlash' : "To'lovni qo'shish"}</button>`;
+}
+function saveDue() {
+  const f = dueUI.f;
+  const n = f.n.trim().slice(0, 60), a = digits(f.a);
+  if (!n) { toast('Nima uchun ekanini yozing'); haptic.error(); return; }
+  if (!a) { toast('Summani kiriting'); haptic.error(); return; }
+  if (!validISO(f.d) || f.d > PLAN.end) { toast('Sanani tanlang'); haptic.error(); return; }
+  const v = { n, a, k: f.k, d: f.d, rp: f.rp, dd: Number(f.d.slice(8)), acc: f.acc, cd: f.acc === 'card' ? f.cd : '' };
+  if (f.id) {
+    const u = db.due.find(x => x.id === f.id);
+    Object.assign(u, v, { st: '' });
+    logEv('plan', `To'lov o'zgartirildi: ${n} ${fmt(a)} · ${dm(f.d)} · ${RP_NAMES[f.rp].toLowerCase()}`);
+    toast("To'lov saqlandi");
+  } else {
+    db.due.push({ id: nextId('u'), ...v, st: '', ld: '', la: 0 });
+    logEv('plan', `Yangi to'lov: ${n} ${f.k === 'in' ? '+' : '−'}${fmt(a)} · ${dm(f.d)} · ${RP_NAMES[f.rp].toLowerCase()}`);
+    toast(`«${n}» Yaqin to'lovlarga qo'shildi`);
+  }
+  touch('meta', 'due');
+  haptic.ok();
+  closeModal();
+  rerender();
+}
+// To'landi yoki o'tkazib yuborildi: takrorlanadigan — keyingi sanaga, bir martalik — yopiladi
+function advanceDue(u, paid) {
+  const was = u.d;
+  if (paid) { u.ld = paid.d; u.la = paid.a; }
+  if (u.rp) { u.d = nextDue(u, u.d); if (u.d > PLAN.end) u.st = 'd'; } else u.st = 'd';
+  touch('due');
+  logEv('plan', `${paid ? `To'lov bajarildi: ${u.n} ${fmt(paid.a)}` : `O'tkazib yuborildi: ${u.n}`} (${dm(was)})${u.st ? '' : ` · keyingisi ${dm(u.d)}`}`);
+}
+function dueSheet(id) {
+  const u = db.due.find(x => x.id === id), C = calc(), t = C.t;
+  const late = u.d < t;
+  const rp = u.rp === 'w' ? `Har hafta, ${WEEKDAYS[dowOf(u.d)].toLowerCase()}` : u.rp === 'm' ? `Har oy, ${u.dd}-sanada` : u.rp === 'y' ? `Har yil, ${longDate(u.d)}` : 'Bir marta';
+  const accTxt = `${accName(u.acc, dueCard(u))} · hozir ${ui.hide ? '•••••' : fmt(u.acc === 'card' ? cardBalOf(C, dueCard(u)) : C.bal.cash)}`;
+  return `<div class="spread" style="align-items:flex-start"><span style="display:flex;align-items:center;gap:12px">${iconTile('bell', 'purple')}
+      <span class="col"><span class="h2" style="font-size:18px">${esc(u.n)}</span><span class="small ${late ? 'c-bad' : 'c-warn'}" style="font-weight:700">${dueWhen(u.d, t)} · ${longDate(u.d)}, ${WEEKDAYS[dowOf(u.d)]}</span></span></span>
+      <button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    <span class="big ${u.k === 'in' ? 'c-in' : ''}" style="font-size:28px">${u.k === 'in' ? '+' : '−'}${fmt(u.a)} <small class="muted" style="font-size:14px">so'm</small></span>
+    <div>${kv('Takrorlanadi', rp)}${kv(u.k === 'in' ? 'Tushadi' : "To'lanadi", esc(accTxt))}${u.ld ? kv("O'tgan safar", `${longDate(u.ld)} · ${fmt(u.la)}`) : ''}</div>
+    <button class="btn primary" data-act="due-pay" data-id="${u.id}">${ic('check', 18, 2.5)}${u.k === 'in' ? 'Tushdi' : "To'ladim"} — amalni yozish</button>
+    <div class="grid2" style="gap:8px">${u.rp ? `<button class="btn sm" data-act="due-skip" data-id="${u.id}">Bu safar o'tkazib yuborish</button>` : ''}
+      <button class="btn sm" data-act="due-edit" data-id="${u.id}">${ic('edit', 16)}Tahrirlash</button>
+      <button class="btn sm danger" data-act="due-del" data-id="${u.id}"${u.rp ? ' style="grid-column:1 / -1"' : ''}>${ic('trash', 16)}O'chirish</button></div>`;
+}
+
 // ===== Asosiy =====
 const QUICK_ACTS = [['qa-in', 'Kirim', 'income', 'mint'], ['qa-tr', "O'tkazma", 'transfer', 'gray'], ['humo', 'HUMO', 'clipboard', 'teal'], ['d-new', 'Yangi qarz', 'users', 'amber']];
 function viewMain() {
@@ -1575,23 +1710,29 @@ function alertsCard(C, t) {
 }
 // Yaqin to'lovlar: o'tib ketgan belgilanmagan bandlar, eng yaqin to'lov kuni (kartada yetadimi) va undan keyingisi
 function payCard(C, t) {
-  const late = [...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e));
+  const pend = iso => [...C.byIso[iso].filter(e => e.id !== 'yol' && isPending(C, e)), ...(C.dueByIso[iso] || [])];
+  const late = [...[...C.events.values()].filter(e => e.iso < t && e.id !== 'yol' && isPending(C, e)),
+    ...Object.keys(C.dueByIso).filter(iso => iso < t).sort().flatMap(iso => C.dueByIso[iso])];
   const groups = [];
   for (const d of DAYS) {
-    if (d.iso < t || groups.length === 2) continue;
-    const list = C.byIso[d.iso].filter(e => e.id !== 'yol' && isPending(C, e));
+    if (d.iso < t || groups.length === 4) continue;
+    const list = pend(d.iso);
     if (list.length) groups.push({ day: d, list });
   }
-  if (!late.length && !groups.length) return '';
+  const head = `<div class="spread"><span class="h2">Yaqin to'lovlar</span><span style="display:flex;align-items:center;gap:10px">`
+    + `<button class="link-btn" data-act="reja-tab" data-t="cal">Reja</button><button class="dues-add" data-act="due-new">${ic('plus', 16, 2.5)}Qo'shish</button></span></div>`;
+  if (!late.length && !groups.length) return `<section class="card list">${head}<p class="small muted" style="padding:6px 0 12px;line-height:1.5">Yaqin to'lov yo'q. «Qo'shish» bilan o'zingiz biladigan to'lovni kiriting — sanasi yaqinlashganda shu yerda turadi.</p></section>`;
   const when = iso => { const n = daysBetween(t, iso); return n === 0 ? 'Bugun' : n === 1 ? 'Ertaga' : `${n} kundan keyin`; };
   let body = '';
-  if (late.length) body += `<span class="grp-l c-bad">O'tib ketgan — bo'lgan bo'lsa belgilang</span>${late.map(e => eventRow(e, C, true)).join('')}`;
+  if (late.length) body += `<span class="grp-l c-bad">O'tib ketgan — bo'lgan bo'lsa belgilang</span>${late.map(e => pendRow(e, C, true)).join('')}`;
   const g = groups[0];
   if (g) {
-    const amt = kind => sum(g.list.filter(e => e.kind === kind), e => e.amount);
     const m = mainCard();
+    // Asosiy kartaga tegadiganlar: reja bandi — oxirgi to'langan karta, o'zim qo'shgan — tanlangan karta
+    const onMain = e => (e.due ? e.due.acc === 'card' && (!m || dueCard(e.due) === m.id) : !multiCard() || lastCardFor(e.id) === m.id);
+    const amt = kind => sum(g.list.filter(e => e.kind === kind && onMain(e)), e => e.amount);
     const need = amt('out') + amt('lock') - amt('in'), card = m ? C.cardBal[m.id] : C.bal.card, where = m && multiCard() ? m.n : 'Karta';
-    body += `<span class="grp-l c-warn">${when(g.day.iso)} · ${longDate(g.day.iso)}, ${WEEKDAYS[g.day.dow]}</span>${g.list.map(e => eventRow(e, C)).join('')}`;
+    body += `<span class="grp-l c-warn">${when(g.day.iso)} · ${longDate(g.day.iso)}, ${WEEKDAYS[g.day.dow]}</span>${g.list.map(e => pendRow(e, C)).join('')}`;
     if (need > 0 && card >= need) {
       body += `<div class="msg soft c-in" style="margin:4px 0 10px">${ic('check', 16, 2.5)}${esc(where)}da ${ui.hide ? '•••••' : fmt(card)} bor — to'lovlarga yetadi</div>`;
     } else if (need > 0) {
@@ -1602,7 +1743,12 @@ function payCard(C, t) {
         + `${move > 0 ? `<button class="status" data-act="topup" data-a="${move}" data-acc="${src.acc}" data-cd="${src.cd}" style="background:var(--coral);color:var(--on-strong)">${esc(src.n)}dan o'tkazish</button>` : ''}</div>`;
     }
   }
-  const g2 = groups[1];
+  // Keyingi 7 kun ichidagi kunlar to'liq (3 tagacha), undan keyingisi — bitta qisqa qator
+  const full = groups.filter((x, i) => i === 0 || (i < 3 && daysBetween(t, x.day.iso) <= 7));
+  for (const x of full.slice(1)) {
+    body += `<span class="grp-l" style="color:var(--muted)">${when(x.day.iso)} · ${longDate(x.day.iso)}, ${WEEKDAYS[x.day.dow]}</span>${x.list.map(e => pendRow(e, C)).join('')}`;
+  }
+  const g2 = groups[full.length];
   if (g2) {
     const net = sum(g2.list, e => (e.kind === 'in' ? e.amount : -e.amount)); // kartaga ta'siri
     body += `<button class="row" data-act="map-day" data-iso="${g2.day.iso}"><span class="body">`
@@ -1610,7 +1756,7 @@ function payCard(C, t) {
       + `<span class="t"><span>${esc(g2.list.map(e => e.title).join(', '))}</span></span></span>`
       + `<span class="num ${net > 0 ? 'c-in' : ''}">${signed(net)}</span><span class="c-muted" style="display:flex">${ic('right', 16)}</span></button>`;
   }
-  return `<section class="card list"><div class="spread"><span class="h2">Yaqin to'lovlar</span><button class="link-btn" data-act="reja-tab" data-t="cal">Reja</button></div>${body}</section>`;
+  return `<section class="card list">${head}${body}</section>`;
 }
 // Bugun · seriya · salomatlik — uchta kichik plitka
 function kpiCard(C, t) {
@@ -1681,7 +1827,7 @@ function recentCard(C) {
 
 // ===== Qo'shish / tahrirlash =====
 let form = null;
-const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', cd: '', tc: '', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
+const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', cd: '', tc: '', due: '', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
 function openAdd(pre = {}) {
   form = { ...blankForm(), ...pre, catSet: !!pre.c, expr: pre.a || '' };
   push('add');
@@ -1882,7 +2028,12 @@ function saveForm() {
   if (!f.id && !t.tm && t.d === today()) t.tm = nowHM();
   const existing = f.id && db.tx.find(x => x.id === f.id);
   if (!t.p && !f.unlinked) t.p = autoLink(t);
-  if (existing) updateTx(existing, t); else addTx(t);
+  if (existing) updateTx(existing, t);
+  else {
+    addTx(t);
+    const u = f.due && db.due.find(x => x.id === f.due && !x.st);
+    if (u) advanceDue(u, t);
+  }
   if (!existing && t.k === 'in' && (t.c === 'oylik' || t.c === 'avans')) { toast(t.c === 'oylik' ? 'Oylik tushdi! 🎉' : 'Avans tushdi! 🎉'); confetti(); }
   else if (t.k === 'out' && CATS[t.c]?.bad) { haptic.warn(); toast('Saqlandi — bu kun qoida buzilgan deb belgilandi'); } else { haptic.ok(); toast('Saqlandi'); }
   back();
@@ -2021,7 +2172,8 @@ function viewReja() {
     if (!day) { cells.push(`<button class="d off" disabled aria-label="${dd}-${MONTHS_UZ[mo - 1]}, reja davridan tashqari"><b>${dd}</b><span class="dots"></span></button>`); continue; }
     const evs = C.byIso[iso].filter(e => e.id !== 'yol');
     const colors = { in: 'mint', out: 'amber', lock: 'blue' };
-    const dots = evs.map(e => `<i class="${isPending(C, e) ? '' : 'done'}" style="--c:var(--${colors[e.kind]})"></i>`).join('');
+    const dots = evs.map(e => `<i class="${isPending(C, e) ? '' : 'done'}" style="--c:var(--${colors[e.kind]})"></i>`).join('')
+      + (C.dueByIso[iso] || []).map(() => '<i style="--c:var(--purple)"></i>').join('');
     const bad = (C.dayStat[iso]?.bad || 0) > 0;
     const disc = C.dayStat[iso]?.disc || 0;
     const heat = disc && !bad ? ` style="--heat:${(disc / maxDisc).toFixed(2)}"` : '';
@@ -2045,7 +2197,7 @@ function viewReja() {
     <section class="card" style="padding:14px 10px;gap:6px">
       <div class="cal">${WD_SHORT.map(w => `<span class="wdh">${w}</span>`).join('')}${cells.join('')}</div>
       <div class="legend"><span><i style="--c:var(--mint)"></i>Kirim</span><span><i style="--c:var(--amber)"></i>To'lov</span>
-        <span><i style="--c:var(--blue)"></i>Qulflash</span><span><i style="--c:var(--coral)"></i>Qoida buzilgan</span>
+        <span><i style="--c:var(--blue)"></i>Qulflash</span><span><i style="--c:var(--purple)"></i>Mening to'lovim</span><span><i style="--c:var(--coral)"></i>Qoida buzilgan</span>
         <span><i style="--c:var(--accent);opacity:.5;border-radius:3px"></i>Ko'p xarajat</span></div></section>
     ${rejaDay(C, reja.sel)}
     <p class="note">«To'lash» yoki «Tushdi» bosilganda summa tanlangan hisobdan Tarixga yoziladi. Ish kunini dam olishga almashtirsangiz, o'sha kunning yo'lkirasi rejadan olib tashlanadi.</p>`;
@@ -2065,7 +2217,7 @@ function rejaDay(C, iso) {
     <div class="spread" style="margin-bottom:6px"><div class="col"><span style="font-size:17px;font-weight:800">${longDate(iso)}, ${WEEKDAYS[day.dow]}</span>
       <span class="small ${noteColor}" style="font-weight:700">${esc(notes)}</span></div>
       <button class="chip sm" data-act="r-work" data-iso="${iso}">${work ? 'Dam olish qilish' : 'Ish kuni qilish'}</button></div>
-    ${evs.length ? evs.map(e => eventRow(e, C)).join('') : '<span class="small muted" style="padding:12px 0;border-top:1px solid var(--line)">Bu kunda rejali to\'lov yo\'q.</span>'}
+    ${evs.length || C.dueByIso[iso] ? evs.map(e => eventRow(e, C)).join('') + (C.dueByIso[iso] || []).map(o => dueRow(o, C)).join('') : '<span class="small muted" style="padding:12px 0;border-top:1px solid var(--line)">Bu kunda rejali to\'lov yo\'q.</span>'}
     ${extra.length ? `<span class="small muted" style="font-weight:700;padding:12px 0 2px">Rejadan tashqari amallar</span>${extra.map(x => txRow(x, C, false)).join('')}` : ''}
   </section>`;
 }
@@ -2254,10 +2406,12 @@ function forecast(C) {
   const t = C.t;
   let s = C.total;
   for (const e of C.events.values()) if (e.iso < t && e.id !== 'yol' && isPending(C, e)) s += delta(e);
+  for (const [iso, list] of Object.entries(C.dueByIso)) if (iso < t) s += sum(list, dueDelta);
   return DAYS.map(d => {
     const p = { iso: d.iso, plan: C.planByIso[d.iso], act: null, proj: null };
     if (d.iso < t) { p.act = totalOf(balOn(C, d.iso)); return p; }
     for (const e of C.byIso[d.iso]) if (isPending(C, e)) s += delta(e);
+    s += sum(C.dueByIso[d.iso] || [], dueDelta);
     if (d.iso === t) p.act = C.total;
     p.proj = s;
     return p;
@@ -2811,7 +2965,7 @@ function viewSzBackup() {
 // ===== Zaxira, CSV =====
 const exportText = () => JSON.stringify({
   v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, cards: db.cards,
-  debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log, wish: db.wish,
+  debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log, wish: db.wish, due: db.due,
 });
 function parseBackup(text) {
   if (!text) throw new Error('Avval zaxira JSON matnini joylang.');
@@ -2827,7 +2981,8 @@ function parseBackup(text) {
   if (data.v !== 2 || !Array.isArray(data.tx) || !Array.isArray(data.debts)) throw new Error('Format noto\'g\'ri: {"v": 2, "tx": [...], "debts": [...]} kutilgan.');
   const meta = cleanMeta({ ...data, mig: 1 });
   const wish = Array.isArray(data.wish) ? data.wish.map(cleanWish) : [];
-  return finishDb({ ...meta, wish }, data.debts.map(cleanDebt), data.tx.map(cleanTx), data.log || []);
+  const due = Array.isArray(data.due) ? data.due.map(cleanDue) : [];
+  return finishDb({ ...meta, wish, due }, data.debts.map(cleanDebt), data.tx.map(cleanTx), data.log || []);
 }
 // sep=';' — fayl (Excel), sep='\t' — buferga (Excel/Sheets'ga joylanganda ustunlarga bo'linadi)
 function csvText(sep) {
@@ -3729,10 +3884,12 @@ function affordPath(C) {
   let s = C.bal.card + C.bal.cash;
   const step = e => (e.kind === 'lock' ? -e.amount : delta(e));
   for (const e of C.events.values()) if (e.iso < t && e.id !== 'yol' && isPending(C, e)) s += step(e); // muddati o'tgan bandlar
+  for (const [iso, list] of Object.entries(C.dueByIso)) if (iso < t) s += sum(list, dueDelta); // to'lanmagan o'zim qo'shganlar
   const path = [];
   for (const d of DAYS) {
     if (d.iso < t) continue;
     for (const e of C.byIso[d.iso]) if (isPending(C, e)) s += step(e);
+    s += sum(C.dueByIso[d.iso] || [], dueDelta);
     path.push({ iso: d.iso, s });
   }
   if (!path.length) path.push({ iso: t, s });
@@ -4028,6 +4185,35 @@ const ACT = {
   'k-bank': el => { cardUI.f.n = el.dataset.v; setModal(cardFormHTML()); },
   'k-col': el => { cardUI.f.col = el.dataset.v; setModal(cardFormHTML()); },
   'k-save': () => saveCard(),
+  'due-new': () => { dueUI.f = blankDue(); openModal(dueFormHTML(), true); },
+  'due-open': el => openModal(dueSheet(el.dataset.id)),
+  'due-edit': el => {
+    const u = db.due.find(x => x.id === el.dataset.id);
+    dueUI.f = { id: u.id, k: u.k, n: u.n, a: String(u.a), d: u.d, rp: u.rp, acc: u.acc, cd: u.cd };
+    openModal(dueFormHTML());
+  },
+  'due-pay': el => {
+    const u = db.due.find(x => x.id === el.dataset.id);
+    if (!u) return;
+    closeModal();
+    openAdd({ k: u.k, a: String(u.a), acc: u.acc, cd: u.cd, n: u.n, c: noteCat(u.n, u.k), due: u.id });
+  },
+  'due-skip': el => { const u = db.due.find(x => x.id === el.dataset.id); if (!u) return; advanceDue(u, null); closeModal(); toast(u.st ? "To'lov yopildi" : `Keyingisi: ${longDate(u.d)}`); rerender(); },
+  'due-del': el => {
+    const u = db.due.find(x => x.id === el.dataset.id);
+    if (!u) return;
+    db.due.splice(db.due.indexOf(u), 1);
+    touch('due');
+    logEv('plan', `To'lov o'chirildi: ${u.n} ${fmt(u.a)}`);
+    closeModal();
+    toast("To'lov o'chirildi", () => { db.due.push(u); touch('due'); logEv('plan', `To'lov qaytarildi: ${u.n}`); rerender(); });
+    rerender();
+  },
+  'u-k': el => { dueUI.f.k = el.dataset.k; setModal(dueFormHTML()); },
+  'u-date': el => { dueUI.f.d = el.dataset.d; setModal(dueFormHTML()); },
+  'u-rp': el => { dueUI.f.rp = el.dataset.r; setModal(dueFormHTML()); },
+  'u-acc': el => { dueUI.f.acc = el.dataset.acc; dueUI.f.cd = el.dataset.cd; setModal(dueFormHTML()); },
+  'u-save': () => saveDue(),
   'k-del': el => toggleCardOff(el.dataset.id),
   'f-card': el => { form[el.dataset.f] = el.dataset.id; haptic.light(); rerender(); },
   'h-card': el => { hist.card = hist.card === el.dataset.id ? '' : el.dataset.id; haptic.light(); rerender(); },
@@ -4276,7 +4462,7 @@ const ACT = {
     next.home = db.home;
     db = next;
     logEv('import', `Zaxira import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz`);
-    touch('meta', 'debts', 'log', 'wish', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
+    touch('meta', 'debts', 'log', 'wish', 'due', ...oldDocs, ...new Set(db.tx.map(t => tdoc(t.d))));
     await flush();
     rerender();
     setBackupMsg(`Import qilindi: ${db.tx.length} ta amal, ${db.debts.length} ta qarz.`, false);
@@ -4320,6 +4506,8 @@ const INPUT = {
   'j-q': el => { jr.q = el.value; $('j-list').innerHTML = logList(); },
   'd-who': el => { debtUI.form.who = el.value; },
   'k-n': el => { cardUI.f.n = el.value; },
+  'u-n': el => { dueUI.f.n = el.value; },
+  'u-a': el => { dueUI.f.a = el.value; },
   'k-l4': el => { cardUI.f.l4 = el.value.replace(/\D/g, '').slice(0, 4); },
   'k-bal': el => { cardUI.f.bal = el.value; },
   'hu-note': el => { humo.note[el.dataset.key] = el.value.trim(); },
@@ -4336,6 +4524,7 @@ const CHANGE = {
   'fmt-num': el => { const v = digits(el.value); el.value = v ? fmt(v) : ''; },
   'd-flow': el => { debtUI.form.flow = el.checked; },
   'k-ty': el => { cardUI.f.ty = el.value; },
+  'u-d': el => { if (validISO(el.value)) dueUI.f.d = el.value; setModal(dueFormHTML()); },
   'k-main': el => { cardUI.f.main = el.checked; },
   'hu-on': el => { humo.on[el.dataset.key] = el.checked; $('hu-res').innerHTML = humoResults(); },
   'hu-cat': el => { humo.cat[el.dataset.key] = el.value; $('hu-res').innerHTML = humoResults(); },

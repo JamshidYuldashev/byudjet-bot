@@ -177,6 +177,12 @@ Hisob-kitob qoidalari:
   (faqat telefonda biometrika bo'lsa, Telegram 7.2+). Yoqilsa, treker ochilganda barmoq izi avtomatik so'raladi.
   Bekor qilsangiz — PIN bilan ochasiz. Har qurilmada alohida yoqiladi. Telegram Desktop'da biometrika yo'q, u yerda PIN ishlaydi.
   PIN o'chirilsa, biometrik ochish ham o'chadi.
+- **O'z to'lovlaringiz**: Asosiy → «Yaqin to'lovlar» → «Qo'shish». Nima uchun, summa, sana (Ertaga / 1 haftadan keyin /
+  Oy oxiri / istalgan kun), takrorlanishi (bir marta, har hafta, har oy, har yil) va qaysi karta yoki naqddan. «Pul kelishi
+  kerak» — kutilayotgan kirim uchun (masalan, kimdir qarzni qaytaradi). To'lov sanasi yaqinlashganda (7 kun ichida)
+  «Yaqin to'lovlar» da reja bandlari bilan birga turadi, Reja kalendarida binafsha nuqta bilan ko'rinadi, «Erkin pul» va
+  prognoz uni hisobga oladi. «To'ladim» bosilsa amal tayyor ochiladi; saqlangach takrorlanadigan to'lov keyingi sanaga o'tadi,
+  bir martaligi yopiladi. Takrorlanadiganini «Bu safar o'tkazib yuborish» mumkin. Bildirishnoma yuborilmaydi.
 - **Bank kartalari**: Sozlamalar → Kartalar → «Karta qo'shish» (nomi, oxirgi 4 raqam, turi: HUMO / Uzcard / VISA /
   Mastercard, rangi). Avval oylik tushadigan **asosiy kartani** qo'shing — hozirgi karta puli va oldingi karta amallari
   shunga yoziladi. Keyingi kartalarni qo'shganda «Hozirgi qoldig'i» ni kiriting: shu summa asosiy kartadan yangi kartaga

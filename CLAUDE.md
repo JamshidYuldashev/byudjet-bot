@@ -75,7 +75,11 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
     trekerdagi o'sha karta qoldig'ini tekshiradi; tuzatish farqli xabardan bir daqiqa oldinga yoziladi. Tiyin tashlanadi.
 - Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
 - Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz (`C.prog`) = yakuniy reja + farq +
-  o'tib ketgan, yozilmagan yo'lkira (pulsiz borilgan kunlar). Erkin pul = `affordPath` minimumi (karta + naqd).
+  o'tib ketgan, yozilmagan yo'lkira (pulsiz borilgan kunlar) + o'zim qo'shgan to'lovlar. Erkin pul = `affordPath` minimumi (karta + naqd).
+- O'zim qo'shgan to'lovlar (`due` hujjati): `{ id: u…, n, a, k: out|in, d (keyingi sana), rp: ''|w|m|y, dd (oy kuni), acc, cd,
+  st: ''|d, ld, la }`. `dueDates` — `d` dan davr oxirigacha takrorlar; `C.dueByIso` orqali «Yaqin to'lovlar», Reja kalendari,
+  `affordPath` (Erkin pul), `forecast` va `C.prog` ga qo'shiladi. «To'ladim» → `openAdd({ due })` → saqlangach `advanceDue`.
+  Bildirishnoma yo'q. Zaxira eksportiga kiradi.
 - Xohishlar (`wish` hujjati): `{ id: w…, ts, a, c, n, acc, st: w|b|s, rd }` — «24 soat qoidasi». Zaxira eksportiga kiradi.
 - Jurnal (`log`): `{ t, k: add|edit|del|debt|plan|set|import|wish, m, r }`, oxirgi 500 ta yozuv. Har bir o'zgarish
   `addTx` / `updateTx` / `removeTx` / `logEv` orqali yoziladi — ma'lumotni to'g'ridan-to'g'ri o'zgartirmang.
@@ -89,7 +93,7 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 - «Balans tuzatish» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Tahlil), lekin qoldiqqa kiradi.
 - Biometrik ochish (BiometricManager, 7.2+): tasodifiy token qurilmaning xavfsiz xotirasida, bulutda faqat
   `meta.bio = { [deviceId]: sha256(token) }`. PIN bo'lmasa `bio` bo'sh. Zaxira eksportiga kirmaydi.
-- Saqlash: hujjatlar `meta`, `debts`, `log`, `wish`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
+- Saqlash: hujjatlar `meta`, `debts`, `log`, `wish`, `due`, `t_YYYY-MM`. Ular 3 500 belgilik bo'laklarga bo'linadi
   (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
 - HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
 - Egasi tekshiruvi: `OWNER_HASH` = sha256(`byudjet-bot:` + CHAT_ID). Uni `.github/workflows/pages.yml` deploy paytida
