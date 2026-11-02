@@ -756,7 +756,8 @@ function isWorkday(day) {
   return w === undefined ? defaultWorkday(day) : w === 1;
 }
 function eventsOn(day) {
-  const list = [...(PLAN.monthly[day.day] || []), ...(PLAN.once[day.iso] || [])];
+  // Qarzga bog'langan band qarz o'chirilsa rejadan ham chiqadi
+  const list = [...(PLAN.monthly[day.day] || []), ...(PLAN.once[day.iso] || [])].filter(e => !e.debt || debtById(e.debt));
   if (isWorkday(day)) list.push(PLAN.transport);
   return list.map(e => ({ ...e, iso: day.iso, key: `${day.iso}:${e.id}` }));
 }
@@ -806,8 +807,15 @@ function calc() {
       if (!debt && tx.c !== 'tuz' && !(planned && e.id !== 'yol')) s.disc += tx.a;
     }
   }
+  // Qarzga bog'langan band: qarz boshqa amallar bilan to'liq yopilgan bo'lsa — bajarilgan (qayta yozilmasin)
+  const settled = new Set();
+  for (const e of events.values()) {
+    const d = e.debt && !byPlan.has(e.key) ? debtMap.get(e.debt) : null;
+    if (d && (debtPaid[d.id] || 0) >= d.a) settled.add(e.key);
+  }
   let expected = PLAN.startBalance;
   for (const key of byPlan.keys()) expected += delta(events.get(key));
+  for (const key of settled) expected += delta(events.get(key));
   const total = bal.card + bal.cash + bal.save;
   // Prognoz: o'tib ketgan, yozilmagan yo'lkira hisobga olinmaydi — pulsiz borilgan kunlar ham bo'ladi
   let pastYol = 0;
@@ -837,11 +845,11 @@ function calc() {
   }
   cache = {
     ver, t, events, byIso, planByIso, final: pb, bal, cardBal, total, byPlan, dayStat, debtPaid, debtMap,
-    expected, dev: total - expected, prog: pb + total - expected + pastYol + dueNet, dueByIso, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
+    expected, settled, dev: total - expected, prog: pb + total - expected + pastYol + dueNet, dueByIso, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
   };
   return cache;
 }
-const isPending = (C, e) => !C.byPlan.has(e.key);
+const isPending = (C, e) => !C.byPlan.has(e.key) && !C.settled.has(e.key);
 // iso kuni oxiridagi hisob qoldiqlari
 function balOn(C, iso) {
   for (let i = C.endDays.length - 1; i >= 0; i--) if (C.endDays[i] <= iso) return C.dayEnd.get(C.endDays[i]);
@@ -1445,6 +1453,7 @@ function eventRow(e, C, withDate) {
   const tx = C.byPlan.get(e.key);
   const btn = tx
     ? `<button class="act done soft" data-act="edit-tx" data-id="${tx.id}">${ic('check', 14, 2.5)}Bajarildi</button>`
+    : C.settled.has(e.key) ? `<button class="act done soft" data-act="d-open" data-id="${e.debt}">${ic('check', 14, 2.5)}Qarz yopilgan</button>`
     : `<button class="act ${e.kind}" data-act="plan" data-key="${e.key}">${ACT_LABEL[e.kind]}</button>`;
   return `<div class="ev"><div class="body"><span class="t">${esc(e.title)}</span><span class="s">${evSub(e, withDate)}</span></div>${evAmount(e)}${btn}</div>`;
 }
@@ -1844,6 +1853,7 @@ function openFromEvent(key) {
   if (!e) return;
   const done = C.byPlan.get(key);
   if (done) { openEdit(done.id); return; }
+  if (C.settled.has(key)) { toast('Bu qarz allaqachon yopilgan'); return; }
   const t = txFromEvent(e, e.iso > C.t ? clampDate(C.t) : e.iso);
   openAdd({ ...t, a: String(t.a) });
 }
@@ -4688,6 +4698,7 @@ function openDeepPlan() {
   if (!key) return;
   const C = calc();
   if (!C.events.has(key)) { toast('Bu reja bandi topilmadi'); return; }
+  if (C.settled.has(key)) { toast('Bu qarz allaqachon yopilgan'); return; }
   if (C.byPlan.has(key)) toast("Bu band allaqachon yozilgan — kerak bo'lsa tahrirlang");
   openFromEvent(key);
 }
