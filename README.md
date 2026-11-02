@@ -1,6 +1,6 @@
 # byudjet-bot
 
-5 oylik shaxsiy byudjet rejasi (2026-10-27 — 2027-03-20) uchun **serversiz** Telegram Mini App
+Shaxsiy byudjet rejasi uchun **serversiz** Telegram Mini App
 va eslatma bot. Hammasi bepul: sahifa GitHub Pages'da, eslatmalar GitHub Actions'da ishlaydi.
 
 - **`index.html`** — Mini App (treker) quyidagilarni qiladi:
@@ -8,14 +8,15 @@ va eslatma bot. Hammasi bepul: sahifa GitHub Pages'da, eslatmalar GitHub Actions
   - har bir kirim va xarajatni kategoriya bilan yozadi;
   - reja kalendari, qarzlar va hisobotlarni ko'rsatadi;
   - HUMO xabarlaridan import qiladi.
-- **`remind.py`** — har kuni soat 20:00 da (Toshkent) ertangi to'lovlar haqida xabar yuboradi,
-  20-sanada esa 2 500 000 so'm qulflanganini so'raydi.
+- **`remind.py`** — har kuni 08:00 va 20:00 da (Toshkent) reja bo'yicha eslatma yuboradi: bugungi va ertangi
+  to'lovlar, qulflash kuni — pul omonatga o'tkazildimi.
 - **`.github/workflows/remind.yml`** — har kuni 15:00 UTC (20:00 Toshkent) da `remind.py` ni ishga tushiradi.
 - **`.github/workflows/keepalive.yml`** — har oy workflowlarni qayta yoqadi, chunki GitHub
   60 kun faollik bo'lmasa cron'ni o'chirib qo'yadi.
 
-Yakuniy reja balansi qoidalardan hisoblanadi: standart sozlamalarda 101 ish kuni,
-**13 794 455 so'm**.
+**Shaxsiy ma'lumotlar kodda yo'q.** Repo ochiq, shuning uchun reja (summalar, sanalar, bayramlar, boshlang'ich
+qarzlar) kodda saqlanmaydi: u faqat sizning Telegram bulutingizda (treker) va GitHub'ning yopiq `PLAN_JSON`
+secret'ida (bot) turadi. Amallar, kartalar, qarzlar va boshqa barcha ma'lumot — faqat Telegram bulutida.
 
 ---
 
@@ -64,20 +65,55 @@ Yakuniy reja balansi qoidalardan hisoblanadi: standart sozlamalarda 101 ish kuni
 
    Bu — sizning **WEBAPP_URL**. Oddiy brauzerda u «Bu shaxsiy ilova» deb ko'rsatadi — bu to'g'ri.
 
-> Diqqat: repo ochiq, shuning uchun koddagi reja summalari hammaga ko'rinadi.
-> Token va chat_id esa faqat Secrets'da turadi va hech qayerda ko'rinmaydi.
+> Repo ochiq, lekin kodda shaxsiy ma'lumot yo'q: reja `PLAN_JSON` secret'ida va Telegram bulutida,
+> token va chat_id — faqat Secrets'da. Ochiq repoda Actions loglari ham hammaga ko'rinadi, shuning uchun
+> `remind.py` u yerda xabar matnlarini chop etmaydi.
 > Treker faqat `CHAT_ID` ga teng Telegram akkauntida ochiladi (pastda «Faqat egasi» ga qarang).
 
 ### 4. Secrets qo'shish
 
 Repo → **Settings → Secrets and variables → Actions → New repository secret**.
-Uchta secret qo'shing:
+To'rtta secret qo'shing:
 
 | Nomi | Qiymati |
 |---|---|
 | `BOT_TOKEN` | BotFather bergan token |
 | `CHAT_ID` | 2-qadamda topilgan raqam |
 | `WEBAPP_URL` | `https://<USERNAME>.github.io/byudjet-bot/` |
+| `PLAN_JSON` | Reja (pastdagi format) — bir qatorga yozish shart emas |
+
+#### Reja formati (`PLAN_JSON`)
+
+Quyidagi misoldagi summalar to'qima — o'zingiznikini yozing. Kompyuterda shu matnni `plan.local.json` ga saqlab
+qo'yish qulay (u `.gitignore` da — repoga tushmaydi).
+
+```json
+{
+  "v": 1,
+  "start": "2030-01-07",
+  "end": "2030-04-30",
+  "startBalance": 500000,
+  "transport": { "amount": 8000, "title": "Yo'lkira" },
+  "monthly": {
+    "10": [
+      { "id": "maosh", "kind": "in", "amount": 2000000, "title": "Maosh", "cat": "oylik" },
+      { "id": "ijara", "kind": "out", "amount": 700000, "title": "Ijara", "cat": "uy" },
+      { "id": "lock", "kind": "lock", "amount": 1000000, "title": "Jamg'armaga" }
+    ]
+  },
+  "once": { "2030-01-20": [{ "id": "qarz", "kind": "in", "amount": 150000, "title": "Qarz qaytishi", "cat": "qarzq", "debt": "qarz" }] },
+  "holidays": { "2030-03-08": "Bayram" },
+  "debts": [{ "id": "qarz", "dir": "lent", "who": "Do'stim", "a": 150000, "due": "2030-01-20" }]
+}
+```
+
+- `monthly` — har oyning shu kunidagi bandlar; `once` — faqat shu sanada; `kind`: `in` (kirim), `out` (chiqim),
+  `lock` (omonatga qulflash — jami balans o'zgarmaydi).
+- `id` — 2–12 ta kichik lotin harfi, hammasi har xil; `yol` band nomi band (yo'lkira uchun). Bot tugmalari va treker
+  bandlarni shu `id` orqali taniydi, shuning uchun keyin o'zgartirmang.
+- `cat` — trekerdagi kategoriya (`oylik`, `avans`, `kirim`, `qarzq`, `aloqa`, `talim`, `uy`, `boshqa` …).
+- `transport.amount` — har ish kuni (Du–Ju, bayramlarsiz) yo'lkira; 0 bo'lsa yo'lkira yo'q.
+- `debts` — boshlang'ich qarzlar (`owe` — men qarzdorman, `lent` — menga qarzdor).
 
 ### 5. Menu Button (bot ichida "Treker" tugmasi)
 
@@ -90,10 +126,10 @@ Uchta secret qo'shing:
 
 1. Repo → **Actions** bo'limi. Agar so'ralsa, workflowlarni yoqing (*I understand... enable*).
 2. **remind** → **Run workflow**:
-   - `slot`: `evening` (20:00 xabari) yoki `morning` (08:00 xabari);
-   - `today` maydoniga `2026-11-04` yozing (bo'sh qoldirilsa — bugungi sana olinadi);
-   - `dry_run` belgilanmagan bo'lsin → **Run workflow**.
-3. Telegram'ga "Ertaga, 05.11:" xabari va "Trekerni ochish" tugmasi kelishi kerak.
+   - `slot`: `plan` → **Run workflow**. Botdan «📋 Reja» xabari keladi: matnni bosing (nusxalanadi), trekerni oching
+     va «Rejani kiriting» ekranida **Buferdan joylash → Saqlash**. Reja shundan keyin Telegram bulutingizda turadi;
+   - eslatmani sinash: `slot`: `evening`, `today` maydoniga reja to'lovidan bir kun oldingi sana (bo'sh — bugun).
+3. Telegram'ga "Ertaga, …" xabari va "Trekerni ochish" tugmasi kelishi kerak.
 4. **keepalive** → **Run workflow** ni ham bir marta ishga tushirib, xatosiz o'tishini tekshiring.
 
 Shundan so'ng eslatmalar har kuni avtomatik keladi. GitHub cron ba'zan 5–30 daqiqa
@@ -148,7 +184,7 @@ Qo'shimcha imkoniyatlar:
   Kvadratni bossangiz, o'sha kun Reja'da ochiladi.
 - **Tez yozish** — «+» oynasida summa kiritmasdan izohga bir qatorda yozing: `30k non karta`, `kecha 12 000 taksi naqd`,
   `+3.3m oylik` va Enter. Summa, kategoriya, hisob va sana o'zi ajratiladi, keyin «Saqlash» ni bosasiz.
-- **Bot xabaridan bir bosishda** — eslatmada har to'lov uchun tugma bor: «✅ To'ladim: Claude obunasi»,
+- **Bot xabaridan bir bosishda** — eslatmada har to'lov uchun tugma bor: «✅ To'ladim: Internet»,
   «💰 Tushdi: Asosiy oylik», «🔒 Qulfladim». Bosilsa, treker shu to'lov bilan tayyor ochiladi — faqat «Saqlash».
   Agar band allaqachon yozilgan bo'lsa, o'sha amal tahrirlash uchun ochiladi. PIN bo'lsa — avval PIN.
 - **Kalkulyator** — klaviaturada «+ − × ÷»: `25 000 + 12 000`, `120 000 ÷ 3`. Natija darhol hisoblanadi
@@ -166,7 +202,7 @@ Hisob-kitob qoidalari:
 
 - **Jami balans** = boshlang'ich qoldiqlar + barcha kirimlar − barcha chiqimlar.
   O'tkazma (masalan, Karta → Omonat) jami balansni o'zgartirmaydi, faqat pulni bir hisobdan boshqasiga ko'chiradi.
-- **Rejadan farq** = jami balans − (1 000 000 + bajarilgan reja bandlari).
+- **Rejadan farq** = jami balans − (boshlang'ich balans + bajarilgan reja bandlari).
   Rejadan tashqari har bir xarajat farqni kamaytiradi. Hali belgilanmagan bandlar farqqa ta'sir qilmaydi.
 - **Prognoz** = jami balans + hali bajarilmagan reja bandlari. O'tib ketgan, yozilmagan yo'lkira hisobga olinmaydi
   (pulsiz borilgan kunlar ham bo'ladi).
@@ -188,7 +224,7 @@ Hisob-kitob qoidalari:
   shunga yoziladi. Keyingi kartalarni qo'shganda «Hozirgi qoldig'i» ni kiriting: shu summa asosiy kartadan yangi kartaga
   o'tkazma bo'lib yoziladi (jami balans o'zgarmaydi). So'ng:
   - «+» oynasida qaysi kartadan to'laganingizni tanlaysiz; o'tkazmada karta → karta ham mumkin;
-  - reja bandi oxirgi marta qaysi kartadan to'langan bo'lsa, keyingi safar o'sha karta tanlanadi (masalan, Claude — Uzum'dan);
+  - reja bandi oxirgi marta qaysi kartadan to'langan bo'lsa, keyingi safar o'sha karta tanlanadi (masalan, obuna — VISA kartadan);
   - Asosiy ekranda «Karta» ni bossangiz — har karta qoldig'i; kartani bossangiz — qoldiqni tuzatish, tarixi, o'tkazma;
   - Tarix'da karta bo'yicha filtr, har qator ostida o'sha kartaning qoldig'i;
   - HUMO xabaridagi `*1234` kabi raqam bo'yicha amal to'g'ri kartaga yoziladi va solishtirish har karta bo'yicha qilinadi;
@@ -198,7 +234,7 @@ Hisob-kitob qoidalari:
   Farq "Balans tuzatish" amali sifatida yoziladi.
 - Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).
 - Ishga bormagan kunni (masalan, Ramazon hayiti) Reja'da "Dam olish" ga o'tkazing.
-  O'sha kunning 10 000 so'mlik yo'lkirasi rejadan olib tashlanadi.
+  O'sha kunning yo'lkirasi rejadan olib tashlanadi.
 - **Faqat egasi**: treker faqat Telegram ID si `CHAT_ID` ga teng akkauntda ochiladi. Boshqa odam botni topib
   «Treker» ni bossa yoki manzilni brauzerda ochsa, «Bu shaxsiy ilova» ekrani chiqadi. Hech narsa yuklanmaydi
   va yozilmaydi. ID kodda turmaydi: `pages` workflow'i sahifaga faqat uning SHA-256 hash'ini joylaydi.
@@ -247,13 +283,11 @@ bilan oxirgi importni to'liq qaytarish mumkin: qo'shilgan amallar, yangi qarzlar
 
 | Qachon | Xabar |
 |---|---|
-| Har ish kuni, 08:00 | "Bugun ish kuni — faqat 10 000 yo'lkira, tushlik uydan" |
+| Har ish kuni, 08:00 | "Bugun ish kuni — faqat yo'lkira, tushlik uydan" |
 | To'lov kuni, 08:00 | Bugungi reja: to'lovlar va kirimlar ro'yxati (dam olish kuni bo'lsa ham keladi) |
 | Oyning 1-sanasi, 08:00 | Oy rejasi: kirim, majburiy to'lovlar, yo'lkira, omonat, oy oxiridagi reja balansi |
-| 4-sana, 20:00 | Ertaga: avans, ingliz tili kursi (2026-11-04 da qarz qaytishi ham) |
-| 13-sana, 20:00 | Ertaga: Claude obunasi (2026-11-13 da Uzum qarzi ham) |
-| 19-sana, 20:00 | Ertaga: asosiy oylik, telefon, omonatga qulflash |
-| 20-sana, 20:00 | 2 500 000 qulflandimi? |
+| To'lovdan bir kun oldin, 20:00 | Ertangi to'lov va kirimlar, har biri uchun «To'ladim» / «Tushdi» tugmasi |
+| Qulflash kuni, 20:00 | Pul omonatga o'tkazildimi? |
 | Yakshanba, 20:00 | Keyingi haftaning to'lovlari va yo'lkira summasi |
 
 Dam olish va bayram kunlari to'lov bo'lmasa, ertalabki xabar kelmaydi.
@@ -276,31 +310,29 @@ Faqat Python 3 kerak, qo'shimcha kutubxona yo'q.
 ```sh
 python -m unittest -v
 
-# Git Bash / Linux / macOS
-TODAY=2026-11-04 python remind.py --dry-run
-TODAY=2026-11-13 python remind.py --dry-run
-TODAY=2027-03-20 python remind.py --dry-run
-TODAY=2026-12-01 python remind.py --dry-run --slot morning   # ertalabki xabar + oy rejasi
-TODAY=2026-11-15 python remind.py --dry-run                  # yakshanba: keyingi hafta
+# Git Bash / Linux / macOS — reja kompyuterdagi plan.local.json dan
+PLAN_FILE=plan.local.json TODAY=2026-11-04 python remind.py --dry-run
+PLAN_FILE=plan.local.json TODAY=2026-12-01 python remind.py --dry-run --slot morning   # ertalabki xabar + oy rejasi
 ```
 
 PowerShell'da:
 
 ```powershell
-$env:TODAY = "2026-11-04"; python remind.py --dry-run
+$env:PLAN_FILE = "plan.local.json"; $env:TODAY = "2026-11-04"; python remind.py --dry-run
 Remove-Item Env:TODAY
 ```
 
-`--dry-run` xabarlarni yubormaydi, faqat ekranga chiqaradi va secretlarni talab qilmaydi.
+`--dry-run` xabarlarni yubormaydi, faqat ekranga chiqaradi va bot secretlarini talab qilmaydi (reja kerak).
+GitHub Actions'da esa matnlar chop etilmaydi — ochiq repoda loglar hammaga ko'rinadi.
+Testlar to'qima reja bilan ishlaydi (`tests/test_remind.py`).
 Mini App'ni sinash uchun `index.html` ni brauzerda ochish kifoya (fayl va localhost'da egasi tekshirilmaydi).
 Boshqa sanadagi holatni ko'rish uchun manzil oxiriga `?today=2026-11-13` qo'shing.
 
 ## Rejani o'zgartirish
 
-Biror summa yoki sana o'zgarsa (masalan, oylik oshsa), uni **ikki joyda** bir xil yangilang:
+Biror summa yoki sana o'zgarsa (masalan, oylik oshsa), reja matnini **ikki joyda** bir xil yangilang:
 
-1. `index.html` → `PLAN` (va `LOCK`) obyekti;
-2. `remind.py` → `PLAN` (va `LOCK`) obyekti;
+1. Trekerda: **Sozlamalar → Reja → Rejani yangilash** (matnni tahrirlab «Saqlash»; «Nusxalash» bilan olib qo'ying);
+2. GitHub'da: **Settings → Secrets → `PLAN_JSON`** — o'sha matn (bot shu bo'yicha eslatadi).
 
-so'ng `CLAUDE.md` dagi moliyaviy qoidalarni ham yangilab, `python -m unittest` ni ishga tushiring.
-Yakuniy reja balansi avtomatik qayta hisoblanadi.
+Yakuniy reja balansi avtomatik qayta hisoblanadi. Kod o'zgarmaydi.
