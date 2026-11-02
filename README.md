@@ -110,7 +110,7 @@ Ustiga ochiladigan sahifalar (yangi amal, HUMO, sozlamalar, jurnal) Telegram «O
 
 | Bo'lim | Nima bor |
 |---|---|
-| **Asosiy** | Jami balans, 7 kunlik chiziq va hisoblar (Karta, Naqd, Omonat — bosilsa qoldiqni tuzatish). Balans ostida ikki ko'rsatkich: **Erkin pul** — rejadagi barcha kelgusi to'lovlardan keyin karta va naqddan hozir sarflash mumkin bo'lgan summa (eng tig'iz kun bilan) va **Rejadan farq** (bosilsa, nimadan yig'ilgani). Tez amallar: Kirim, O'tkazma, HUMO, Yangi qarz. Keyin kartalar: **Yaqin to'lovlar** (o'tib ketgan belgilanmagan bandlar, eng yaqin to'lov kuni; kartada pul yetmasa — «Naqddan o'tkazish» tugmasi), **Diqqat** (HUMO bilan farq, qarz muddati, limit, qoida buzilishi, xohishlar), Bugun / Seriya / Salomatlik plitkalari, Xohishlar, Yakuniy maqsad, Qarzlar, Oxirgi amallar. Ko'z tugmasi summalarni yashiradi. Yo'lkira bu yerda eslatilmaydi (pulsiz borilgan kunlar ham bo'ladi) |
+| **Asosiy** | Jami balans, 7 kunlik chiziq va hisoblar (Karta, Naqd, Omonat). «Karta» bosilsa — har bank kartasining qoldig'i alohida; Naqd/Omonat bosilsa — qoldiqni tuzatish. Balans ostida ikki ko'rsatkich: **Erkin pul** — rejadagi barcha kelgusi to'lovlardan keyin karta va naqddan hozir sarflash mumkin bo'lgan summa (eng tig'iz kun bilan) va **Rejadan farq** (bosilsa, nimadan yig'ilgani). Tez amallar: Kirim, O'tkazma, HUMO, Yangi qarz. Keyin kartalar: **Yaqin to'lovlar** (o'tib ketgan belgilanmagan bandlar, eng yaqin to'lov kuni; asosiy kartada pul yetmasa — eng ko'p pul turgan karta yoki naqddan o'tkazish tugmasi), **Diqqat** (HUMO bilan farq, qarz muddati, limit, qoida buzilishi, xohishlar), Bugun / Seriya / Salomatlik plitkalari, Xohishlar, Yakuniy maqsad, Qarzlar, Oxirgi amallar. Ko'z tugmasi summalarni yashiradi. Yo'lkira bu yerda eslatilmaydi (pulsiz borilgan kunlar ham bo'ladi) |
 | **Qo'shish (+)** | Tepada Chiqim / Kirim / O'tkazma. Raqamlar paneli, tez summalar, «Kecha» va **Saqlash doim pastda** — surmasdan, bosh barmoq bilan yetadi. Hisob (qoldig'i bilan) va sana, izoh, kategoriyalar. Izoh yozilsa kategoriya o'zi tanlanadi; summa hali kiritilmagan bo'lsa izohga `30k non karta` yozib Enter bosish kifoya. Taqiqlangan xarajatda ogohlantirish chiqadi, rejadan tashqari katta xaridda «⏳ 24 soat» tugmasi |
 | **Tarix** | Barcha amallar kunlar bo'yicha; qidiruv va filtrlar tepada yopishib turadi. Har amal tagida shu amaldan keyingi hisob qoldig'i (HUMO 💰 bilan bir xil), har kun ostida kun oxiridagi qoldiq. Chapga surish — o'chirish, o'ngga — bugunga nusxalash, 5 soniya «Qaytarish». Tepadagi soat belgisi — **o'zgarishlar jurnali** |
 | **Reja** | Uch bo'lim: **Kalendar** (kunlar xarajatga qarab bo'yalgan, kunni tanlab «To'lash» / «Tushdi» / «Qulflash», ish kuni ↔ dam olish), **Qarzlar** («Men qarzdorman» / «Menga qarzdor», bosilsa to'liq yoki qisman to'lash va tarix), **Xohishlar** (24 soat kutayotganlar, hal qilinganlar, tejalgan summa) |
@@ -177,6 +177,17 @@ Hisob-kitob qoidalari:
   (faqat telefonda biometrika bo'lsa, Telegram 7.2+). Yoqilsa, treker ochilganda barmoq izi avtomatik so'raladi.
   Bekor qilsangiz — PIN bilan ochasiz. Har qurilmada alohida yoqiladi. Telegram Desktop'da biometrika yo'q, u yerda PIN ishlaydi.
   PIN o'chirilsa, biometrik ochish ham o'chadi.
+- **Bank kartalari**: Sozlamalar → Kartalar → «Karta qo'shish» (nomi, oxirgi 4 raqam, turi: HUMO / Uzcard / VISA /
+  Mastercard, rangi). Avval oylik tushadigan **asosiy kartani** qo'shing — hozirgi karta puli va oldingi karta amallari
+  shunga yoziladi. Keyingi kartalarni qo'shganda «Hozirgi qoldig'i» ni kiriting: shu summa asosiy kartadan yangi kartaga
+  o'tkazma bo'lib yoziladi (jami balans o'zgarmaydi). So'ng:
+  - «+» oynasida qaysi kartadan to'laganingizni tanlaysiz; o'tkazmada karta → karta ham mumkin;
+  - reja bandi oxirgi marta qaysi kartadan to'langan bo'lsa, keyingi safar o'sha karta tanlanadi (masalan, Claude — Uzum'dan);
+  - Asosiy ekranda «Karta» ni bossangiz — har karta qoldig'i; kartani bossangiz — qoldiqni tuzatish, tarixi, o'tkazma;
+  - Tarix'da karta bo'yicha filtr, har qator ostida o'sha kartaning qoldig'i;
+  - HUMO xabaridagi `*1234` kabi raqam bo'yicha amal to'g'ri kartaga yoziladi va solishtirish har karta bo'yicha qilinadi;
+  - qoldig'i 0 bo'lgan kartani arxivlash mumkin (tarixi qoladi).
+  Karta nomi va raqami kodda emas, faqat Telegram bulutingizda saqlanadi.
 - **Balansni tuzatish**: Asosiy ekranda hisobni bosing va haqiqiy qoldiqni kiriting.
   Farq "Balans tuzatish" amali sifatida yoziladi.
 - Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).
@@ -200,8 +211,9 @@ xabarlari nusxalab joylanadi:
    - reja bandiga mos kelsa (summa ±5%, sana ±3 kun), amalni o'sha bandga bog'laydi;
    - avval import qilingan xabarni qayta qo'shmaydi;
    - P2P o'tkazmada turini so'raydi: Omonatga, Qarz berdim yoki Xarajat;
-   - naqd pul yechishni Karta → Naqd o'tkazmasi sifatida yozadi.
-4. Oxirida trekerdagi Karta qoldig'ini HUMO'dagi oxirgi qoldiq bilan solishtiradi.
+   - naqd pul yechishni Karta → Naqd o'tkazmasi sifatida yozadi;
+   - kartalar qo'shilgan bo'lsa, xabardagi karta raqami (`*1234`) bo'yicha amalni o'sha kartaga yozadi.
+4. Oxirida trekerdagi karta qoldig'ini HUMO'dagi oxirgi qoldiq bilan solishtiradi.
    Farq bo'lsa, uni "Balans tuzatish" sifatida yozishni taklif qiladi.
 
 Matn faqat telefoningizda tahlil qilinadi va hech qayerga yuborilmaydi.
