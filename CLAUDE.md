@@ -61,12 +61,18 @@ Standart sozlamalarda: 101 ish kuni, yakuniy balans **13 794 455 so'm**
 
 - Hisoblar: `card` (Karta), `cash` (Naqd), `save` (Omonat — qulflangan). Boshlang'ich qoldiqlar `open` da
   (standart: Karta 1 000 000).
-- Amal: `{ id, d, tm, k: in|out|tr, a, acc, to, c, n, p, h, debt, b }`.
+- Bank kartalari: `meta.cards = [{ id: k…, n, l4, ty: humo|uzcard|visa|mc, col, main, off }]` — «Karta» hisobi ichida.
+  Nomi va raqami faqat bulutda (kodda emas). Bo'sh bo'lsa — bitta umumiy Karta. Boshlang'ich karta puli (`open.card`)
+  birinchi kartada; keyingi karta qo'shilganda qoldig'i asosiy kartadan `tr` (karta → karta) bilan ajratiladi.
+  Zaxira eksportiga kiradi.
+- Amal: `{ id, d, tm, k: in|out|tr, a, acc, to, c, n, p, h, debt, b, cd, tc }`.
   - `p` — reja bandi kaliti (`2026-11-05:avans`): band bajarilgan deb hisoblanadi.
   - `h` — HUMO xabari izi (takror importdan himoya).
   - `debt` — qarz id si.
+  - `cd` — karta (`acc === 'card'`), `tc` — qabul qiluvchi karta (`to === 'card'`). Yo'q yoki noma'lum bo'lsa — asosiy
+    karta (`cardOf`). Karta → karta o'tkazmada `cd !== tc`. `addTx` → `fixCards` maydonlarni to'ldiradi.
   - `b` — HUMO xabaridagi 💰 karta qoldig'i (tiyin), shu amaldan keyin. «HUMO bilan solishtirish» (`reconcile`) shu bilan
-    trekerdagi karta qoldig'ini tekshiradi; tuzatish farqli xabardan bir daqiqa oldinga yoziladi.
+    trekerdagi o'sha karta qoldig'ini tekshiradi; tuzatish farqli xabardan bir daqiqa oldinga yoziladi. Tiyin tashlanadi.
 - Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
 - Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz (`C.prog`) = yakuniy reja + farq +
   o'tib ketgan, yozilmagan yo'lkira (pulsiz borilgan kunlar). Erkin pul = `affordPath` minimumi (karta + naqd).
