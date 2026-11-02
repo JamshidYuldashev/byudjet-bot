@@ -23,7 +23,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Egasini belgilash (CHAT_ID dan hash)
+      - name: Egasini belgilash (CHAT_ID dan sekin hash — PBKDF2)
         env:
           CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
@@ -35,7 +35,8 @@ jobs:
           src = pathlib.Path("index.html").read_text(encoding="utf-8")
           if src.count("__OWNER_HASH__") != 1:
               sys.exit("Xato: index.html da __OWNER_HASH__ bitta bo'lishi kerak")
-          owner = hashlib.sha256(f"byudjet-bot:{chat_id}".encode()).hexdigest()
+          # index.html dagi OWNER_ITER bilan bir xil; sekin hash ID ni tanlab topishni qimmatlashtiradi
+          owner = hashlib.pbkdf2_hmac("sha256", chat_id.encode(), b"byudjet-bot", 300000).hex()
           site = pathlib.Path("_site")
           site.mkdir()
           (site / "index.html").write_text(src.replace("__OWNER_HASH__", owner), encoding="utf-8")

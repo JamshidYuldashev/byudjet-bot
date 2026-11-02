@@ -524,41 +524,11 @@ body.padded #toast { bottom: calc(var(--padh, 360px) + 12px); }
 'use strict';
 
 // ===== Moliyaviy reja — remind.py dagi PLAN bilan bir xil bo'lishi shart (CLAUDE.md) =====
-const LOCK = 2500000; // har 20-sanada omonatga
-const PLAN = {
-  start: '2026-10-27',
-  end: '2027-03-20',
-  startBalance: 1000000,
-  monthly: {
-    5: [
-      { id: 'avans', kind: 'in', amount: 523691, title: 'Oylik avans', cat: 'avans' },
-      { id: 'ingliz', kind: 'out', amount: 600000, title: 'Ingliz tili kursi', cat: 'talim' },
-    ],
-    14: [
-      { id: 'claude', kind: 'out', amount: 410000, title: 'Claude obunasi', cat: 'aloqa' },
-    ],
-    20: [
-      { id: 'oylik', kind: 'in', amount: 3325200, title: 'Asosiy oylik', cat: 'oylik' },
-      { id: 'telefon', kind: 'out', amount: 52000, title: 'Telefon', cat: 'aloqa' },
-      { id: 'lock', kind: 'lock', amount: LOCK, title: 'Omonatga qulflash' },
-    ],
-  },
-  once: {
-    '2026-11-05': [{ id: 'qarz', kind: 'in', amount: 300000, title: 'Qarz qaytishi', cat: 'qarzq', debt: 'qarz' }],
-    '2026-11-14': [{ id: 'uzum', kind: 'out', amount: 430000, title: 'Uzum qarzini yopish', cat: 'qarz', debt: 'uzum' }],
-  },
-  transport: { id: 'yol', kind: 'out', amount: 10000, title: "Yo'lkira", cat: 'yol', acc: 'cash' },
-  holidays: {
-    '2026-12-08': 'Konstitutsiya kuni',
-    '2027-01-01': 'Yangi yil',
-    '2027-03-08': 'Xotin-qizlar kuni',
-  },
-};
-// Reja boshida mavjud qarzlar (Qarzlar bo'limida tahrirlanadi)
-const SEED_DEBTS = [
-  { id: 'uzum', dir: 'owe', who: 'Uzum Bank', a: 430000, due: '2026-11-14', d: PLAN.start },
-  { id: 'qarz', dir: 'lent', who: 'Qarzdor', a: 300000, due: '2026-11-05', d: PLAN.start },
-];
+// Reja (summalar, sanalar, bayramlar, boshlang'ich qarzlar) kodda saqlanmaydi — repo ochiq.
+// U foydalanuvchining Telegram bulutida «plan» hujjatida turadi (bot uchun — PLAN_JSON secret'ida).
+// Format remind.py dagi parse_plan bilan bir xil; cleanPlan tekshiradi, setPlan kunlarni quradi.
+let PLAN = null;
+let PLAN_RAW = null; // bulutga yoziladigan, tekshirilgan JSON
 
 // ===== Ikonkalar (Tabler outline yo'llari) =====
 const ICON = {
@@ -727,13 +697,67 @@ const $ = id => document.getElementById(id);
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 const sum = (list, f = x => x) => list.reduce((s, x) => s + f(x), 0);
 
-const DAYS = [];
-for (let t = parseISO(PLAN.start), end = parseISO(PLAN.end); t <= end; t += DAY_MS) {
-  const date = new Date(t), iso = toISO(t);
-  DAYS.push({ iso, month: iso.slice(0, 7), day: date.getUTCDate(), dow: date.getUTCDay(), holiday: PLAN.holidays[iso] || '' });
+const DAYS = [], DAY_BY_ISO = new Map(), MONTHS = [];
+const EVENT_ID_RE = /^[a-z]{2,12}$/; // ?plan=ISO:id kaliti bilan bir xil
+function cleanPlan(o) {
+  if (!isObj(o)) throw new Error('reja obyekt emas');
+  if (!validISO(o.start) || !validISO(o.end) || o.start > o.end || daysBetween(o.start, o.end) > 731) throw new Error("start/end noto'g'ri (ko'pi bilan 2 yil)");
+  const int = (v, what, lo = 0) => { if (!Number.isInteger(v) || v < lo || v > 999999999) throw new Error(`${what}: butun son kerak`); return v; };
+  const ids = new Set();
+  const ev = (e, where) => {
+    if (!isObj(e) || typeof e.id !== 'string' || !EVENT_ID_RE.test(e.id) || e.id === 'yol') throw new Error(`${where}: id 2–12 ta kichik lotin harfi bo'lishi kerak`);
+    if (ids.has(e.id)) throw new Error(`${where}: «${e.id}» id takrorlangan`);
+    ids.add(e.id);
+    if (!['in', 'out', 'lock'].includes(e.kind)) throw new Error(`${where}: kind in/out/lock bo'lishi kerak`);
+    if (typeof e.title !== 'string' || !e.title.trim() || e.title.length > 40) throw new Error(`${where}: title kerak (40 belgigacha)`);
+    const x = { id: e.id, kind: e.kind, amount: int(e.amount, `${where}: amount`, 1), title: e.title.trim() };
+    if (e.kind !== 'lock') {
+      x.cat = e.cat ?? (e.kind === 'in' ? 'kirim' : 'boshqa');
+      if (!catOk(x.cat, e.kind)) throw new Error(`${where}: kategoriya noto'g'ri`);
+      if (e.acc !== undefined) { if (!['card', 'cash'].includes(e.acc)) throw new Error(`${where}: acc card/cash`); x.acc = e.acc; }
+    }
+    if (e.debt !== undefined) { if (!DEBT_ID_RE.test(e.debt)) throw new Error(`${where}: debt noto'g'ri`); x.debt = e.debt; }
+    return x;
+  };
+  const monthly = {}, once = {}, holidays = {};
+  for (const [k, list] of Object.entries(isObj(o.monthly) ? o.monthly : {})) {
+    const day = Number(k);
+    if (!Number.isInteger(day) || day < 1 || day > 31 || !Array.isArray(list)) throw new Error(`monthly[${k}] noto'g'ri`);
+    monthly[day] = list.map(e => ev(e, `monthly[${k}]`));
+  }
+  for (const [k, list] of Object.entries(isObj(o.once) ? o.once : {})) {
+    if (!validISO(k) || !Array.isArray(list)) throw new Error(`once[${k}] noto'g'ri`);
+    once[k] = list.map(e => ev(e, `once[${k}]`));
+  }
+  for (const [k, n] of Object.entries(isObj(o.holidays) ? o.holidays : {})) {
+    if (!validISO(k)) throw new Error(`holidays[${k}]: sana noto'g'ri`);
+    holidays[k] = String(n).slice(0, 40);
+  }
+  const tr = isObj(o.transport) ? o.transport : {};
+  const transport = { id: 'yol', kind: 'out', amount: int(tr.amount ?? 0, 'transport.amount'), title: String(tr.title || "Yo'lkira").slice(0, 40), cat: 'yol', acc: 'cash' };
+  const debts = (Array.isArray(o.debts) ? o.debts : []).map(d => cleanDebt({ ...d, due: d.due || '', d: d.d || o.start }));
+  const startBalance = int(o.startBalance ?? 0, 'startBalance', -999999999);
+  return {
+    plan: { start: o.start, end: o.end, startBalance, monthly, once, holidays, transport, debts },
+    raw: { v: 1, start: o.start, end: o.end, startBalance, transport: { amount: transport.amount, title: transport.title }, monthly, once, holidays, debts },
+  };
 }
-const DAY_BY_ISO = new Map(DAYS.map(d => [d.iso, d]));
-const MONTHS = [...new Set(DAYS.map(d => d.month))];
+// Rejani o'rnatish: kunlar, oylar qayta quriladi
+function setPlan(c) {
+  PLAN = c.plan;
+  PLAN_RAW = c.raw;
+  DAYS.length = 0;
+  DAY_BY_ISO.clear();
+  for (let t = parseISO(PLAN.start), end = parseISO(PLAN.end); t <= end; t += DAY_MS) {
+    const date = new Date(t), iso = toISO(t);
+    const day = { iso, month: iso.slice(0, 7), day: date.getUTCDate(), dow: date.getUTCDay(), holiday: PLAN.holidays[iso] || '' };
+    DAYS.push(day);
+    DAY_BY_ISO.set(iso, day);
+  }
+  MONTHS.splice(0, MONTHS.length, ...new Set(DAYS.map(d => d.month)));
+  cache = null;
+  ver++;
+}
 const clampMonth = m => (m < MONTHS[0] ? MONTHS[0] : m > MONTHS[MONTHS.length - 1] ? MONTHS[MONTHS.length - 1] : m);
 
 // ===== Holat =====
@@ -748,7 +772,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], due: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null, cards: [],
+  tx: [], debts: PLAN.debts.map(d => ({ ...d })), log: [], wish: [], due: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null, cards: [],
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -757,7 +781,7 @@ function isWorkday(day) {
 }
 function eventsOn(day) {
   const list = [...(PLAN.monthly[day.day] || []), ...(PLAN.once[day.iso] || [])];
-  if (isWorkday(day)) list.push(PLAN.transport);
+  if (isWorkday(day) && PLAN.transport.amount) list.push(PLAN.transport);
   return list.map(e => ({ ...e, iso: day.iso, key: `${day.iso}:${e.id}` }));
 }
 const delta = e => (e.kind === 'in' ? e.amount : e.kind === 'out' ? -e.amount : 0);
@@ -916,7 +940,7 @@ function applyTheme() {
 // ===== Saqlash: CloudStorage (6.9+) yoki localStorage; hujjatlar 3500 belgilik bo'laklarga bo'linadi =====
 // Kalitlar: meta_N, debts_N, log_N, t_YYYY-MM_N. Birinchi bo'lak "bo'laklar_soni|" bilan boshlanadi.
 const CHUNK = 3500; // CloudStorage qiymati 4096 belgigacha
-const DOC_RE = /^(meta|debts|log|wish|due|t_\d{4}-\d{2})_(\d{1,3})$/;
+const DOC_RE = /^(plan|meta|debts|log|wish|due|t_\d{4}-\d{2})_(\d{1,3})$/;
 const V1_RE = /^m_(\d{4}-\d{2})$/;
 function createStore() {
   if (tgAtLeast('6.9') && WA.CloudStorage) {
@@ -964,6 +988,7 @@ const unpackTx = (a, m) => {
   return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt, b, cd, tc };
 };
 function serialize(doc) {
+  if (doc === 'plan') return JSON.stringify(PLAN_RAW);
   if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp, cards: db.cards });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
@@ -1184,6 +1209,8 @@ async function load() {
       docs[doc] = JSON.parse(text);
     } catch { broken.push(doc); }
   }
+  // Reja bo'lmasa (yoki buzilgan bo'lsa) — «Rejani kiriting» ekrani; qolgan ma'lumot tegilmaydi
+  try { setPlan(cleanPlan(docs.plan)); } catch { return false; }
   let meta = null;
   if (docs.meta) {
     try { meta = cleanMeta(docs.meta); } catch { broken.push('meta'); }
@@ -1232,6 +1259,32 @@ async function load() {
   }
   if (broken.length || skipped) toast(`Ba'zi saqlangan ma'lumotlar buzilgan, e'tiborsiz qoldirildi (${broken.length + skipped})`);
   ver++;
+  return true;
+}
+// Reja matnini tekshirib bulutga yozadi; xato bo'lsa — matnini qaytaradi
+async function savePlanText(text) {
+  let c;
+  try { c = cleanPlan(JSON.parse(text)); } catch (e) { return e instanceof SyntaxError ? `JSON xato: ${e.message}` : e.message; }
+  setPlan(c);
+  if (db) logEv('set', `Reja yangilandi: ${dm(PLAN.start)}.${PLAN.start.slice(0, 4)} – ${dm(PLAN.end)}.${PLAN.end.slice(0, 4)}`);
+  touch('plan');
+  await flush();
+  return '';
+}
+function showPlanSetup() {
+  $('loading').hidden = true;
+  $('lock').dataset.mode = 'plan';
+  $('lock').hidden = false;
+  $('lock').innerHTML = `<div class="lockbox" style="max-width:420px">
+    <span class="tile lg soft" style="--c:var(--blue)">${ic('calendar', 24)}</span>
+    <h1 class="h2" style="font-size:18px">Rejani kiriting</h1>
+    <p class="small muted" style="line-height:1.55">Moliyaviy reja (summalar va sanalar) kodda saqlanmaydi — faqat sizning Telegram bulutingizda.
+      Botdagi «📋 Reja» xabarida matnni bosing (nusxalanadi), keyin shu yerga joylang.</p>
+    <textarea class="field" id="plan-text" spellcheck="false" autocomplete="off" placeholder='{"v":1,"start":"…"}' style="width:100%"></textarea>
+    <button class="btn sm" data-act="pl-paste" style="width:100%">${ic('clipboard', 16)}Buferdan joylash</button>
+    <button class="btn primary" data-act="pl-save" style="width:100%">Saqlash</button>
+    <p class="small c-bad" id="plan-msg" role="alert" style="font-weight:700;min-height:18px"></p>
+  </div>`;
 }
 
 // ===== O'zgartirishlar =====
@@ -1438,7 +1491,7 @@ function evAmount(e) {
 }
 function evSub(e, withDate) {
   const card = multiCard() && e.id !== 'yol' ? ` · ${cardName(lastCardFor(e.id))}` : '';
-  const acc = (e.kind === 'lock' ? 'Karta → Omonat' : e.id === 'yol' ? '5 000 + 5 000 · Naqd' : e.kind === 'in' ? 'Kartaga' : 'Kartadan') + card;
+  const acc = (e.kind === 'lock' ? 'Karta → Omonat' : e.id === 'yol' ? 'Har ish kuni · Naqd' : e.kind === 'in' ? 'Kartaga' : 'Kartadan') + card;
   return (withDate ? `${longDate(e.iso)} · ` : '') + acc + (e.debt ? " · qarz bilan bog'langan" : '');
 }
 function eventRow(e, C, withDate) {
@@ -2192,7 +2245,7 @@ function viewReja() {
         <div class="col"><span class="small muted">Kirim</span><span class="num c-in">+${fmt(inSum)}</span></div>
         <div class="col"><span class="small muted">Majburiy to'lovlar</span><span class="num">−${fmt(outSum)}</span></div>
         <div class="col"><span class="small muted">Yo'lkira · ${yolN} ish kuni</span><span class="num">−${fmt(yolN * PLAN.transport.amount)}</span></div>
-        <div class="col"><span class="small muted">Omonatga (20-sana)</span><span class="num c-acc">→ ${fmt(lockSum)}</span></div>
+        <div class="col"><span class="small muted">Omonatga (qulflash)</span><span class="num c-acc">→ ${fmt(lockSum)}</span></div>
       </div></section>
     <section class="card" style="padding:14px 10px;gap:6px">
       <div class="cal">${WD_SHORT.map(w => `<span class="wdh">${w}</span>`).join('')}${cells.join('')}</div>
@@ -2796,6 +2849,7 @@ function viewSozlama() {
     <span class="grp">Reja va hisoblar</span>
     <section class="setlist">
       ${setItem('page', 'card', 'blue', 'Kartalar', db.cards.length ? activeCards().map(k => k.n).join(' · ') : "Bank kartalarini qo'shing", db.cards.length ? String(activeCards().length) : '', ' data-to="sz-cards"')}
+      ${setItem('page', 'calendar', 'purple', 'Reja', `${dm(PLAN.start)}.${PLAN.start.slice(2, 4)} – ${dm(PLAN.end)}.${PLAN.end.slice(2, 4)} · faqat bulutda`, '', ' data-to="sz-plan"')}
       ${setItem('page', 'card', 'teal', "Boshlang'ich qoldiqlar", ACC_IDS.filter(a => db.open[a]).map(a => `${ACC[a].name} ${fmt(db.open[a])}`).join(' · ') || "Hammasi 0", '', ' data-to="sz-open"')}
       ${setItem('page', 'adjust', 'amber', 'Oylik limitlar', lims.length ? lims.map(([c, v]) => `${CATS[c].name} ${fmt(v)}`).join(' · ') : "O'rnatilmagan", '', ' data-to="sz-lim"')}
       ${setItem('reja-tab', 'calendar', 'purple', 'Ish kunlari va bayramlar', 'Reja kalendarida kunni bosib almashtiring', '', ' data-t="cal"')}
@@ -2934,6 +2988,25 @@ function cardSheet(id) {
       <button class="btn sm" data-act="card-edit" data-id="${id}">${ic('edit', 16)}Tahrirlash</button>
     </div>`);
 }
+function viewSzPlan() {
+  const C = calc();
+  const ev = e => `<div class="row" style="min-height:48px"><span class="body"><span class="t"><span>${esc(e.title)}</span></span><span class="s">${e.id}${e.debt ? ' · qarz' : ''}</span></span>`
+    + `<span class="num ${e.kind === 'in' ? 'c-in' : e.kind === 'lock' ? 'c-acc' : ''}">${e.kind === 'in' ? '+' : e.kind === 'lock' ? '→ ' : '−'}${fmt(e.amount)}</span></div>`;
+  const days = Object.keys(PLAN.monthly).map(Number).sort((a, b) => a - b);
+  return `${subHead('Reja')}
+    <p class="note">Reja kodda saqlanmaydi: u faqat sizning Telegram bulutingizda, bot uchun esa GitHub'dagi yopiq PLAN_JSON secret'ida.
+      Bu yerda o'zgartirsangiz, yangi matnni secret'ga ham qo'ying — aks holda bot eski reja bo'yicha eslatadi.</p>
+    <section class="card" style="gap:0">${kv('Davr', `${longDate(PLAN.start)} ${PLAN.start.slice(0, 4)} – ${longDate(PLAN.end)} ${PLAN.end.slice(0, 4)}`)}
+      ${kv("Boshlang'ich balans", fmt(PLAN.startBalance))}${kv(`${esc(PLAN.transport.title)} (har ish kuni)`, fmt(PLAN.transport.amount))}${kv('Yakuniy reja', fmt(C.final))}</section>
+    ${days.map(d => `<section class="card list"><span class="h2" style="margin-bottom:4px">Har oy, ${d}-sana</span>${PLAN.monthly[d].map(ev).join('')}</section>`).join('')}
+    ${Object.keys(PLAN.once).length ? `<section class="card list"><span class="h2" style="margin-bottom:4px">Bir martalik</span>${Object.entries(PLAN.once).sort().flatMap(([iso, l]) => l.map(e => ev({ ...e, title: `${dm(iso)} · ${e.title}` }))).join('')}</section>` : ''}
+    <section class="card"><span class="h2">Rejani yangilash</span>
+      <p class="small muted" style="line-height:1.5">Matnni tahrirlang yoki yangisini joylang. Saqlangach treker qayta ochiladi.</p>
+      <textarea class="field" id="plan-text" spellcheck="false" autocomplete="off">${esc(JSON.stringify(PLAN_RAW))}</textarea>
+      <div class="grid2" style="gap:8px"><button class="btn sm" data-act="pl-copy">${ic('copy', 16)}Nusxalash</button><button class="btn sm" data-act="pl-paste">${ic('clipboard', 16)}Buferdan joylash</button></div>
+      <button class="btn primary" data-act="pl-save">Saqlash</button>
+      <p class="small c-bad" id="plan-msg" role="alert" style="font-weight:700"></p></section>`;
+}
 function viewSzLim() {
   return `${subHead('Oylik limitlar')}
     <p class="note">Kategoriya bo'yicha oylik chegara. 80% ga yetganda va oshganda Asosiy ekranda ogohlantiriladi, Tahlil'da oy oxiri prognozi ko'rsatiladi. Bo'sh qoldirilsa — limitsiz.</p>
@@ -2964,7 +3037,7 @@ function viewSzBackup() {
 
 // ===== Zaxira, CSV =====
 const exportText = () => JSON.stringify({
-  v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, cards: db.cards,
+  v: 2, plan: PLAN_RAW, open: db.open, work: db.work, lim: db.lim, seq: db.seq, cards: db.cards,
   debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log, wish: db.wish, due: db.due,
 });
 function parseBackup(text) {
@@ -3354,6 +3427,7 @@ async function pinHash(pin, salt) {
 }
 function showLock(mode, done) {
   Object.assign(pinUI, { mode, buf: '', first: '', msg: '', done });
+  $('lock').dataset.mode = 'pin';
   $('lock').hidden = false;
   renderLock();
   if (mode === 'unlock') bioUnlock();
@@ -3427,9 +3501,9 @@ async function pinKey(k) {
 async function forgotPin() {
   if (!(await confirmDialog("PIN-kodni unutgan bo'lsangiz, xavfsizlik uchun trekerdagi barcha ma'lumotlar o'chiriladi va u yangidan boshlanadi. Zaxira nusxangiz bo'lsa, keyin uni import qilishingiz mumkin. Davom etasizmi?"))) return;
   if (!(await confirmDialog("Rostdan ham barcha ma'lumotlar o'chirilsinmi? Buni qaytarib bo'lmaydi."))) return;
-  const ours = (await store.keys()).filter(k => DOC_RE.test(k) || V1_RE.test(k));
+  const ours = (await store.keys()).filter(k => (DOC_RE.test(k) && !k.startsWith('plan_')) || V1_RE.test(k));
   for (let i = 0; i < ours.length; i += 20) await store.remove(ours.slice(i, i + 20));
-  for (const k of Object.keys(chunkCount)) delete chunkCount[k];
+  for (const k of Object.keys(chunkCount)) if (k !== 'plan') delete chunkCount[k];
   db = blankDb();
   bioForget();
   touch('meta', 'debts');
@@ -3498,15 +3572,30 @@ function bioDisable() {
 // Lokal fayl va localhost — tekshirish uchun ochiq.
 const OWNER_HASH = '__OWNER_HASH__';
 const DEV_HOST = location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(location.hostname);
+// PBKDF2 (pages.yml bilan bir xil): sahifadagi hash'dan Telegram ID ni tanlab topish juda qimmat
+const OWNER_ITER = 300000;
 async function ownerMatch(id, hash) {
   if (!id || !/^[0-9a-f]{64}$/.test(hash) || !window.crypto?.subtle) return false;
-  return (await sha256hex(`byudjet-bot:${id}`)) === hash;
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(String(id)), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: enc.encode('byudjet-bot'), iterations: OWNER_ITER }, key, 256);
+  return hex(new Uint8Array(bits)) === hash;
 }
+// Sekin hash har ochilishda hisoblanmasin: shu qurilmada egasi tasdiqlangan bo'lsa — eslab qolinadi
+// (id va sahifadagi hash bilan; boshqa akkaunt yoki yangi hash bo'lsa qayta tekshiriladi)
 async function isOwner() {
-  return DEV_HOST || ownerMatch(inTelegram && WA.initDataUnsafe?.user?.id, OWNER_HASH);
+  if (DEV_HOST) return true;
+  const id = inTelegram && WA.initDataUnsafe?.user?.id;
+  if (!id) return false;
+  const memo = `${id}:${OWNER_HASH}`;
+  try { if (localStorage.getItem('byudjet:ui:owner') === memo) return true; } catch { /* saqlash yo'q */ }
+  const ok = await ownerMatch(id, OWNER_HASH);
+  if (ok) try { localStorage.setItem('byudjet:ui:owner', memo); } catch { /* saqlash yo'q */ }
+  return ok;
 }
 function showPrivate() {
   $('loading').hidden = true;
+  $('lock').dataset.mode = 'private';
   $('lock').hidden = false;
   $('lock').innerHTML = `<div class="lockbox" role="alert">
     <span class="tile lg soft" style="--c:var(--coral)">${ic('lock', 24)}</span>
@@ -3625,7 +3714,7 @@ const BADGES = [
   ['first', 'Birinchi qadam', 'Birinchi amalni yozdingiz', 'check', 'mint'],
   ['streak7', '7 kun taqiqsiz', 'Ketma-ket 7 kun qoidaga amal qildingiz', 'flame', 'amber'],
   ['streak30', '30 kun taqiqsiz', 'Ketma-ket 30 kun — temir intizom', 'flame', 'coral'],
-  ['lockday', 'Oylik qulflandi', '20-sanada omonatga o\'sha kuni o\'tkazdingiz', 'lock', 'blue'],
+  ['lockday', 'Oylik qulflandi', 'Qulflash kuni pulni o\'sha kuni omonatga o\'tkazdingiz', 'lock', 'blue'],
   ['nodebt', 'Qarzsiz', 'Barcha qarzlaringiz yopilgan', 'users', 'teal'],
   ['planmonth', 'Reja ustasi', 'Bir oyning hamma reja bandlari bajarildi', 'calendar', 'purple'],
   ['humo10', 'HUMO ustasi', '10 ta amal HUMO dan import qilindi', 'clipboard', 'teal'],
@@ -4185,6 +4274,21 @@ const ACT = {
   'k-bank': el => { cardUI.f.n = el.dataset.v; setModal(cardFormHTML()); },
   'k-col': el => { cardUI.f.col = el.dataset.v; setModal(cardFormHTML()); },
   'k-save': () => saveCard(),
+  'pl-paste': async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text.trim()) throw new Error();
+      $('plan-text').value = text;
+    } catch { toast("Buferni o'qib bo'lmadi — matnni maydonga qo'lda joylang"); }
+  },
+  'pl-copy': async () => { if (await copyText($('plan-text').value)) toast('Nusxalandi'); },
+  'pl-save': async () => {
+    const err = await savePlanText($('plan-text').value.trim());
+    $('plan-msg').textContent = err;
+    if (err) { haptic.error(); return; }
+    haptic.ok();
+    location.reload();
+  },
   'due-new': () => { dueUI.f = blankDue(); openModal(dueFormHTML(), true); },
   'due-open': el => openModal(dueSheet(el.dataset.id)),
   'due-edit': el => {
@@ -4611,6 +4715,8 @@ document.addEventListener('input', ev => { const k = ev.target.dataset?.input; i
 document.addEventListener('change', ev => { const k = ev.target.dataset?.change; if (k && CHANGE[k]) CHANGE[k](ev.target); });
 document.addEventListener('keydown', ev => {
   if (!$('lock').hidden) {
+    // Faqat PIN ekranida: reja kiritish va «shaxsiy ilova» ekranlarida raqamlar PIN emas
+    if ($('lock').dataset.mode !== 'pin' || ev.target.closest?.('textarea, input')) return;
     if (/^\d$/.test(ev.key)) pinKey(ev.key);
     else if (ev.key === 'Backspace') pinKey('back');
     else return;
@@ -4644,7 +4750,7 @@ document.addEventListener('keydown', ev => {
 
 const VIEWS = {
   main: viewMain, tarix: viewTarix, reja: viewReja, tahlil: viewTahlil, add: viewAdd, humo: viewHumo, jurnal: viewJurnal,
-  sozlama: viewSozlama, 'sz-cards': viewSzCards, 'sz-home': viewSzHome, 'sz-lim': viewSzLim, 'sz-open': viewSzOpen, 'sz-backup': viewSzBackup,
+  sozlama: viewSozlama, 'sz-plan': viewSzPlan, 'sz-cards': viewSzCards, 'sz-home': viewSzHome, 'sz-lim': viewSzLim, 'sz-open': viewSzOpen, 'sz-backup': viewSzBackup,
 };
 
 // ===== Ishga tushirish =====
@@ -4663,8 +4769,9 @@ async function start() {
   if (!(await isOwner())) { showPrivate(); return; }
   const bioP = bioInit();
   try {
-    await load();
+    const ok = await load();
     await bioP;
+    if (!ok) { showPlanSetup(); return; }
   } catch (e) {
     $('loading').innerHTML = `<p>Ma'lumotlarni yuklab bo'lmadi: ${esc(e.message)}</p><button class="btn primary" onclick="location.reload()">Qayta urinish</button>`;
     return;
