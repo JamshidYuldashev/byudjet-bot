@@ -491,6 +491,19 @@ body.padded #toast { bottom: calc(var(--padh, 360px) + 12px); }
 .vgrid { display: grid; grid-template-columns: 50px repeat(3, minmax(0, 1fr)); gap: 4px 8px; font-size: 12px; font-weight: 700; }
 .vgrid > :not(:nth-child(4n+1)) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .vgrid.vhead { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .03em; text-transform: uppercase; }
+/* Kartalar */
+.kchip { width: 38px; height: 26px; border-radius: 6px; background: var(--c); color: var(--on-strong); flex: none; display: flex;
+  align-items: flex-end; justify-content: flex-end; padding: 2px 4px; font-size: 7.5px; font-weight: 800; letter-spacing: .02em; }
+.kdot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); flex: none; }
+.kpick { margin-top: -2px; }
+.kpick .chip { min-height: 40px; }
+.kgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kgrid .opt2 { min-height: 46px; padding: 0 8px; gap: 6px; }
+.kgrid .opt2 b { font-size: 12px; }
+.opt2 b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kcols { display: flex; gap: 10px; flex-wrap: wrap; }
+.kcol { width: 34px; height: 34px; border-radius: 17px; border: 3px solid transparent; background: var(--c); padding: 0; }
+.kcol[aria-pressed="true"] { border-color: var(--text); }
 </style>
 </head>
 <body>
@@ -624,6 +637,40 @@ const CATS = {
   tuz: { k: 'any', name: 'Balans tuzatish', icon: 'adjust', color: 'gray', hidden: true },
 };
 const catOk = (c, k) => !!CATS[c] && (CATS[c].k === k || CATS[c].k === 'any');
+
+// ===== Bank kartalari: «Karta» hisobi ichida har karta alohida qoldiq bilan =====
+// Karta nomi va raqami kodda emas — faqat foydalanuvchining Telegram bulutida (meta.cards).
+const CARD_ID = /^k[0-9a-z]{1,10}$/;
+const CARD_TYPES = { humo: 'HUMO', uzcard: 'Uzcard', visa: 'VISA', mc: 'Mastercard' };
+const CARD_COLORS = ['blue', 'purple', 'amber', 'teal', 'coral', 'pink', 'mint', 'gray'];
+const BANKS = ['Uzum Karta', 'Octobank', 'Kapitalbank', 'Anorbank', 'TBC', 'Hamkorbank', 'Ipoteka', 'Xalq banki', 'Agrobank', 'Asakabank', 'NBU', 'Aloqabank'];
+const activeCards = () => db.cards.filter(k => !k.off);
+const multiCard = () => activeCards().length > 1;
+const cardById = id => (id && db.cards.find(k => k.id === id)) || null;
+const mainCard = () => db.cards.find(k => k.main && !k.off) || activeCards()[0] || db.cards[0] || null;
+// Amal qaysi kartaga tegishli (karta ko'rsatilmagan bo'lsa — asosiy). Kartalar yo'q bo'lsa — ''.
+function cardOf(t, side = 'acc') {
+  if (!db.cards.length) return '';
+  const id = side === 'to' ? t.tc : t.cd;
+  return cardById(id) ? id : mainCard().id;
+}
+const cardName = id => cardById(id)?.n || 'Karta';
+const accName = (acc, cd) => (acc === 'card' && db.cards.length ? cardName(cd) : ACC[acc].name);
+const cardBalOf = (C, id) => (db.cards.length ? C.cardBal[id] ?? 0 : C.bal.card);
+const cardChip = k => `<span class="kchip" style="--c:var(--${k.col})" aria-hidden="true">${CARD_TYPES[k.ty] || ''}</span>`;
+// Kartasiz amal maydonlari tozalanadi, karta ko'rsatilmagan karta amali — asosiy kartaga
+function fixCards(t) {
+  if (t.acc !== 'card') t.cd = '';
+  else if (db.cards.length && !cardById(t.cd)) t.cd = mainCard().id;
+  if (t.to !== 'card') t.tc = '';
+  else if (db.cards.length && !cardById(t.tc)) t.tc = mainCard().id;
+}
+// Reja bandi uchun karta: shu band oxirgi marta qaysi kartadan to'langan bo'lsa — o'sha
+function lastCardFor(eid) {
+  if (!db.cards.length) return '';
+  const x = calc().sorted.find(t => t.acc === 'card' && t.p?.endsWith(`:${eid}`));
+  return x && cardById(x.cd) && !cardById(x.cd).off ? x.cd : mainCard().id;
+}
 const LIMIT_CATS = ['oziq', 'aloqa', 'talim', 'sog', 'uy', 'boshqa'];
 
 // ===== Sana: reja UTC da, "bugun" qurilmaning mahalliy sanasi =====
@@ -683,7 +730,9 @@ const MONTHS = [...new Set(DAYS.map(d => d.month))];
 const clampMonth = m => (m < MONTHS[0] ? MONTHS[0] : m > MONTHS[MONTHS.length - 1] ? MONTHS[MONTHS.length - 1] : m);
 
 // ===== Holat =====
-// db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt, b (HUMO 💰 karta qoldig'i, tiyin) }
+// db.tx: { id, d, tm, k: in|out|tr, a, acc, to, c, n, p (reja kaliti "ISO:id"), h (HUMO izi), debt, b (HUMO 💰 karta qoldig'i, tiyin),
+//          cd (karta — acc === 'card'), tc (qabul qiluvchi karta — to === 'card') }
+// db.cards: [{ id: k…, n, l4, ty: humo|uzcard|visa|mc, col, main, off }] — bo'sh bo'lsa bitta umumiy «Karta»
 // db.log: { t: "YYYY-MM-DD HH:MM", k: add|edit|del|debt|plan|set|import|wish, m: matn, r: qarz yoki amal id }
 // db.wish: { id, ts (ms), a, c, n, acc, st: w (kutilmoqda) | b (sotib olindi) | s (voz kechildi), rd: hal qilingan sana }
 let db = null;
@@ -691,7 +740,7 @@ let ver = 0;
 let cache = null;
 const blankDb = () => ({
   open: { card: PLAN.startBalance, cash: 0, save: 0 }, work: {}, lim: {}, seq: 0, mig: 1,
-  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null,
+  tx: [], debts: SEED_DEBTS.map(d => ({ ...d })), log: [], wish: [], pin: null, bio: {}, home: { order: [], off: [], v: 2 }, imp: null, cards: [],
 });
 const defaultWorkday = day => day.dow >= 1 && day.dow <= 5 && !day.holiday;
 function isWorkday(day) {
@@ -723,12 +772,20 @@ function calc() {
     planByIso[day.iso] = pb;
   }
   const bal = { ...db.open };
+  // Kartalar: boshlang'ich karta puli birinchi qo'shilgan kartada
+  const cardBal = Object.fromEntries(db.cards.map((k, i) => [k.id, i ? 0 : db.open.card]));
+  const cardMove = (box, tx) => {
+    if (!db.cards.length) return;
+    if (tx.acc === 'card') box[cardOf(tx)] += tx.k === 'in' ? tx.a : -tx.a;
+    if (tx.k === 'tr' && tx.to === 'card') box[cardOf(tx, 'to')] += tx.a;
+  };
   const byPlan = new Map(), dayStat = {}, debtPaid = {};
   const debtMap = new Map(db.debts.map(d => [d.id, d]));
   for (const tx of db.tx) {
     if (tx.k === 'in') bal[tx.acc] += tx.a;
     else if (tx.k === 'out') bal[tx.acc] -= tx.a;
     else { bal[tx.acc] -= tx.a; bal[tx.to] += tx.a; }
+    cardMove(cardBal, tx);
     const e = tx.p ? events.get(tx.p) : null;
     if (e && !byPlan.has(tx.p)) byPlan.set(tx.p, tx);
     const planned = e && byPlan.get(tx.p) === tx;
@@ -751,16 +808,18 @@ function calc() {
   // Har amaldan keyingi hisob qoldig'i (vaqt tartibida, eng eskisidan) — HUMO xabaridagi 💰 bilan solishtiriladi
   const after = new Map(), dayEnd = new Map();
   const run = { ...db.open };
+  const runCard = Object.fromEntries(db.cards.map((k, i) => [k.id, i ? 0 : db.open.card]));
   for (let i = sorted.length - 1; i >= 0; i--) {
     const tx = sorted[i];
     if (tx.k === 'in') run[tx.acc] += tx.a;
     else if (tx.k === 'out') run[tx.acc] -= tx.a;
     else { run[tx.acc] -= tx.a; run[tx.to] += tx.a; }
-    after.set(tx.id, run[tx.acc]);
+    cardMove(runCard, tx);
+    after.set(tx.id, tx.acc === 'card' && db.cards.length ? runCard[cardOf(tx)] : run[tx.acc]);
     dayEnd.set(tx.d, { ...run }); // kun oxiridagi qoldiqlar (sanalar o'sish tartibida qo'shiladi)
   }
   cache = {
-    ver, t, events, byIso, planByIso, final: pb, bal, total, byPlan, dayStat, debtPaid, debtMap,
+    ver, t, events, byIso, planByIso, final: pb, bal, cardBal, total, byPlan, dayStat, debtPaid, debtMap,
     expected, dev: total - expected, prog: pb + total - expected + pastYol, sorted, after, dayEnd, endDays: [...dayEnd.keys()],
   };
   return cache;
@@ -879,16 +938,16 @@ async function getBatched(keys) {
   return out;
 }
 const packTx = t => {
-  const a = [t.id, t.d.slice(8), t.tm, t.k, t.a, t.acc, t.to, t.c, t.n, t.p, t.h, t.debt, t.b];
+  const a = [t.id, t.d.slice(8), t.tm, t.k, t.a, t.acc, t.to, t.c, t.n, t.p, t.h, t.debt, t.b, t.cd, t.tc];
   while (a.length > 5 && a[a.length - 1] === '') a.pop();
   return a;
 };
 const unpackTx = (a, m) => {
-  const [id, dd, tm, k, amt, acc, to, c, n, p, h, debt, b] = a;
-  return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt, b };
+  const [id, dd, tm, k, amt, acc, to, c, n, p, h, debt, b, cd, tc] = a;
+  return { id, d: `${m}-${dd}`, tm, k, a: amt, acc, to, c, n, p, h, debt, b, cd, tc };
 };
 function serialize(doc) {
-  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp });
+  if (doc === 'meta') return JSON.stringify({ v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, mig: db.mig, pin: db.pin, bio: db.bio, home: db.home, imp: db.imp, cards: db.cards });
   if (doc === 'debts') return JSON.stringify(db.debts.map(d => [d.id, d.dir, d.who, d.a, d.due, d.d]));
   if (doc === 'log') return JSON.stringify(db.log.map(e => [e.t, e.k, e.m, e.r]));
   if (doc === 'wish') return JSON.stringify(db.wish.map(w => [w.id, w.ts, w.a, w.c, w.n, w.acc, w.st, w.rd]));
@@ -944,6 +1003,7 @@ function cleanTx(o) {
     id: o.id, d: o.d, tm: o.tm || '', k: o.k, a: o.a, acc: o.acc, to: o.to || '', c: o.c || '',
     n: o.n || '', p: o.p || '', h: o.h || '', debt: o.debt || '',
     b: Number.isInteger(o.b) && o.b >= 0 && o.b <= 1e14 ? o.b : '', // noto'g'ri qoldiq — shunchaki tashlanadi
+    cd: o.acc === 'card' && CARD_ID.test(o.cd || '') ? o.cd : '', tc: o.to === 'card' && CARD_ID.test(o.tc || '') ? o.tc : '',
   };
   const bad = what => new Error(`amal ${typeof t.id === 'string' ? t.id : '?'}: noto'g'ri ${what}`);
   if (typeof t.id !== 'string' || !ID_RE.test(t.id)) throw bad('id');
@@ -953,7 +1013,8 @@ function cleanTx(o) {
   if (!isAmt(t.a)) throw bad('summa');
   if (!ACC[t.acc]) throw bad('hisob');
   if (t.k === 'tr') {
-    if (!ACC[t.to] || t.to === t.acc) throw bad("o'tkazma");
+    // Karta → karta (har xil kartalar) ruxsat etiladi
+    if (!ACC[t.to] || (t.to === t.acc && !(t.acc === 'card' && t.cd && t.tc && t.cd !== t.tc))) throw bad("o'tkazma");
     t.c = ''; t.debt = '';
   } else {
     if (!catOk(t.c, t.k)) throw bad('kategoriya');
@@ -1005,7 +1066,18 @@ function cleanMeta(o) {
   // Oxirgi HUMO import — bekor qilish uchun: qo'shilgan amallar, yangi qarzlar, takror deb bog'langanlar
   const ids = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string' && /^[a-z][0-9a-z]{1,12}$/.test(x)).slice(0, 500) : []);
   const imp = isObj(o.imp) && typeof o.imp.t === 'string' ? { t: o.imp.t.slice(0, 16), tx: ids(o.imp.tx), debts: ids(o.imp.debts), h: ids(o.imp.h) } : null;
-  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio, home, imp };
+  // Bank kartalari: nomi, oxirgi 4 raqam (HUMO xabarini bog'lash uchun), turi, rangi; bittasi asosiy
+  const cards = [];
+  for (const k of Array.isArray(o.cards) ? o.cards.slice(0, 12) : []) {
+    const n = isObj(k) && typeof k.n === 'string' ? k.n.trim().slice(0, 30) : '';
+    if (!n || !CARD_ID.test(k.id) || cards.some(x => x.id === k.id)) continue;
+    cards.push({ id: k.id, n, l4: /^\d{4}$/.test(k.l4) ? k.l4 : '', ty: CARD_TYPES[k.ty] ? k.ty : '', col: CARD_COLORS.includes(k.col) ? k.col : 'blue',
+      main: k.main === true && k.off !== true, off: k.off === true });
+  }
+  let hasMain = false;
+  for (const k of cards) { if (k.main && hasMain) k.main = false; hasMain ||= k.main; }
+  if (!hasMain) { const k = cards.find(x => !x.off); if (k) k.main = true; }
+  return { open, work, lim, seq, mig: o.mig === 1 ? 1 : 0, pin, bio, home, imp, cards };
 }
 const LOG_KINDS = ['add', 'edit', 'del', 'debt', 'plan', 'set', 'import', 'wish'];
 function cleanWish(o) {
@@ -1028,7 +1100,7 @@ function finishDb(meta, debts, tx, log = meta.log) {
   const ids = new Set();
   const uniq = list => list.filter(x => (ids.has(x.id) ? false : ids.add(x.id)));
   const out = { ...meta, debts: uniq(debts), tx: uniq(tx), log: cleanLog(log) };
-  out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), ...(out.wish || []).map(w => idNum(w.id)), 0);
+  out.seq = Math.max(out.seq, ...out.tx.map(t => idNum(t.id)), ...out.debts.map(d => (d.id[0] === 'd' ? idNum(d.id) : 0)), ...(out.wish || []).map(w => idNum(w.id)), ...(out.cards || []).map(k => idNum(k.id)), 0);
   return out;
 }
 
@@ -1140,7 +1212,7 @@ function logEv(k, m, r = '') {
 }
 const sgn = t => (t.k === 'in' ? `+${fmt(t.a)}` : t.k === 'out' ? `−${fmt(t.a)}` : fmt(t.a));
 function txLabel(t) {
-  return `${txTitle(t, calc())} ${sgn(t)}${t.k === 'tr' ? '' : ` · ${ACC[t.acc].name}`} · ${dm(t.d)}${t.n ? ` · ${t.n}` : ''}`;
+  return `${txTitle(t, calc())} ${sgn(t)}${t.k === 'tr' ? '' : ` · ${accName(t.acc, cardOf(t))}`} · ${dm(t.d)}${t.n ? ` · ${t.n}` : ''}`;
 }
 // Qarz amali yozilganda qarzning yangi holati qo'shiladi
 function debtNote(t) {
@@ -1150,7 +1222,8 @@ function debtNote(t) {
   return s.closed ? ' · qarz yopildi' : ` · ${fmt(s.left)} qoldi`;
 }
 function addTx(t, how = {}) {
-  const tx = { id: nextId('t'), tm: '', to: '', c: '', n: '', p: '', h: '', debt: '', b: '', ...t };
+  const tx = { id: nextId('t'), tm: '', to: '', c: '', n: '', p: '', h: '', debt: '', b: '', cd: '', tc: '', ...t };
+  fixCards(tx);
   db.tx.push(tx);
   if (how.quiet) { ver++; return tx; }
   touch('meta', tdoc(tx.d));
@@ -1167,6 +1240,9 @@ function updateTx(tx, patch) {
   if (before.a !== tx.a) ch.push(`summa ${fmt(before.a)} → ${fmt(tx.a)}`);
   if (before.d !== tx.d) ch.push(`sana ${dm(before.d)} → ${dm(tx.d)}`);
   if (before.acc !== tx.acc || before.to !== tx.to) ch.push(`hisob ${ACC[before.acc].name} → ${ACC[tx.acc].name}`);
+  else if (db.cards.length && ((before.cd || '') !== (tx.cd || '') || (before.tc || '') !== (tx.tc || ''))) {
+    ch.push(`karta ${accName(before.acc, before.cd)} → ${accName(tx.acc, tx.cd)}`);
+  }
   if (before.c !== tx.c && tx.c) ch.push(`kategoriya ${CATS[before.c]?.name || '—'} → ${CATS[tx.c].name}`);
   if (before.n !== tx.n) ch.push('izoh');
   if (before.p !== tx.p) ch.push(tx.p ? "rejaga bog'landi" : 'rejadan ajratildi');
@@ -1196,7 +1272,7 @@ function deleteTx(tx) {
 // Amalni bugungi sanaga takrorlash (HUMO izi va reja bog'lanishisiz)
 function copyTxToday(tx) {
   if (tx.c === 'tuz') { toast("Balans tuzatishni nusxalab bo'lmaydi"); return; }
-  const t = { d: clampDate(today()), tm: nowHM(), k: tx.k, a: tx.a, acc: tx.acc, to: tx.to, c: tx.c, n: tx.n, p: '', h: '',
+  const t = { d: clampDate(today()), tm: nowHM(), k: tx.k, a: tx.a, acc: tx.acc, to: tx.to, cd: tx.cd, tc: tx.tc, c: tx.c, n: tx.n, p: '', h: '',
     debt: tx.debt && debtById(tx.debt) ? tx.debt : '' };
   t.p = autoLink(t);
   const nt = addTx(t, { prefix: 'Nusxalandi' });
@@ -1210,8 +1286,10 @@ function copyTxToday(tx) {
 }
 function txFromEvent(e, d) {
   const base = { d, tm: '', n: '', p: e.key, h: '' };
-  if (e.kind === 'lock') return { ...base, k: 'tr', a: e.amount, acc: 'card', to: 'save', c: '', debt: '' };
-  return { ...base, k: e.kind, a: e.amount, acc: e.acc || 'card', to: '', c: e.cat, debt: e.debt && debtById(e.debt) ? e.debt : '' };
+  const cd = lastCardFor(e.id);
+  if (e.kind === 'lock') return { ...base, k: 'tr', a: e.amount, acc: 'card', cd, to: 'save', c: '', debt: '' };
+  const acc = e.acc || 'card';
+  return { ...base, k: e.kind, a: e.amount, acc, cd: acc === 'card' ? cd : '', to: '', c: e.cat, debt: e.debt && debtById(e.debt) ? e.debt : '' };
 }
 // Yangi amal shu kungi bajarilmagan reja bandiga mos kelsa — bog'lanadi
 function autoLink(t) {
@@ -1280,7 +1358,7 @@ const rerender = () => render();
 // ===== Umumiy bo'laklar =====
 function txTitle(t, C) {
   const e = t.p && C.byPlan.get(t.p) === t ? C.events.get(t.p) : null;
-  if (t.k === 'tr') return e ? e.title : `${ACC[t.acc].name} → ${ACC[t.to].name}`;
+  if (t.k === 'tr') return e ? e.title : `${accName(t.acc, cardOf(t))} → ${accName(t.to, cardOf(t, 'to'))}`;
   const debt = t.debt && C.debtMap.get(t.debt);
   if (debt) return debt.who;
   if (e && e.id !== 'yol') return e.title;
@@ -1292,7 +1370,7 @@ function debtFlow(t, debt) {
 }
 function txSub(t, C, withDate) {
   const debt = t.debt && C.debtMap.get(t.debt);
-  const parts = [t.k === 'tr' ? "O'tkazma" : ACC[t.acc].name];
+  const parts = [t.k === 'tr' ? "O'tkazma" : accName(t.acc, cardOf(t))];
   if (debt) parts.push(debtFlow(t, debt));
   if (withDate) parts.push(t.d === C.t ? 'bugun' : longDate(t.d));
   if (t.tm) parts.push(t.tm);
@@ -1317,7 +1395,7 @@ function txRow(t, C, withDate, withBal) {
     + `<span class="body"><span class="t"><span>${esc(txTitle(t, C))}</span>${t.h ? '<span class="tag">HUMO</span>' : ''}</span>`
     + `<span class="s">${esc(txSub(t, C, withDate))}</span></span>`
     + `<span class="end">${amountHTML(t)}${bad ? '<span class="badge soft">Qoida buzildi</span>' : ''}`
-    + `${withBal ? `<span class="bal">${ACC[t.acc].name}: ${ui.hide ? '•••••' : fmt(C.after.get(t.id))}</span>` : ''}</span></button>`;
+    + `${withBal ? `<span class="bal">${accName(t.acc, cardOf(t))}: ${ui.hide ? '•••••' : fmt(C.after.get(t.id))}</span>` : ''}</span></button>`;
 }
 const ACT_LABEL = { in: 'Tushdi', out: "To'lash", lock: 'Qulflash' };
 function evAmount(e) {
@@ -1325,7 +1403,8 @@ function evAmount(e) {
   return e.kind === 'in' ? `<span class="num c-in">+${fmt(e.amount)}</span>` : `<span class="num">−${fmt(e.amount)}</span>`;
 }
 function evSub(e, withDate) {
-  const acc = e.kind === 'lock' ? 'Karta → Omonat' : e.id === 'yol' ? '5 000 + 5 000 · Naqd' : e.kind === 'in' ? 'Kartaga' : 'Kartadan';
+  const card = multiCard() && e.id !== 'yol' ? ` · ${cardName(lastCardFor(e.id))}` : '';
+  const acc = (e.kind === 'lock' ? 'Karta → Omonat' : e.id === 'yol' ? '5 000 + 5 000 · Naqd' : e.kind === 'in' ? 'Kartaga' : 'Kartadan') + card;
   return (withDate ? `${longDate(e.iso)} · ` : '') + acc + (e.debt ? " · qarz bilan bog'langan" : '');
 }
 function eventRow(e, C, withDate) {
@@ -1358,8 +1437,8 @@ function viewMain() {
       <div class="spread"><span class="lbl">Jami balans</span><span class="hero-chip">${chip}</span></div>
       ${hide ? `<button class="hero-total" data-act="eye" aria-label="Summalarni ko'rsatish">•••••• <small>so'm</small></button>`
         : `<div class="hero-total"><span id="hero-num" data-v="${C.total}">${fmt(C.total)}</span> <small>so'm</small></div>${sparkHTML(C, t)}`}
-      <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="${hide ? 'eye' : 'adjust'}" data-acc="${a}" aria-label="${hide ? `${ACC[a].name}: summani ko'rsatish` : `${ACC[a].name}: ${fmt(C.bal[a])} so'm, qoldiqni tuzatish`}">`
-        + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}</span><b>${show(fmt(C.bal[a]))}</b></button>`).join('')}</div>
+      <div class="grid3">${ACC_IDS.map(a => `<button class="acc" data-act="${hide ? 'eye' : a === 'card' ? 'cards' : 'adjust'}" data-acc="${a}" aria-label="${hide ? `${ACC[a].name}: summani ko'rsatish` : `${ACC[a].name}: ${fmt(C.bal[a])} so'm, ${a === 'card' ? 'kartalar bo\'yicha' : 'qoldiqni tuzatish'}`}">`
+        + `<span>${ic(ACC[a].icon, 14)}${ACC[a].name}${a === 'card' && multiCard() ? ` · ${activeCards().length}` : ''}</span><b>${show(fmt(C.bal[a]))}</b></button>`).join('')}</div>
       <hr>
       <div class="grid2" style="gap:8px">
         <button class="hk" data-act="${hide ? 'eye' : 'free-info'}" aria-label="Erkin pul: ${hide ? 'yashirilgan' : `${fmt(fm.v)} so'm`}, tafsilot">
@@ -1444,7 +1523,7 @@ function alertsCard(C, t) {
   const rc = reconcile(C);
   if (rc && !rc.ok) {
     items.push({ lvl: 2, color: 'coral', icon: 'clipboard', act: 'data-act="recon"',
-      text: `Karta HUMO bilan mos emas: trekerda ${fmt(Math.abs(rc.bad.diff))} ${rc.bad.diff > 0 ? 'kam' : "ko'p"}`,
+      text: `${esc(db.cards.length ? cardName(rc.bad.kid) : 'Karta')} HUMO bilan mos emas: trekerda ${fmt(Math.abs(rc.bad.diff))} ${rc.bad.diff > 0 ? 'kam' : "ko'p"}`,
       sub: `${dm(rc.bad.tx.d)}, ${rc.bad.tx.tm} holatiga · bosing — tafsilot va tuzatish` });
   }
   for (const d of db.debts) {
@@ -1510,14 +1589,17 @@ function payCard(C, t) {
   const g = groups[0];
   if (g) {
     const amt = kind => sum(g.list.filter(e => e.kind === kind), e => e.amount);
-    const need = amt('out') + amt('lock') - amt('in'), card = C.bal.card;
+    const m = mainCard();
+    const need = amt('out') + amt('lock') - amt('in'), card = m ? C.cardBal[m.id] : C.bal.card, where = m && multiCard() ? m.n : 'Karta';
     body += `<span class="grp-l c-warn">${when(g.day.iso)} · ${longDate(g.day.iso)}, ${WEEKDAYS[g.day.dow]}</span>${g.list.map(e => eventRow(e, C)).join('')}`;
     if (need > 0 && card >= need) {
-      body += `<div class="msg soft c-in" style="margin:4px 0 10px">${ic('check', 16, 2.5)}Kartada ${ui.hide ? '•••••' : fmt(card)} bor — to'lovlarga yetadi</div>`;
+      body += `<div class="msg soft c-in" style="margin:4px 0 10px">${ic('check', 16, 2.5)}${esc(where)}da ${ui.hide ? '•••••' : fmt(card)} bor — to'lovlarga yetadi</div>`;
     } else if (need > 0) {
-      const move = Math.min(need - card, Math.max(0, C.bal.cash));
-      body += `<div class="msg soft c-bad" style="margin:4px 0 10px">${ic('alert', 16)}<span style="flex:1">Kartada ${fmt(need - card)} yetmaydi</span>`
-        + `${move > 0 ? `<button class="status" data-act="cash2card" data-a="${move}" style="background:var(--coral);color:var(--on-strong)">Naqddan o'tkazish</button>` : ''}</div>`;
+      const src = [...activeCards().filter(k => k !== m).map(k => ({ acc: 'card', cd: k.id, n: k.n, v: C.cardBal[k.id] })), { acc: 'cash', cd: '', n: 'Naqd', v: C.bal.cash }]
+        .filter(x => x.v > 0).sort((a, b) => b.v - a.v)[0];
+      const move = src ? Math.min(need - card, src.v) : 0;
+      body += `<div class="msg soft c-bad" style="margin:4px 0 10px">${ic('alert', 16)}<span style="flex:1">${esc(where)}da ${fmt(need - card)} yetmaydi</span>`
+        + `${move > 0 ? `<button class="status" data-act="topup" data-a="${move}" data-acc="${src.acc}" data-cd="${src.cd}" style="background:var(--coral);color:var(--on-strong)">${esc(src.n)}dan o'tkazish</button>` : ''}</div>`;
     }
   }
   const g2 = groups[1];
@@ -1599,7 +1681,7 @@ function recentCard(C) {
 
 // ===== Qo'shish / tahrirlash =====
 let form = null;
-const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
+const blankForm = () => ({ id: '', k: 'out', a: '', c: '', acc: 'card', to: 'save', cd: '', tc: '', d: clampDate(today()), tm: '', n: '', p: '', h: '', debt: '', unlinked: false });
 function openAdd(pre = {}) {
   form = { ...blankForm(), ...pre, catSet: !!pre.c, expr: pre.a || '' };
   push('add');
@@ -1619,8 +1701,20 @@ function openFromEvent(key) {
   const t = txFromEvent(e, e.iso > C.t ? clampDate(C.t) : e.iso);
   openAdd({ ...t, a: String(t.a) });
 }
+// Shakldagi kartalar: tanlanmagan bo'lsa asosiy; karta → karta bo'lsa qabul qiluvchi boshqa karta
+function formCards(f) {
+  if (!db.cards.length) return { cd: '', tc: '' };
+  const ok = id => cardById(id) && !cardById(id).off;
+  const cd = ok(f.cd) ? f.cd : mainCard().id;
+  let tc = ok(f.tc) ? f.tc : mainCard().id;
+  if (f.k === 'tr' && f.acc === 'card' && f.to === 'card' && tc === cd) tc = activeCards().find(k => k.id !== cd)?.id || tc;
+  return { cd, tc };
+}
+const cardPick = (C, field, sel, other) => (multiCard() ? `<div class="kgrid">${activeCards().map(k => `<button class="opt opt2" data-act="f-card" data-f="${field}" data-id="${k.id}" aria-pressed="${sel === k.id}"${k.id === other ? ' disabled' : ''}>`
+  + `<span class="kdot" style="--c:var(--${k.col})"></span><span><b>${esc(k.n)}</b><small>${ui.hide ? '•••••' : fmt(C.cardBal[k.id])}</small></span></button>`).join('')}</div>` : '');
 function viewAdd() {
   const f = form, C = calc(), t = C.t;
+  const fc = formCards(f);
   const isTr = f.k === 'tr';
   const debt = !isTr && f.debt ? C.debtMap.get(f.debt) : null;
   const forbidden = f.k === 'out' && CATS[f.c]?.bad;
@@ -1640,16 +1734,19 @@ function viewAdd() {
     + `<button class="round sm" data-act="f-unplan" aria-label="Rejadan ajratish">${ic('x', 16)}</button></div>` : '';
   let middle;
   if (isTr) {
-    const pick = (field, other) => `<div class="grid3">${ACC_IDS.map(a => `<button class="opt" data-act="f-${field}" data-acc="${a}" aria-pressed="${f[field] === a}"${other === a ? ' disabled' : ''}>${ic(ACC[a].icon, 16)}${ACC[a].name}</button>`).join('')}</div>`;
-    middle = `<div class="trrow"><span class="lbl">Qayerdan · ${fmt(C.bal[f.acc])}</span>${pick('acc', f.to)}</div>
-      <div class="trrow"><span class="lbl">Qayerga</span>${pick('to', f.acc)}</div>
+    const same = a => a === 'card' && multiCard(); // karta → boshqa karta mumkin
+    const pick = (field, other) => `<div class="grid3">${ACC_IDS.map(a => `<button class="opt" data-act="f-${field}" data-acc="${a}" aria-pressed="${f[field] === a}"${other === a && !same(a) ? ' disabled' : ''}>${ic(ACC[a].icon, 16)}${ACC[a].name}</button>`).join('')}</div>`;
+    const both = f.acc === 'card' && f.to === 'card';
+    const fromBal = f.acc === 'card' ? cardBalOf(C, fc.cd) : C.bal[f.acc];
+    middle = `<div class="trrow"><span class="lbl">Qayerdan · ${fmt(fromBal)}</span>${pick('acc', f.to)}${f.acc === 'card' ? cardPick(C, 'cd', fc.cd, '') : ''}</div>
+      <div class="trrow"><span class="lbl">Qayerga</span>${pick('to', f.acc)}${f.to === 'card' ? cardPick(C, 'tc', fc.tc, both ? fc.cd : '') : ''}</div>
       ${f.to === 'save' ? '<p class="note">Omonatga o\'tkazma jami balansni o\'zgartirmaydi — pul faqat qulflanadi.</p>' : ''}
       <div class="grid3">${dateBtn}</div>${note}${planChip}`;
   } else {
     const bal = a => (ui.hide ? '•••••' : fmt(C.bal[a]));
     middle = `<div class="grid3">${['card', 'cash'].map(a => `<button class="opt opt2" data-act="f-acc" data-acc="${a}" aria-pressed="${f.acc === a}">${ic(ACC[a].icon, 16)}`
       + `<span><b>${ACC[a].name}</b><small>${bal(a)}</small></span></button>`).join('')}${dateBtn}</div>
-      ${note}${planChip}<div id="f-cats" style="display:contents">${addCatsHTML(f, debt)}</div>`;
+      ${f.acc === 'card' ? cardPick(C, 'cd', fc.cd, '') : ''}${note}${planChip}<div id="f-cats" style="display:contents">${addCatsHTML(f, debt)}</div>`;
   }
   const keys = ['1', '2', '3', '+', '4', '5', '6', '−', '7', '8', '9', '×', '000', '0', 'back', '÷'];
   const hasOp = /[+−×÷]/.test(f.expr || '');
@@ -1707,6 +1804,8 @@ function addCatsHTML(f, debt) {
   const warn = forbidden ? `<div class="msg warnbox soft c-bad">${ic('alert', 20)}<span><b class="c-bad">Taqiqlangan xarajat!</b> Saqlasangiz, bu kun «qoida buzilgan kun» bo'ladi va prognoz ${fmt(digits(f.a))} so'mga kamayadi.</span></div>` : '';
   return catBlock + warn;
 }
+// O'tkazma o'sha hisobning o'ziga — faqat ikki har xil karta bo'lsa mumkin
+const sameAcc = f => f.acc === f.to && !(f.acc === 'card' && multiCard() && formCards(f).cd !== formCards(f).tc);
 function addSaveHTML(f) {
   const isTr = f.k === 'tr';
   const amount = digits(f.a);
@@ -1716,7 +1815,7 @@ function addSaveHTML(f) {
   // «24 soat qoidasi»: taqiqlangan yoki katta (30 000+) rejadan tashqari xarid — avval xohishlar ro'yxatiga
   const wish = !f.id && f.k === 'out' && !f.debt && !f.p && amount && !needCat && !CATS[f.c].hidden && (forbidden || amount >= 30000);
   return `<div id="f-actions" class="save-row">${wish ? `<button class="btn wishbtn" data-act="f-wish" aria-label="24 soat kutaman — xohishlar ro'yxatiga">${ic('hourglass', 18)}24 soat</button>` : ''}`
-    + `<button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && f.acc === f.to) ? ' disabled' : ''}>${label}</button></div>`;
+    + `<button class="btn primary${forbidden ? ' bad' : ''}" id="f-save" data-act="save"${!amount || needCat || (isTr && sameAcc(f)) ? ' disabled' : ''}>${label}</button></div>`;
 }
 
 // ===== Izohdan kategoriya: oldingi amallaringizdan o'rganadi + tayyor kalit so'zlar =====
@@ -1773,10 +1872,12 @@ function saveForm() {
   const a = digits(f.a);
   if (!a) return;
   if (f.k !== 'tr' && !catOk(f.c, f.k)) return;
-  if (f.k === 'tr' && f.acc === f.to) return;
+  if (f.k === 'tr' && sameAcc(f)) return;
+  const fc = formCards(f);
   const t = {
     d: f.d, tm: f.tm, k: f.k, a, acc: f.acc, to: f.k === 'tr' ? f.to : '', c: f.k === 'tr' ? '' : f.c,
     n: f.n.trim().slice(0, 120), p: f.p, h: f.h, debt: f.k === 'tr' ? '' : f.debt,
+    cd: f.acc === 'card' ? fc.cd : '', tc: f.k === 'tr' && f.to === 'card' ? fc.tc : '',
   };
   if (!f.id && !t.tm && t.d === today()) t.tm = nowHM();
   const existing = f.id && db.tx.find(x => x.id === f.id);
@@ -1788,7 +1889,7 @@ function saveForm() {
 }
 
 // ===== Tarix =====
-const hist = { q: '', f: 'all', day: '' };
+const hist = { q: '', f: 'all', day: '', card: '' };
 const LOG_LOOK = { add: ['plus', 'mint'], edit: ['edit', 'blue'], del: ['trash', 'coral'], debt: ['users', 'amber'], plan: ['calendar', 'purple'], set: ['adjust', 'gray'], import: ['clipboard', 'teal'], wish: ['hourglass', 'purple'] };
 function viewTarix() {
   const C = calc();
@@ -1803,7 +1904,8 @@ function viewTarix() {
       <button class="pill-btn" data-act="humo">${ic('clipboard', 16)}HUMO import</button></div></header>
     <div class="stick">
       <label class="search">${ic('search', 18)}<span class="sr">Qidiruv</span><input data-input="h-q" value="${esc(hist.q)}" placeholder="Izoh, joy yoki summa bo'yicha qidirish" autocomplete="off"></label>
-      <div class="chips">${F.map(([id, label]) => `<button class="chip" data-act="h-f" data-f="${id}" aria-pressed="${hist.f === id}">${label}</button>`).join('')}</div>
+      <div class="chips">${F.map(([id, label]) => `<button class="chip" data-act="h-f" data-f="${id}" aria-pressed="${hist.f === id}">${label}</button>`).join('')}
+        ${multiCard() ? activeCards().map(k => `<button class="chip" data-act="h-card" data-id="${k.id}" aria-pressed="${hist.card === k.id}"><span class="kdot" style="--c:var(--${k.col})"></span>${esc(k.n)}</button>`).join('') : ''}</div>
     </div>
     <section class="card" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:14px 16px">
       <div class="col"><span class="small muted" style="font-weight:600">${monthName(m)} kirim</span><span class="num c-in">+${fmt(ins)}</span></div>
@@ -1847,6 +1949,7 @@ function histList(C) {
     if (hist.f === 'bad' && !(t.k === 'out' && CATS[t.c]?.bad)) return false;
     if (hist.f === 'humo' && !t.h) return false;
     if (hist.day && t.d !== hist.day) return false;
+    if (hist.card && !((t.acc === 'card' && cardOf(t) === hist.card) || (t.to === 'card' && cardOf(t, 'to') === hist.card))) return false;
     if (!q) return true;
     const text = `${txTitle(t, C)} ${t.n} ${CATS[t.c]?.name || ''}`.toLowerCase();
     return text.includes(q) || (qd.length >= 3 && qd === q.replace(/\s/g, '') && String(t.a).includes(qd));
@@ -1969,7 +2072,7 @@ function rejaDay(C, iso) {
 
 // ===== Qarzlar =====
 // Ikki ro'yxat: "Men qarzdorman" va "Menga qarzdor". Qarz bosilganda oyna ochiladi — to'lov bir bosishda yoziladi.
-const debtUI = { form: null, open: '', acc: 'card' };
+const debtUI = { form: null, open: '', acc: 'card', cd: '' };
 const blankDebtForm = () => ({ id: '', dir: 'owe', who: '', a: '', due: '', flow: true });
 function debtLists(C, t) {
   const s = debtTotals(C, t);
@@ -2033,6 +2136,7 @@ function debtSheet(id) {
   const hist = lines.length ? `<span class="small muted" style="font-weight:800;margin-top:4px">Tarix</span>${lines.join('')}` : '';
   const actions = s.closed ? `<div class="msg soft c-in">${ic('check', 16, 2.5)}Qarz yopilgan</div>` : `
     <div class="grid2" style="gap:8px">${['card', 'cash'].map(a => `<button class="opt" data-act="d-acc" data-acc="${a}" aria-pressed="${debtUI.acc === a}">${ic(ACC[a].icon, 16)}${x.owe ? ACC[a].from : ACC[a].to}</button>`).join('')}</div>
+    ${debtUI.acc === 'card' && multiCard() ? `<div class="chips kpick">${activeCards().map(k => `<button class="chip" data-act="d-card" data-id="${k.id}" aria-pressed="${(debtUI.cd || mainCard().id) === k.id}"><span class="kdot" style="--c:var(--${k.col})"></span>${esc(k.n)}</button>`).join('')}</div>` : ''}
     <button class="btn primary" data-act="d-full" data-id="${d.id}">${ic('check', 18, 2.5)}${x.owe ? "To'liq to'landi" : "To'liq qaytdi"} · ${fmt(s.left)}</button>
     <div style="display:flex;gap:8px"><input class="field r" id="d-part" data-change="fmt-num" inputmode="numeric" placeholder="Qisman summa" autocomplete="off" aria-label="Qisman summa">
       <button class="btn sm" data-act="d-part" data-id="${d.id}" style="flex:none">${x.owe ? "Qisman to'lash" : 'Qisman qaytdi'}</button></div>`;
@@ -2068,7 +2172,7 @@ function recordDebtPay(id, amount) {
   const a = Math.min(amount, s.left);
   if (!a) return;
   const k = repayKind(d);
-  const t = { d: clampDate(C.t), tm: nowHM(), k, a, acc: debtUI.acc, c: k === 'out' ? 'qarz' : 'qarzq', debt: d.id };
+  const t = { d: clampDate(C.t), tm: nowHM(), k, a, acc: debtUI.acc, cd: debtUI.acc === 'card' ? debtUI.cd : '', c: k === 'out' ? 'qarz' : 'qarzq', debt: d.id };
   t.p = autoLink(t);
   addTx(t);
   closeModal();
@@ -2220,7 +2324,6 @@ function fcTip(ev) {
 
 // ===== HUMO bilan solishtirish: har HUMO xabaridagi 💰 karta qoldig'i ↔ trekerdagi karta qoldig'i =====
 // Farq birinchi paydo bo'lgan joy topiladi: oxirgi mos nuqtadan keyingi qo'lda yozilgan karta amallari — gumondorlar.
-const touchesCard = x => x.acc === 'card' || x.to === 'card';
 // Tuzatish HUMO xabaridan bir daqiqa oldinga yoziladi — o'sha xabardagi qoldiq bilan mos tushadi
 const minuteBefore = tm => {
   if (!tm) return '';
@@ -2230,24 +2333,32 @@ const minuteBefore = tm => {
 };
 function reconcile(C) {
   const pts = [];
-  let card = db.open.card;
+  const run = { [db.cards[0]?.id || '']: db.open.card };
   for (let i = C.sorted.length - 1; i >= 0; i--) {
     const x = C.sorted[i];
-    if (x.k === 'in' && x.acc === 'card') card += x.a;
-    else if (x.k === 'out' && x.acc === 'card') card -= x.a;
-    else if (x.k === 'tr') { if (x.acc === 'card') card -= x.a; if (x.to === 'card') card += x.a; }
-    if (Number.isInteger(x.b)) pts.push({ tx: x, i, app: card, humo: x.b, diff: Math.round(x.b / 100) - card, ok: Math.abs(card * 100 - x.b) < 100 });
+    const a = x.acc === 'card' ? cardOf(x) : null, to = x.k === 'tr' && x.to === 'card' ? cardOf(x, 'to') : null;
+    if (a !== null) run[a] = (run[a] || 0) + (x.k === 'in' ? x.a : -x.a);
+    if (to !== null) run[to] = (run[to] || 0) + x.a;
+    const kid = a ?? to;
+    if (Number.isInteger(x.b) && kid !== null) {
+      const app = run[kid];
+      pts.push({ tx: x, i, kid, app, humo: x.b, diff: Math.floor(x.b / 100) - app, ok: Math.abs(app * 100 - x.b) < 100 });
+    }
   }
   if (!pts.length) return null;
-  const last = pts[pts.length - 1];
-  if (last.ok) return { pts, last, ok: true };
+  // Har karta bo'yicha oxirgi tekshiruv; mos kelmaganlardan eng oxirgisi ko'rsatiladi
+  const lasts = [...new Map(pts.map(q => [q.kid, q])).values()];
+  const wrong = lasts.filter(q => !q.ok).sort((a, b) => a.i - b.i)[0];
+  if (!wrong) return { pts, lasts, ok: true };
+  const kp = pts.filter(q => q.kid === wrong.kid);
   // Oxirgi farq bilan bir xil farqli nuqtalar — bitta sabab; farq o'zgargan joy — paydo bo'lgan oraliq
-  let k = pts.length - 1;
-  while (k > 0 && !pts[k - 1].ok && pts[k - 1].diff === last.diff) k--;
-  const bad = pts[k], from = pts[k - 1] || null;
+  let k = kp.length - 1;
+  while (k > 0 && !kp[k - 1].ok && kp[k - 1].diff === wrong.diff) k--;
+  const bad = kp[k], from = kp[k - 1] || null;
   const upTo = from ? from.i : C.sorted.length;
-  const suspects = C.sorted.filter((x, i) => i > bad.i && i < upTo && !x.h && x.c !== 'tuz' && touchesCard(x));
-  return { pts, last, ok: false, bad, from, suspects };
+  const mine = x => (x.acc === 'card' && cardOf(x) === bad.kid) || (x.k === 'tr' && x.to === 'card' && cardOf(x, 'to') === bad.kid);
+  const suspects = C.sorted.filter((x, i) => i > bad.i && i < upTo && !x.h && x.c !== 'tuz' && mine(x));
+  return { pts, lasts, ok: false, bad, from, suspects };
 }
 const humoBal = tiyin => `${fmt(Math.floor(tiyin / 100))},${pad(tiyin % 100)}`;
 function reconHTML(C) {
@@ -2258,12 +2369,13 @@ function reconHTML(C) {
   }
   const at = q => `${dm(q.tx.d)}, ${q.tx.tm || '—'}`;
   if (r.ok) {
-    return `<div class="msg soft c-in">${ic('check', 16, 2.5)}Karta qoldig'i HUMO bilan mos</div>
-      <div>${kv(`Oxirgi tekshiruv (${at(r.last)})`, humoBal(r.last.humo))}${kv('Tekshirilgan HUMO xabarlari', `${r.pts.length} ta`)}</div>`;
+    return `<div class="msg soft c-in">${ic('check', 16, 2.5)}${r.lasts.length > 1 ? 'Kartalar' : 'Karta'} qoldig'i HUMO bilan mos</div>
+      <div>${r.lasts.map(q => kv(`${db.cards.length ? `${esc(cardName(q.kid))} · ` : 'Oxirgi tekshiruv '}${at(q)}`, humoBal(q.humo))).join('')}${kv('Tekshirilgan HUMO xabarlari', `${r.pts.length} ta`)}</div>`;
   }
   const b = r.bad;
-  return `<div class="msg soft c-bad">${ic('alert', 16)}<span>Trekerda ${fmt(Math.abs(b.diff))} so'm ${b.diff > 0 ? 'kam' : "ko'p"} (${at(b)} holatiga)</span></div>
-    <div>${kv('HUMO: 💰 karta qoldig\'i', humoBal(b.humo))}${kv('Trekerda karta', fmt(b.app))}</div>
+  const kn = db.cards.length ? esc(cardName(b.kid)) : 'karta';
+  return `<div class="msg soft c-bad">${ic('alert', 16)}<span>${db.cards.length ? `${kn}: t` : 'T'}rekerda ${fmt(Math.abs(b.diff))} so'm ${b.diff > 0 ? 'kam' : "ko'p"} (${at(b)} holatiga)</span></div>
+    <div>${kv('HUMO: 💰 karta qoldig\'i', humoBal(b.humo))}${kv(`Trekerda ${kn}`, fmt(b.app))}</div>
     <p class="small muted" style="line-height:1.5">${r.from ? `Farq ${at(r.from)} va ${at(b)} oralig'idagi amallarda paydo bo'lgan.` : `Farq ${at(b)} gacha bo'lgan amallarda — boshlang'ich qoldiqni ham tekshiring.`}
       ${b.diff > 0 ? 'Yozilmagan kirim yoki ortiqcha yozilgan chiqim bor.' : "Yozilmagan chiqim (masalan, kartadan to'lov) yoki ortiqcha kirim bor."}</p>
     ${r.suspects.length ? `<div class="col" style="gap:0"><span class="small" style="font-weight:800">Shu oraliqda qo'lda yozilgan karta amallari:</span>${r.suspects.slice(0, 5).map(x => txRow(x, C, true)).join('')}</div>` : ''}
@@ -2280,7 +2392,7 @@ function fixRecon() {
   const r = reconcile(calc());
   if (!r || r.ok) return;
   const b = r.bad;
-  addTx({ d: b.tx.d, tm: minuteBefore(b.tx.tm), k: b.diff > 0 ? 'in' : 'out', a: Math.abs(b.diff),
+  addTx({ d: b.tx.d, tm: minuteBefore(b.tx.tm), k: b.diff > 0 ? 'in' : 'out', a: Math.abs(b.diff), cd: b.kid,
     acc: 'card', c: 'tuz', n: "HUMO qoldig'i bo'yicha" }, { prefix: 'Balans tuzatildi' });
   closeModal();
   haptic.ok();
@@ -2529,6 +2641,7 @@ function viewSozlama() {
     </section>
     <span class="grp">Reja va hisoblar</span>
     <section class="setlist">
+      ${setItem('page', 'card', 'blue', 'Kartalar', db.cards.length ? activeCards().map(k => k.n).join(' · ') : "Bank kartalarini qo'shing", db.cards.length ? String(activeCards().length) : '', ' data-to="sz-cards"')}
       ${setItem('page', 'card', 'teal', "Boshlang'ich qoldiqlar", ACC_IDS.filter(a => db.open[a]).map(a => `${ACC[a].name} ${fmt(db.open[a])}`).join(' · ') || "Hammasi 0", '', ' data-to="sz-open"')}
       ${setItem('page', 'adjust', 'amber', 'Oylik limitlar', lims.length ? lims.map(([c, v]) => `${CATS[c].name} ${fmt(v)}`).join(' · ') : "O'rnatilmagan", '', ' data-to="sz-lim"')}
       ${setItem('reja-tab', 'calendar', 'purple', 'Ish kunlari va bayramlar', 'Reja kalendarida kunni bosib almashtiring', '', ' data-t="cal"')}
@@ -2550,6 +2663,122 @@ function viewSzHome() {
       <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="-1" aria-label="${x.label}: yuqoriga"${i === 0 ? ' disabled' : ''}>${ic('up', 16)}</button>
       <button class="round sm" data-act="home-move" data-id="${x.id}" data-step="1" aria-label="${x.label}: pastga"${i === list.length - 1 ? ' disabled' : ''}>${ic('down', 16)}</button></div>`).join('')}</section>
     <button class="btn sm" data-act="home-reset">Standart tartibga qaytarish</button>`;
+}
+// ===== Kartalar sahifasi va oynalari =====
+function viewSzCards() {
+  const C = calc();
+  return `${subHead('Kartalar')}
+    <p class="note">Har bank kartasi alohida qoldiq bilan yuritiladi, to'lovda qaysi kartadan to'laganingizni tanlaysiz. Asosiy karta — oylik tushadigan,
+      reja to'lovlari odatda qilinadigan karta. Oxirgi 4 raqam HUMO xabarini to'g'ri kartaga bog'laydi. Kartalar faqat Telegram bulutingizda saqlanadi.</p>
+    ${db.cards.length ? `<section class="setlist">${db.cards.map(k => `<button class="si" data-act="card-edit" data-id="${k.id}">${cardChip(k)}`
+      + `<span class="body"><b>${esc(k.n)}${k.off ? ' · arxivda' : ''}</b><span>${[k.l4 && `·${k.l4}`, CARD_TYPES[k.ty], k.main && 'asosiy'].filter(Boolean).join(' · ')}</span></span>`
+      + `<span class="val">${ui.hide ? '•••••' : fmt(C.cardBal[k.id])}</span><span class="c-muted" style="display:flex">${ic('right', 16)}</span></button>`).join('')}</section>`
+      : `<section class="card"><p class="small muted" style="line-height:1.5">Hozir barcha kartalaringiz bitta «Karta» hisobida: ${fmt(C.bal.card)} so'm. Avval oylik tushadigan
+        asosiy kartani qo'shing — hozirgi karta puli shunda turadi. Keyin qolganlarini qo'shganda ularning qoldig'i asosiy kartadan ajratiladi.</p></section>`}
+    <button class="btn primary" data-act="card-new">${ic('plus', 18, 2.5)}Karta qo'shish</button>`;
+}
+const cardUI = { f: null };
+function cardFormHTML() {
+  const f = cardUI.f, C = calc();
+  const first = !f.id && !db.cards.length, m = mainCard();
+  const k = cardById(f.id);
+  const used = k && db.tx.some(t => (t.acc === 'card' && cardOf(t) === k.id) || (t.to === 'card' && cardOf(t, 'to') === k.id));
+  return `<div class="spread"><span class="h2" style="font-size:18px">${f.id ? 'Kartani tahrirlash' : 'Yangi karta'}</span>
+      <button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    ${f.id ? '' : `<div class="chips">${BANKS.map(b => `<button class="chip sm" data-act="k-bank" data-v="${b}" aria-pressed="${f.n === b}">${b}</button>`).join('')}</div>`}
+    <label class="fl">Nomi<input class="field" id="k-n" data-input="k-n" value="${esc(f.n)}" maxlength="30" placeholder="masalan: Uzum Karta" autocomplete="off"></label>
+    <div class="formgrid">
+      <label class="fl">Oxirgi 4 raqam<input class="field" data-input="k-l4" value="${esc(f.l4)}" inputmode="numeric" maxlength="4" placeholder="1234" autocomplete="off"></label>
+      <label class="fl">Turi<select class="field" data-change="k-ty">${['', ...Object.keys(CARD_TYPES)].map(t => `<option value="${t}"${f.ty === t ? ' selected' : ''}>${CARD_TYPES[t] || '—'}</option>`).join('')}</select></label>
+    </div>
+    <div class="col" style="gap:6px"><span class="fl" style="gap:0">Rangi</span><div class="kcols">${CARD_COLORS.map(c => `<button class="kcol" data-act="k-col" data-v="${c}" aria-pressed="${f.col === c}" aria-label="Rang: ${c}" style="--c:var(--${c})"></button>`).join('')}</div></div>
+    ${first ? `<p class="small muted" style="line-height:1.5">Hozirgi karta puli (${fmt(C.bal.card)}) va oldingi barcha karta amallari shu kartaga yoziladi — u asosiy karta bo'ladi.</p>`
+      : f.id ? (k.main || k.off ? '' : `<label class="check"><input type="checkbox" data-change="k-main"${f.main ? ' checked' : ''}>Asosiy karta (oylik tushadigan)</label>`)
+      : `<label class="fl">Hozirgi qoldig'i<input class="field r" data-input="k-bal" data-change="fmt-num" value="${f.bal ? fmt(digits(f.bal)) : ''}" inputmode="numeric" placeholder="0" autocomplete="off"></label>
+        <p class="small muted" style="line-height:1.5">Bu summa ${esc(m.n)} kartasidan shu kartaga o'tkazma bo'lib yoziladi — jami balans o'zgarmaydi.</p>`}
+    <button class="btn primary" data-act="k-save" data-enter>${f.id ? 'Saqlash' : "Kartani qo'shish"}</button>
+    ${k && !k.main ? `<button class="btn sm danger" data-act="k-del" data-id="${k.id}">${k.off ? 'Arxivdan qaytarish' : used ? 'Arxivlash' : "O'chirish"}</button>` : ''}`;
+}
+function saveCard() {
+  const f = cardUI.f;
+  const n = f.n.trim().slice(0, 30), l4 = f.l4.trim();
+  if (!n) { toast('Karta nomini yozing'); haptic.error(); return; }
+  if (l4 && !/^\d{4}$/.test(l4)) { toast("Oxirgi 4 raqamni to'liq kiriting"); haptic.error(); return; }
+  if (l4 && db.cards.some(k => k.id !== f.id && k.l4 === l4)) { toast('Bu raqamli karta allaqachon bor'); haptic.error(); return; }
+  if (f.id) {
+    const k = cardById(f.id);
+    const ch = [];
+    if (k.n !== n) ch.push(`nomi ${k.n} → ${n}`);
+    if (k.l4 !== l4) ch.push('raqami');
+    if (f.main && !k.main) { db.cards.forEach(x => { x.main = x === k; }); ch.push('asosiy karta qilindi'); }
+    Object.assign(k, { n, l4, ty: f.ty, col: f.col });
+    logEv('set', `Karta o'zgartirildi: ${n}${ch.length ? ` — ${ch.join(', ')}` : ''}`);
+    toast('Karta saqlandi');
+  } else {
+    const first = !db.cards.length;
+    const k = { id: nextId('k'), n, l4, ty: f.ty, col: f.col, main: first, off: false };
+    db.cards.push(k);
+    if (first) {
+      // Oldingi karta amallari shu kartaga bog'lanadi — keyin asosiy karta almashsa ham tarix siljimaydi
+      for (const t of db.tx) {
+        const was = `${t.cd}|${t.tc}`;
+        fixCards(t);
+        if (`${t.cd}|${t.tc}` !== was) touch(tdoc(t.d));
+      }
+    }
+    logEv('set', `Karta qo'shildi: ${n}${l4 ? ` ·${l4}` : ''}${first ? ' (asosiy)' : ''}`);
+    const bal = digits(f.bal);
+    if (!first && bal) {
+      addTx({ d: clampDate(today()), tm: nowHM(), k: 'tr', a: bal, acc: 'card', cd: mainCard().id, to: 'card', tc: k.id, n: 'Kartaga ajratildi' }, { prefix: 'Kartaga ajratildi' });
+    }
+    toast(`«${n}» qo'shildi`);
+  }
+  touch('meta');
+  haptic.ok();
+  closeModal();
+  rerender();
+}
+// Arxivlash: tarix qoladi, tanlovlarda ko'rinmaydi. Faqat qoldig'i 0 bo'lsa.
+function toggleCardOff(id) {
+  const k = cardById(id), C = calc();
+  if (!k || k.main) return;
+  const used = db.tx.some(t => (t.acc === 'card' && cardOf(t) === id) || (t.to === 'card' && cardOf(t, 'to') === id));
+  if (!k.off && C.cardBal[id]) { toast(`Avval ${fmt(C.cardBal[id])} so'mni boshqa kartaga o'tkazing`); haptic.error(); return; }
+  if (!k.off && !used && db.cards[0] !== k) {
+    db.cards.splice(db.cards.indexOf(k), 1);
+    logEv('set', `Karta o'chirildi: ${k.n}`);
+  } else {
+    k.off = !k.off;
+    logEv('set', `Karta ${k.off ? 'arxivlandi' : 'arxivdan qaytarildi'}: ${k.n}`);
+  }
+  touch('meta');
+  closeModal();
+  rerender();
+}
+// Asosiy ekrandagi «Karta» bosilganda: har karta qoldig'i
+function cardsSheet() {
+  const C = calc(), list = activeCards();
+  const rows = list.map(k => `<button class="row" data-act="card-open" data-id="${k.id}">${cardChip(k)}`
+    + `<span class="body"><span class="t"><span>${esc(k.n)}</span>${k.main ? '<span class="tag">ASOSIY</span>' : ''}</span><span class="s">${[k.l4 && `·${k.l4}`, CARD_TYPES[k.ty]].filter(Boolean).join(' · ') || 'karta'}</span></span>`
+    + `<span class="num">${fmt(C.cardBal[k.id])}</span><span class="c-muted" style="display:flex">${ic('right', 16)}</span></button>`).join('');
+  openModal(`<div class="spread"><span class="h2" style="font-size:18px">Kartalar</span><button class="round sm" data-act="modal-close" aria-label="Yopish">${ic('x', 18)}</button></div>
+    <div class="spread" style="align-items:baseline"><span class="lbl">Jami kartalarda</span><span class="big">${fmt(C.bal.card)} <small class="muted" style="font-size:14px">so'm</small></span></div>
+    ${list.length ? `<div>${rows}</div>` : `<p class="small muted" style="line-height:1.5">Hozir barcha bank kartalaringiz bitta «Karta» hisobida. Kartalarni qo'shsangiz, har birining qoldig'i alohida ko'rinadi va to'lovda qaysi kartadan to'laganingizni tanlaysiz.</p>`}
+    <div class="grid2" style="gap:8px">${list.length ? '' : `<button class="btn sm" data-act="adjust" data-acc="card">${ic('adjust', 16)}Qoldiqni tuzatish</button>`}
+      <button class="btn sm" data-act="cards-manage"${list.length ? ' style="grid-column:1 / -1"' : ''}>${ic(list.length ? 'gear' : 'plus', 16)}${list.length ? 'Kartalarni boshqarish' : "Kartalarni qo'shish"}</button></div>`);
+}
+function cardSheet(id) {
+  const k = cardById(id), C = calc();
+  const other = activeCards().find(x => x.id !== id);
+  setModal(`<div class="spread"><span style="display:flex;align-items:center;gap:10px">${cardChip(k)}<span class="h2" style="font-size:18px">${esc(k.n)}${k.l4 ? ` <span class="muted">·${k.l4}</span>` : ''}</span></span>
+      <button class="round sm" data-act="cards" aria-label="Kartalarga qaytish">${ic('left', 18)}</button></div>
+    <div class="spread" style="align-items:baseline"><span class="lbl">${[CARD_TYPES[k.ty], k.main && 'asosiy karta'].filter(Boolean).join(' · ') || 'Karta'}</span><span class="big">${fmt(C.cardBal[id])} <small class="muted" style="font-size:14px">so'm</small></span></div>
+    <div class="grid2" style="gap:8px">
+      <button class="btn sm" data-act="adjust" data-acc="card" data-cd="${id}">${ic('adjust', 16)}Qoldiqni tuzatish</button>
+      <button class="btn sm" data-act="card-hist" data-id="${id}">${ic('list', 16)}Tarixi</button>
+      <button class="btn sm" data-act="card-tr" data-id="${id}" data-to="${other ? other.id : ''}">${ic('transfer', 16)}O'tkazma</button>
+      <button class="btn sm" data-act="card-edit" data-id="${id}">${ic('edit', 16)}Tahrirlash</button>
+    </div>`);
 }
 function viewSzLim() {
   return `${subHead('Oylik limitlar')}
@@ -2581,7 +2810,7 @@ function viewSzBackup() {
 
 // ===== Zaxira, CSV =====
 const exportText = () => JSON.stringify({
-  v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq,
+  v: 2, open: db.open, work: db.work, lim: db.lim, seq: db.seq, cards: db.cards,
   debts: db.debts, tx: [...db.tx].sort((a, b) => a.d.localeCompare(b.d) || idNum(a.id) - idNum(b.id)), log: db.log, wish: db.wish,
 });
 function parseBackup(text) {
@@ -2611,7 +2840,7 @@ function csvText(sep) {
   };
   const rows = [['Sana', 'Vaqt', 'Turi', 'Summa', 'Hisob', 'Qayerga', 'Kategoriya', 'Nomi', 'Izoh', 'Manba']];
   for (const t of [...C.sorted].reverse()) {
-    rows.push([dm(t.d) + '.' + t.d.slice(0, 4), t.tm, TYPE[t.k], t.a, ACC[t.acc].name, t.to ? ACC[t.to].name : '',
+    rows.push([dm(t.d) + '.' + t.d.slice(0, 4), t.tm, TYPE[t.k], t.a, accName(t.acc, cardOf(t)), t.to ? accName(t.to, cardOf(t, 'to')) : '',
       t.c ? CATS[t.c].name : '', txTitle(t, C), t.n, t.h ? 'HUMO' : '']);
   }
   return rows.map(r => r.map(cell).join(sep)).join('\r\n');
@@ -2767,9 +2996,12 @@ const P2P_CHOICES = {
   out: [['save', "Omonatga o'tkazma"], ['lent', 'Qarz berdim'], ['spend', 'Xarajat']],
   in: [['back', 'Qarz qaytdi'], ['save', 'Omonatdan'], ['inc', 'Kirim']],
 };
+// Xabardagi «*1234» — oxirgi 4 raqami mos karta; topilmasa asosiy karta
+const humoCard = l4 => (l4 && db.cards.find(k => k.l4 === l4)?.id) || mainCard()?.id || '';
 function humoTx(x) {
   const n = [humo.note[x.key], x.place === 'Noma\'lum' ? '' : x.place].filter(Boolean).join(' · ').slice(0, 120);
-  const base = { d: x.d, tm: x.tm, a: x.a, n, p: x.link, h: x.key, debt: x.debt, to: '', c: '', b: x.bal === null ? '' : x.bal };
+  const kid = humoCard(x.card);
+  const base = { d: x.d, tm: x.tm, a: x.a, n, p: x.link, h: x.key, debt: x.debt, to: '', c: '', b: x.bal === null ? '' : x.bal, cd: kid, tc: kid };
   if (x.tr) return { ...base, k: 'tr', ...x.tr, debt: '' };
   if (x.ask || x.forceChoice) {
     const ch = x.choice;
@@ -2819,22 +3051,24 @@ function humoResults() {
   const chosen = rows.filter(r => r.on);
   const missing = chosen.filter(r => (r.ask || r.forceChoice) && !r.choice).length;
   // Karta qoldig'i tekshiruvi: tanlangan amallar qo'shilgandan keyingi Karta vs HUMO oxirgi qoldig'i
-  let after = C.bal.card;
+  // Karta qoldig'i tekshiruvi — oxirgi qoldiqli xabardagi karta bo'yicha
+  const lastBal = rows.filter(r => r.bal !== null).sort((a, b) => (a.d + a.tm).localeCompare(b.d + b.tm)).pop();
+  const kid = lastBal ? humoCard(lastBal.card) : mainCard()?.id || '';
+  let after = cardBalOf(C, kid);
   for (const r of chosen) {
     const t = humoTx(r);
-    if (t.k === 'in' && t.acc === 'card') after += t.a;
-    else if (t.k === 'out' && t.acc === 'card') after -= t.a;
-    else if (t.k === 'tr') { if (t.acc === 'card') after -= t.a; if (t.to === 'card') after += t.a; }
+    fixCards(t);
+    if (t.acc === 'card' && (!kid || t.cd === kid)) after += t.k === 'in' ? t.a : -t.a;
+    if (t.k === 'tr' && t.to === 'card' && (!kid || t.tc === kid)) after += t.a;
   }
-  const lastBal = rows.filter(r => r.bal !== null).sort((a, b) => (a.d + a.tm).localeCompare(b.d + b.tm)).pop();
   let check = '', fixDiff = 0;
   if (lastBal) {
     const diffT = after * 100 - lastBal.bal;
     const ok = Math.abs(diffT) < 100;
-    fixDiff = ok ? 0 : Math.round(lastBal.bal / 100) - after;
+    fixDiff = ok ? 0 : Math.floor(lastBal.bal / 100) - after; // tiyin tashlanadi
     const balText = `${fmt(Math.floor(lastBal.bal / 100))},${pad(lastBal.bal % 100)}`;
     check = `<section class="card ${ok ? '' : 'bad-border'}" style="gap:6px">
-      <span class="h2 ${ok ? 'c-in' : 'c-bad'}" style="font-size:14px">${ok ? "Karta qoldig'i HUMO bilan mos" : `Farq bor: trekerda ${fmt(Math.abs(fixDiff))} so'm ${fixDiff > 0 ? 'kam' : "ko'p"}`}</span>
+      <span class="h2 ${ok ? 'c-in' : 'c-bad'}" style="font-size:14px">${ok ? `${esc(kid ? cardName(kid) : 'Karta')} qoldig'i HUMO bilan mos` : `Farq bor: trekerda ${fmt(Math.abs(fixDiff))} so'm ${fixDiff > 0 ? 'kam' : "ko'p"}`}</span>
       <div class="spread small c-soft" style="font-size:13px"><span>HUMO oxirgi qoldig'i (${dm(lastBal.d)}, ${lastBal.tm})</span><b>${balText}</b></div>
       <div class="spread small c-soft" style="font-size:13px"><span>Trekerda, importdan keyin</span><b>${fmt(after)}</b></div>
       ${ok ? '' : `<label class="check"><input type="checkbox" data-change="hu-fix"${humo.fix ? ' checked' : ''}>Farqni «Balans tuzatish» sifatida yozish (${signed(fixDiff)})</label>`}
@@ -2845,7 +3079,7 @@ function humoResults() {
   return `<div class="spread" style="padding:4px 4px 0;align-items:baseline"><span class="h2">Topildi: ${rows.length} ta amal</span>
       <span class="small muted" style="font-weight:700">${cards.length ? cards.map(c => `Karta *${c}`).join(', ') : ''}</span></div>
     ${rows.map((r, i) => humoRowHTML(r, i)).join('')}${check}
-    <button class="btn primary" data-act="hu-import"${missing || !n ? ' disabled' : ''} data-fix="${fixDiff}" data-date="${lastBal ? lastBal.d : ''}" data-tm="${lastBal ? lastBal.tm : ''}">${cta}</button>`;
+    <button class="btn primary" data-act="hu-import"${missing || !n ? ' disabled' : ''} data-fix="${fixDiff}" data-date="${lastBal ? lastBal.d : ''}" data-tm="${lastBal ? lastBal.tm : ''}" data-cd="${kid}">${cta}</button>`;
 }
 function humoRowHTML(r, i) {
   const C = calc();
@@ -2856,6 +3090,7 @@ function humoRowHTML(r, i) {
   if (r.status === 'out') notes += '<span class="hnote box">Reja davridan tashqarida — qo\'shilmaydi</span>';
   if (r.status === 'maybe') notes += `<span class="hnote c-warn">${ic('alert', 14)}Shu kuni xuddi shu summa qo'lda yozilgan. Takror bo'lsa belgilamang.</span>`;
   if (!dis) {
+    if (multiCard()) notes += `<span class="hnote c-soft">${ic('card', 14)}${r.card && !db.cards.some(k => k.l4 === r.card) ? `*${r.card} kartasi topilmadi — ` : ''}${esc(cardName(humoCard(r.card)))}</span>`;
     if (r.tr) notes += `<span class="hnote c-soft">${ic('transfer', 14)}${ACC[r.tr.acc].name} → ${ACC[r.tr.to].name} o'tkazma</span>`;
     if (r.link) notes += `<span class="hnote c-in">${ic('check', 14, 2.5)}Rejaga bog'lanadi: ${esc(C.events.get(r.link).title)} (${dm(C.events.get(r.link).iso)})</span>`;
     if (r.debt) notes += `<span class="hnote c-in">${ic('users', 14)}Qarz: ${esc(debtById(r.debt).who)}</span>`;
@@ -2905,7 +3140,7 @@ function importHumo(el) {
   const fix = Number(el.dataset.fix);
   if (fix && humo.fix) {
     const inside = el.dataset.date && inPeriod(el.dataset.date);
-    imp.tx.push(addTx({ d: inside ? el.dataset.date : clampDate(today()), tm: inside ? minuteBefore(el.dataset.tm) : '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' }).id);
+    imp.tx.push(addTx({ d: inside ? el.dataset.date : clampDate(today()), tm: inside ? minuteBefore(el.dataset.tm) : '', k: fix > 0 ? 'in' : 'out', a: Math.abs(fix), acc: 'card', cd: el.dataset.cd, c: 'tuz', n: 'HUMO qoldig\'i bo\'yicha' }, { prefix: 'Balans tuzatildi' }).id);
   }
   db.imp = imp;
   touch('meta', 'debts');
@@ -3762,7 +3997,7 @@ async function saveWrapImage() {
 
 // ===== Hodisalar =====
 const ACT = {
-  tab: el => { if (el.dataset.to === 'tarix') hist.day = ''; go(el.dataset.to); },
+  tab: el => { if (el.dataset.to === 'tarix') { hist.day = ''; hist.card = ''; } go(el.dataset.to); },
   back: () => back(),
   add: () => openAdd(),
   humo: () => push('humo'),
@@ -3775,7 +4010,28 @@ const ACT = {
   },
   'qa-in': () => openAdd({ k: 'in' }),
   'qa-tr': () => openAdd({ k: 'tr', acc: 'card', to: 'cash' }),
-  cash2card: el => openAdd({ k: 'tr', acc: 'cash', to: 'card', a: el.dataset.a }),
+  topup: el => openAdd({ k: 'tr', acc: el.dataset.acc, cd: el.dataset.cd, to: 'card', tc: mainCard()?.id || '', a: el.dataset.a }),
+  cards: () => cardsSheet(),
+  'cards-manage': () => { closeModal(); push('sz-cards'); },
+  'card-open': el => cardSheet(el.dataset.id),
+  'card-hist': el => { Object.assign(hist, { f: 'all', q: '', day: '', card: el.dataset.id }); closeModal(); go('tarix'); },
+  'card-tr': el => { closeModal(); openAdd({ k: 'tr', acc: 'card', cd: el.dataset.id, to: el.dataset.to ? 'card' : 'cash', tc: el.dataset.to }); },
+  'card-new': () => {
+    cardUI.f = { id: '', n: '', l4: '', ty: '', col: CARD_COLORS[db.cards.length % CARD_COLORS.length], bal: '', main: false };
+    openModal(cardFormHTML(), true);
+  },
+  'card-edit': el => {
+    const k = cardById(el.dataset.id);
+    cardUI.f = { id: k.id, n: k.n, l4: k.l4, ty: k.ty, col: k.col, bal: '', main: k.main };
+    openModal(cardFormHTML());
+  },
+  'k-bank': el => { cardUI.f.n = el.dataset.v; setModal(cardFormHTML()); },
+  'k-col': el => { cardUI.f.col = el.dataset.v; setModal(cardFormHTML()); },
+  'k-save': () => saveCard(),
+  'k-del': el => toggleCardOff(el.dataset.id),
+  'f-card': el => { form[el.dataset.f] = el.dataset.id; haptic.light(); rerender(); },
+  'h-card': el => { hist.card = hist.card === el.dataset.id ? '' : el.dataset.id; haptic.light(); rerender(); },
+  'd-card': el => { debtUI.cd = el.dataset.id; setModal(debtSheet(debtUI.open)); },
   'free-info': () => freeInfo(),
   recon: () => reconModal(),
   'recon-fix': () => fixRecon(),
@@ -3789,22 +4045,24 @@ const ACT = {
   'edit-tx': el => openEdit(el.dataset.id),
   plan: el => openFromEvent(el.dataset.key),
   adjust: el => {
-    const acc = el.dataset.acc;
+    const acc = el.dataset.acc, cd = el.dataset.cd || '';
     const C = calc();
-    openModal(`<h2 class="h2">${ACC[acc].name} qoldig'ini tuzatish</h2>
-      <p class="small muted" style="line-height:1.5">Trekerda: <b style="color:var(--text)">${fmt(C.bal[acc])}</b> so'm. Haqiqiy qoldiqni kiriting — farq «Balans tuzatish» amali sifatida Tarixga yoziladi.</p>
-      <input class="field r big-in" id="m-amt" inputmode="numeric" autocomplete="off" value="${C.bal[acc] > 0 ? fmt(C.bal[acc]) : '0'}" aria-label="Haqiqiy qoldiq">
-      <div class="grid2" style="gap:8px"><button class="btn sm" data-act="modal-close">Bekor qilish</button><button class="btn sm fill-warn" data-act="adjust-save" data-acc="${acc}" data-enter>Saqlash</button></div>`);
+    const cur = cd ? cardBalOf(C, cd) : C.bal[acc];
+    openModal(`<h2 class="h2">${esc(accName(acc, cd))} qoldig'ini tuzatish</h2>
+      <p class="small muted" style="line-height:1.5">Trekerda: <b style="color:var(--text)">${fmt(cur)}</b> so'm. Haqiqiy qoldiqni kiriting — farq «Balans tuzatish» amali sifatida Tarixga yoziladi.</p>
+      <input class="field r big-in" id="m-amt" inputmode="numeric" autocomplete="off" value="${cur > 0 ? fmt(cur) : '0'}" aria-label="Haqiqiy qoldiq">
+      <div class="grid2" style="gap:8px"><button class="btn sm" data-act="modal-close">Bekor qilish</button><button class="btn sm fill-warn" data-act="adjust-save" data-acc="${acc}" data-cd="${cd}" data-enter>Saqlash</button></div>`);
     $('m-amt').select();
   },
   'adjust-save': el => {
-    const acc = el.dataset.acc;
-    const diff = digits($('m-amt').value) - calc().bal[acc];
+    const acc = el.dataset.acc, cd = el.dataset.cd || '';
+    const C = calc();
+    const diff = digits($('m-amt').value) - (cd ? cardBalOf(C, cd) : C.bal[acc]);
     closeModal();
     if (!diff) { toast("Farq yo'q — o'zgarmadi"); return; }
-    addTx({ d: clampDate(today()), tm: nowHM(), k: diff > 0 ? 'in' : 'out', a: Math.abs(diff), acc, c: 'tuz', n: '' }, { prefix: 'Balans tuzatildi' });
+    addTx({ d: clampDate(today()), tm: nowHM(), k: diff > 0 ? 'in' : 'out', a: Math.abs(diff), acc, cd, c: 'tuz', n: '' }, { prefix: 'Balans tuzatildi' });
     haptic.ok();
-    toast(`${ACC[acc].name}: ${signed(diff)} so'm tuzatildi`);
+    toast(`${accName(acc, cd)}: ${signed(diff)} so'm tuzatildi`);
     rerender();
   },
   'modal-close': () => closeModal(),
@@ -3938,7 +4196,7 @@ const ACT = {
   },
   // Qarzlar
   'd-new': () => { debtUI.form = blankDebtForm(); openModal(debtFormHTML(), true); },
-  'd-open': el => { debtUI.open = el.dataset.id; debtUI.acc = 'card'; openModal(debtSheet(el.dataset.id)); },
+  'd-open': el => { debtUI.open = el.dataset.id; debtUI.acc = 'card'; debtUI.cd = ''; openModal(debtSheet(el.dataset.id)); },
   'd-acc': el => { debtUI.acc = el.dataset.acc; setModal(debtSheet(debtUI.open)); },
   'd-full': el => {
     const C = calc();
@@ -4061,6 +4319,9 @@ const INPUT = {
   'h-q': el => { hist.q = el.value; $('h-list').innerHTML = histList(calc()); },
   'j-q': el => { jr.q = el.value; $('j-list').innerHTML = logList(); },
   'd-who': el => { debtUI.form.who = el.value; },
+  'k-n': el => { cardUI.f.n = el.value; },
+  'k-l4': el => { cardUI.f.l4 = el.value.replace(/\D/g, '').slice(0, 4); },
+  'k-bal': el => { cardUI.f.bal = el.value; },
   'hu-note': el => { humo.note[el.dataset.key] = el.value.trim(); },
   'd-a': el => { debtUI.form.a = el.value; },
   'd-due': el => { debtUI.form.due = validISO(el.value) ? el.value : ''; },
@@ -4074,6 +4335,8 @@ const CHANGE = {
   'f-date': el => { if (validISO(el.value)) { form.d = clampDate(el.value); form.tm = form.id ? form.tm : ''; } rerender(); },
   'fmt-num': el => { const v = digits(el.value); el.value = v ? fmt(v) : ''; },
   'd-flow': el => { debtUI.form.flow = el.checked; },
+  'k-ty': el => { cardUI.f.ty = el.value; },
+  'k-main': el => { cardUI.f.main = el.checked; },
   'hu-on': el => { humo.on[el.dataset.key] = el.checked; $('hu-res').innerHTML = humoResults(); },
   'hu-cat': el => { humo.cat[el.dataset.key] = el.value; $('hu-res').innerHTML = humoResults(); },
   'hu-fix': el => { humo.fix = el.checked; $('hu-res').innerHTML = humoResults(); },
@@ -4192,7 +4455,7 @@ document.addEventListener('keydown', ev => {
 
 const VIEWS = {
   main: viewMain, tarix: viewTarix, reja: viewReja, tahlil: viewTahlil, add: viewAdd, humo: viewHumo, jurnal: viewJurnal,
-  sozlama: viewSozlama, 'sz-home': viewSzHome, 'sz-lim': viewSzLim, 'sz-open': viewSzOpen, 'sz-backup': viewSzBackup,
+  sozlama: viewSozlama, 'sz-cards': viewSzCards, 'sz-home': viewSzHome, 'sz-lim': viewSzLim, 'sz-open': viewSzOpen, 'sz-backup': viewSzBackup,
 };
 
 // ===== Ishga tushirish =====
