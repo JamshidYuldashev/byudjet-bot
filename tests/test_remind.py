@@ -225,6 +225,17 @@ class MainTest(unittest.TestCase):
         self.assertTrue(first.full_url.endswith("/setChatMenuButton"))
         self.assertEqual(json.loads(first.data)["menu_button"]["web_app"]["url"], ENV["WEBAPP_URL"])
 
+    def test_version_in_urls(self) -> None:
+        resp = mock.MagicMock()
+        resp.__enter__.return_value = io.BytesIO(b'{"ok": true}')
+        with mock.patch("urllib.request.urlopen", return_value=resp) as urlopen:
+            code, _, _ = self.run_main({**ENV, "TODAY": "2030-02-09", "GITHUB_SHA": "abc1234def"})
+        self.assertEqual(code, 0)
+        first = json.loads(urlopen.call_args_list[0].args[0].data)
+        self.assertEqual(first["menu_button"]["web_app"]["url"], ENV["WEBAPP_URL"] + "?v=abc1234")
+        rows = json.loads(urlopen.call_args.args[0].data)["reply_markup"]["inline_keyboard"]
+        self.assertEqual(rows[0][0]["web_app"]["url"], ENV["WEBAPP_URL"] + "?v=abc1234&plan=2030-02-10%3Amaosh")
+
     def test_menu_error_does_not_stop_messages(self) -> None:
         resp = mock.MagicMock()
         resp.__enter__.return_value = io.BytesIO(b'{"ok": true}')

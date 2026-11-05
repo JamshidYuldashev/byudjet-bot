@@ -276,6 +276,14 @@ def build_plan_message() -> Message:
     )
 
 
+def with_version(url: str) -> str:
+    """Har commit uchun alohida manzil: Telegram eski nusxani keshdan ochmasin (GITHUB_SHA faqat Actions'da)."""
+    sha = os.environ.get("GITHUB_SHA", "")[:7]
+    if not sha:
+        return url
+    return f"{url}{'&' if '?' in url else '?'}v={sha}"
+
+
 def plan_url(webapp_url: str, d: date, e: Event) -> str:
     """Trekerni shu reja bandi bilan ochadigan manzil (kalit index.html dagi bilan bir xil: ISO:id)."""
     sep = "&" if "?" in webapp_url else "?"
@@ -409,10 +417,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{today:%d.%m.%Y}: bugun eslatma yo'q.")
         return 0
 
-    set_menu(env["BOT_TOKEN"], env["CHAT_ID"], env["WEBAPP_URL"])
+    webapp = with_version(env["WEBAPP_URL"])
+    set_menu(env["BOT_TOKEN"], env["CHAT_ID"], webapp)
     for msg in messages:
         try:
-            send(env["BOT_TOKEN"], env["CHAT_ID"], msg, env["WEBAPP_URL"])
+            send(env["BOT_TOKEN"], env["CHAT_ID"], msg, webapp)
         except RuntimeError as e:
             print(f"Xato: {e}", file=sys.stderr)
             return 1
