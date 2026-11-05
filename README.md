@@ -8,8 +8,8 @@ va eslatma bot. Hammasi bepul: sahifa GitHub Pages'da, eslatmalar GitHub Actions
   - har bir kirim va xarajatni kategoriya bilan yozadi;
   - reja kalendari, qarzlar va hisobotlarni ko'rsatadi;
   - HUMO xabarlaridan import qiladi.
-- **`remind.py`** — har kuni 08:00 va 20:00 da (Toshkent) reja bo'yicha eslatma yuboradi: bugungi va ertangi
-  to'lovlar, qulflash kuni — pul omonatga o'tkazildimi.
+- **`remind.py`** — har kuni 08:00 va 20:00 da (Toshkent) tekshiradi: bugungi yoki ertangi to'lov bo'lsa, eslatma yuboradi.
+  To'lovsiz kunda xabar kelmaydi; yakshanba kechqurun — hafta rejasi, oyning 1-sanasida — oy rejasi.
 - **`.github/workflows/remind.yml`** — har kuni 15:00 UTC (20:00 Toshkent) da `remind.py` ni ishga tushiradi.
 - **`.github/workflows/keepalive.yml`** — har oy workflowlarni qayta yoqadi, chunki GitHub
   60 kun faollik bo'lmasa cron'ni o'chirib qo'yadi.
@@ -141,17 +141,18 @@ kechikishi mumkin — bu normal holat.
 
 ### Treker (Mini App)
 
-Pastki menyu: **Asosiy · Tarix · «+» · Reja · Tahlil**. Sozlamalar Asosiy ekran tepasidagi ⚙ tugmasidan ochiladi.
-Ustiga ochiladigan sahifalar (yangi amal, HUMO, sozlamalar, jurnal) Telegram «Orqaga» tugmasi bilan yopiladi.
+Suzuvchi menyu: **Asosiy · Tarix · Reja · Tahlil**, yonida alohida **«+»**. Sozlamalar Asosiy ekran tepasidagi ⚙ tugmasidan ochiladi.
+Ustiga ochiladigan sahifalar (yangi yozuv, Hisoblarim, HUMO, sozlamalar, jurnal) Telegram «Orqaga» tugmasi bilan yopiladi.
 
 | Bo'lim | Nima bor |
 |---|---|
-| **Asosiy** | Jami balans, 7 kunlik chiziq va hisoblar (Karta, Naqd, Omonat). «Karta» bosilsa — har bank kartasining qoldig'i alohida; Naqd/Omonat bosilsa — qoldiqni tuzatish. Balans ostida ikki ko'rsatkich: **Erkin pul** — rejadagi barcha kelgusi to'lovlardan keyin karta va naqddan hozir sarflash mumkin bo'lgan summa (eng tig'iz kun bilan) va **Rejadan farq** (bosilsa, nimadan yig'ilgani). Tez amallar: Kirim, O'tkazma, HUMO, Yangi qarz. Keyin kartalar: **Yaqin to'lovlar** (o'tib ketgan belgilanmagan bandlar, eng yaqin to'lov kuni; asosiy kartada pul yetmasa — eng ko'p pul turgan karta yoki naqddan o'tkazish tugmasi), **Diqqat** (HUMO bilan farq, qarz muddati, limit, qoida buzilishi, xohishlar), Bugun / Seriya / Salomatlik plitkalari, Xohishlar, Yakuniy maqsad, Qarzlar, Oxirgi amallar. Ko'z tugmasi summalarni yashiradi. Yo'lkira bu yerda eslatilmaydi (pulsiz borilgan kunlar ham bo'ladi) |
-| **Qo'shish (+)** | Tepada Chiqim / Kirim / O'tkazma. Raqamlar paneli, tez summalar, «Kecha» va **Saqlash doim pastda** — surmasdan, bosh barmoq bilan yetadi. Hisob (qoldig'i bilan) va sana, izoh, kategoriyalar. Izoh yozilsa kategoriya o'zi tanlanadi; summa hali kiritilmagan bo'lsa izohga `30k non karta` yozib Enter bosish kifoya. Taqiqlangan xarajatda ogohlantirish chiqadi, rejadan tashqari katta xaridda «⏳ 24 soat» tugmasi |
-| **Tarix** | Barcha amallar kunlar bo'yicha; qidiruv va filtrlar tepada yopishib turadi. Har amal tagida shu amaldan keyingi hisob qoldig'i (HUMO 💰 bilan bir xil), har kun ostida kun oxiridagi qoldiq. Chapga surish — o'chirish, o'ngga — bugunga nusxalash, 5 soniya «Qaytarish». Tepadagi soat belgisi — **o'zgarishlar jurnali** |
-| **Reja** | Uch bo'lim: **Kalendar** (kunlar xarajatga qarab bo'yalgan, kunni tanlab «To'lash» / «Tushdi» / «Qulflash», ish kuni ↔ dam olish), **Qarzlar** («Men qarzdorman» / «Menga qarzdor», bosilsa to'liq yoki qisman to'lash va tarix), **Xohishlar** (24 soat kutayotganlar, hal qilinganlar, tejalgan summa) |
-| **Tahlil** | Oy bo'yicha kirim/chiqim, oy yakuni, **pul oqimi prognozi**, **HUMO bilan solishtirish**, moliyaviy salomatlik, **g'ayrioddiy xarajatlar**, **oy oxiri prognozi**, **reja va haqiqat jadvali**, «Agar…» va «Qachon olaman?», xulosalar, kategoriyalar, kundalik xarajat, limitlar, eng katta xarajatlar, intizom xaritasi |
-| **Sozlamalar (⚙)** | Ko'rinish (mavzu, Asosiy ekran kartalari, summalarni yashirish), Xavfsizlik (PIN-kod, barmoq izi, hozir qulflash), Reja va hisoblar (boshlang'ich qoldiqlar, oylik limitlar, ish kunlari), Ma'lumotlar (HUMO import, o'zgarishlar jurnali, zaxira va eksport) |
+| **Asosiy** | Katta raqam: **Sarflasa bo'ladi** — rejadagi hamma to'lovlarga pul yetgan holda bugun sarflash mumkin bo'lgan summa, ostida karta va naqdning qanchasi ajratilgani. Keyin hisoblar (bosilsa **Hisoblarim**), **Reja** va **Qarzlar**, kerak bo'lganda eslatmalar (bank xabari bilan farq, limit, vaqti kelgan xohish), **Yaqin to'lovlar** (kechikkan, keyin eng yaqin 3 ta; «To'ladim» faqat bugun, ertaga va kechikkanda; kartada pul yetmasa — o'tkazish tugmasi), **Bugun** (bugungi amallar). Ko'z tugmasi summalarni yashiradi |
+| **Yangi yozuv (+)** | Bitta oyna: Chiqim, Kirim, O'tkazma, Qarz. Raqamlar paneli va **Saqlash doim pastda**. Hisob qoldig'i bilan alohida oynada tanlanadi, sana: Bugun, Kecha yoki taqvim. Izoh yozilsa kategoriya o'zi tanlanadi; summa hali kiritilmagan bo'lsa izohga `30k non karta` yozib Enter bosish kifoya. Taqiqlangan xarajatda klaviatura tepasida ogohlantirish, katta xaridda «24 soat kutay» tugmasi. HUMO xabari ham shu yerdan |
+| **Tarix** | Barcha amallar kunlar bo'yicha, har qatorda shu amaldan keyingi hisob qoldig'i. Qidiruv va filtr tepadagi tugmalarda, faol filtr ko'rinib turadi. Qator bosilsa tafsilot oynasi: o'zgartirish, yana yozish, o'chirish. Chapga surish — o'chirish, o'ngga — bugunga yozish, 10 soniya «Qaytarish» |
+| **Reja** | To'rt bo'lim: **To'lovlar** (kechikkan, ertaga, shu hafta, keyingi oylar, bajarilganlar), **Taqvim** (belgilar: to'lov, kirim, qoida buzilgan, bajarilgan; kunni tanlab «To'ladim» / «Tushdi» / «O'tkazdim», ish kuni ↔ dam olish), **Qarzlar** («Men qarzman» / «Menga qarzdor», bosilsa to'liq yoki qisman to'lash va tarix), **Xohishlar** (qaror vaqti kelganlar, kutilayotganlar, tejalgan summa) |
+| **Tahlil** | Uch bo'lim: **Xulosa** (oy kirim/chiqimi, 3 ta asosiy xulosa, intizom bahosi, oy yakuni, intizom xaritasi), **Xarajatlar** (kategoriyalar bitta ro'yxatda: summa, limit va sur'at; kunlik xarajat, odatdan tashqari xarajatlar, eng kattalari), **Prognoz** (reja tugaganda qancha bo'lishi, pul oqimi grafigi, eng tig'iz kun, reja va haqiqat, «Agar…» va «Qachon olaman?») |
+| **Hisoblarim** | Jami pul, har karta qoldig'i va bank xabari bilan mosligi, naqd, omonat, qarzlar. Pastda asboblar paneli: O'tkazma, Solishtirish, HUMO |
+| **Sozlamalar (⚙)** | Saqlash holati, Ko'rinish (mavzu, Asosiy ekran, summalarni yashirish), Xavfsizlik (PIN-kod, barmoq izi, hozir qulflash), Pul va reja (Hisoblarim, reja, boshlang'ich qoldiqlar, oylik limitlar, ish kunlari), Ma'lumotlar (HUMO xabari, o'zgarishlar jurnali, zaxira va eksport) |
 
 Tahlil bo'limidagi professional ko'rsatkichlar:
 
@@ -159,7 +160,7 @@ Tahlil bo'limidagi professional ko'rsatkichlar:
   (nuqtali). Grafikni bossangiz, o'sha kunning qiymatlari chiqadi. Ostida davr oxiri prognozi va **eng tig'iz kun** —
   karta va naqdda eng kam pul qoladigan kun.
 - **HUMO bilan solishtirish** — har HUMO xabaridagi 💰 karta qoldig'i shu amal bilan birga saqlanadi va trekerdagi
-  karta qoldig'i bilan solishtiriladi. Farq bo'lsa, Diqqat'da ogohlantirish chiqadi: farq qaysi ikki HUMO xabari
+  karta qoldig'i bilan solishtiriladi. Farq bo'lsa, Asosiy ekranda eslatma chiqadi: farq qaysi ikki HUMO xabari
   oralig'ida paydo bo'lgani va o'sha oraliqda qo'lda yozilgan karta amallari ko'rsatiladi, «Farqni tuzatish» bir bosishda.
 - **G'ayrioddiy xarajatlar** — odatdagi xariddan 3 barobar katta xarid, haftalik o'rtachadan 2 barobar ko'p kategoriya
   va kunlik o'rtachadan 3 barobar ko'p kun. Haftalik taqqoslash uchun kamida 4 hafta ma'lumot kerak.
@@ -169,11 +170,11 @@ Tahlil bo'limidagi professional ko'rsatkichlar:
 
 Qo'shimcha imkoniyatlar:
 
-- **Oy yakuni («Wrapped»)** — oy oxirgi kuni va keyingi oyning 1–5-sanalarida Asosiy ekranda 🎬 banner chiqadi
-  (istalgan oyni Tahlil → «… yakunini ko'rish» dan ochish mumkin). Story kabi to'liq ekranli kartalar: pul oqimi,
-  eng ko'p xarajat, eng katta xarajat, intizom xaritasi, jamg'arma, salomatlik bali. Oxirida konfetti va
+- **Oy yakuni («Wrapped»)** — oy oxirgi kuni va keyingi oyning 1–5-sanalarida Asosiy ekranda eslatma chiqadi
+  (istalgan oyni Tahlil → Xulosa → «… yakuni» dan ochish mumkin). Story kabi to'liq ekranli kartalar: pul oqimi,
+  eng ko'p xarajat, eng katta xarajat, intizom xaritasi, jamg'arma, intizom bahosi. Oxirida konfetti va
   «Rasm sifatida saqlash» (1080×1350 PNG).
-- **Moliyaviy salomatlik (0–100)** — intizom (40), rejaga muvofiqlik (30), reja bandlari (15), qarzlar (15).
+- **Intizom bahosi (0–100)** — intizom (40), rejaga muvofiqlik (30), reja bandlari (15), qarzlar (15).
   Tahlil'dagi kartani bossangiz — har qism alohida va 9 ta nishon («7 kun taqiqsiz», «Qarzsiz», «Reja ustasi» …).
   Yangi nishon olinganda tabrik va konfetti.
 - **Xulosalar** (Tahlil) — o'tgan hafta bilan solishtirish, rejadan tashqari xarajatsiz kunlar, limit sur'ati,
@@ -184,15 +185,15 @@ Qo'shimcha imkoniyatlar:
   Kvadratni bossangiz, o'sha kun Reja'da ochiladi.
 - **Tez yozish** — «+» oynasida summa kiritmasdan izohga bir qatorda yozing: `30k non karta`, `kecha 12 000 taksi naqd`,
   `+3.3m oylik` va Enter. Summa, kategoriya, hisob va sana o'zi ajratiladi, keyin «Saqlash» ni bosasiz.
-- **Bot xabaridan bir bosishda** — eslatmada har to'lov uchun tugma bor: «✅ To'ladim: Internet»,
-  «💰 Tushdi: Asosiy oylik», «🔒 Qulfladim». Bosilsa, treker shu to'lov bilan tayyor ochiladi — faqat «Saqlash».
+- **Bot xabaridan bir bosishda** — eslatmada har to'lov uchun tugma bor: «To'ladim», «Telefon to'landi»,
+  «Oylik tushdi», «Omonatga o'tkazdim». Bosilsa, treker shu to'lov bilan tayyor ochiladi — faqat «Saqlash».
   Agar band allaqachon yozilgan bo'lsa, o'sha amal tahrirlash uchun ochiladi. PIN bo'lsa — avval PIN.
 - **Kalkulyator** — klaviaturada «+ − × ÷»: `25 000 + 12 000`, `120 000 ÷ 3`. Natija darhol hisoblanadi
   (ko'paytirish va bo'lish avval), saqlanadigan summa — natija.
 - **«24 soat qoidasi» — xohishlar ro'yxati** — taqiqlangan yoki 30 000+ rejadan tashqari xarid yozilayotganda
-  «24 soat kutaman» tugmasi chiqadi. Xarid darrov yozilmaydi; 24 soatdan keyin Diqqat'da «hali ham kerakmi?» so'raladi:
+  «24 soat kutaman» tugmasi chiqadi. Xarid darrov yozilmaydi; 24 soatdan keyin Asosiy ekranda «hali ham kerakmi?» so'raladi:
   «Ha, sotib oldim» — amal yoziladi, «Kerak emas» — summa «Tejalgan» hisobiga qo'shiladi, «Yana 24 soat» — kechiktiriladi.
-- **Qachon sotib ola olaman?** — narxni yozasiz (Tahlil, Reja → Xohishlar yoki «Erkin pul» oynasidan). Karta va naqd
+- **Qachon sotib ola olaman?** — narxni yozasiz (Tahlil, Reja → Xohishlar yoki «Sarflasa bo'ladi» oynasidan). Karta va naqd
   (omonatga tegmasdan) rejadagi barcha to'lovlar bilan kunma-kun hisoblanadi va xariddan keyin hech qaysi kunda
   pul yetmay qolmaydigan eng erta sana ko'rsatiladi. Xohishlar ro'yxatidagi har xarid yonida ham shu sana turadi.
 - **Jonli animatsiyalar** — balans raqami sanab o'zgaradi, kartalar silliq paydo bo'ladi, oylik tushganda yoki
@@ -202,37 +203,37 @@ Hisob-kitob qoidalari:
 
 - **Jami balans** = boshlang'ich qoldiqlar + barcha kirimlar − barcha chiqimlar.
   O'tkazma (masalan, Karta → Omonat) jami balansni o'zgartirmaydi, faqat pulni bir hisobdan boshqasiga ko'chiradi.
-- **Rejadan farq** = jami balans − (boshlang'ich balans + bajarilgan reja bandlari).
+- **Reja holati** = jami balans − (boshlang'ich balans + bajarilgan reja bandlari).
   Rejadan tashqari har bir xarajat farqni kamaytiradi. Hali belgilanmagan bandlar farqqa ta'sir qilmaydi.
 - **Prognoz** = jami balans + hali bajarilmagan reja bandlari. O'tib ketgan, yozilmagan yo'lkira hisobga olinmaydi
   (pulsiz borilgan kunlar ham bo'ladi).
-- **Erkin pul** = rejadagi barcha kelgusi to'lovlar, qulflash va yo'lkiradan keyin karta + naqdda eng kam qoladigan summa
+- **Sarflasa bo'ladi** = rejadagi barcha kelgusi to'lovlar, qulflash va yo'lkiradan keyin karta + naqdda eng kam qoladigan summa
   (omonat hisobga olinmaydi). Shuncha sarflasangiz ham hech qaysi kunda pul yetmay qolmaydi.
 - **PIN-kod**: Sozlamalar → Xavfsizlik bo'limida o'rnatiladi. Shundan so'ng treker har ochilganda va 1 daqiqadan ko'p fonda turgandan keyin 4 xonali PIN so'raydi. 5 marta xato kiritilsa, 30 soniya kutiladi. PIN unutilsa, xavfsizlik uchun trekerdagi barcha ma'lumotlar o'chiriladi — shuning uchun JSON zaxira saqlab qo'ying.
 - **Barmoq izi / yuzni tanish**: PIN o'rnatilgandan keyin Sozlamalar → Xavfsizlik'da «Barmoq izi bilan ochish» kaliti chiqadi
   (faqat telefonda biometrika bo'lsa, Telegram 7.2+). Yoqilsa, treker ochilganda barmoq izi avtomatik so'raladi.
   Bekor qilsangiz — PIN bilan ochasiz. Har qurilmada alohida yoqiladi. Telegram Desktop'da biometrika yo'q, u yerda PIN ishlaydi.
   PIN o'chirilsa, biometrik ochish ham o'chadi.
-- **O'z to'lovlaringiz**: Asosiy → «Yaqin to'lovlar» → «Qo'shish». Nima uchun, summa, sana (Ertaga / 1 haftadan keyin /
+- **O'z to'lovlaringiz**: Reja → «+ To'lov». Nima uchun, summa, sana (Ertaga / 1 haftadan keyin /
   Oy oxiri / istalgan kun), takrorlanishi (bir marta, har hafta, har oy, har yil) va qaysi karta yoki naqddan. «Pul kelishi
-  kerak» — kutilayotgan kirim uchun (masalan, kimdir qarzni qaytaradi). To'lov sanasi yaqinlashganda (7 kun ichida)
-  «Yaqin to'lovlar» da reja bandlari bilan birga turadi, Reja kalendarida binafsha nuqta bilan ko'rinadi, «Erkin pul» va
+  kerak» — kutilayotgan kirim uchun (masalan, kimdir qarzni qaytaradi). Qo'shishdan oldin «Sarflasa bo'ladi» qanchaga tushishi ko'rinadi.
+  «Yaqin to'lovlar» va Reja → To'lovlar da reja bandlari bilan birga turadi, taqvimda belgi bilan ko'rinadi, «Sarflasa bo'ladi» va
   prognoz uni hisobga oladi. «To'ladim» bosilsa amal tayyor ochiladi; saqlangach takrorlanadigan to'lov keyingi sanaga o'tadi,
   bir martaligi yopiladi. Takrorlanadiganini «Bu safar o'tkazib yuborish» mumkin. Bildirishnoma yuborilmaydi.
-- **Bank kartalari**: Sozlamalar → Kartalar → «Karta qo'shish» (nomi, oxirgi 4 raqam, turi: HUMO / Uzcard / VISA /
+- **Bank kartalari**: Asosiy → hisoblar → «Karta qo'shish» (nomi, oxirgi 4 raqam, turi: HUMO / Uzcard / VISA /
   Mastercard, rangi). Avval oylik tushadigan **asosiy kartani** qo'shing — hozirgi karta puli va oldingi karta amallari
   shunga yoziladi. Keyingi kartalarni qo'shganda «Hozirgi qoldig'i» ni kiriting: shu summa asosiy kartadan yangi kartaga
   o'tkazma bo'lib yoziladi (jami balans o'zgarmaydi). So'ng:
   - «+» oynasida qaysi kartadan to'laganingizni tanlaysiz; o'tkazmada karta → karta ham mumkin;
   - reja bandi oxirgi marta qaysi kartadan to'langan bo'lsa, keyingi safar o'sha karta tanlanadi (masalan, obuna — VISA kartadan);
-  - Asosiy ekranda «Karta» ni bossangiz — har karta qoldig'i; kartani bossangiz — qoldiqni tuzatish, tarixi, o'tkazma;
+  - Hisoblarim'da har karta qoldig'i; kartani bossangiz — tarixi, o'tkazma, qoldiqni tuzatish, o'zgartirish;
   - Tarix'da karta bo'yicha filtr, har qator ostida o'sha kartaning qoldig'i;
   - HUMO xabaridagi `*1234` kabi raqam bo'yicha amal to'g'ri kartaga yoziladi va solishtirish har karta bo'yicha qilinadi;
   - qoldig'i 0 bo'lgan kartani arxivlash mumkin (tarixi qoladi).
   Karta nomi va raqami kodda emas, faqat Telegram bulutingizda saqlanadi.
-- **Balansni tuzatish**: Asosiy ekranda hisobni bosing va haqiqiy qoldiqni kiriting.
+- **Qoldiqni tuzatish**: Hisoblarim'da hisobni bosing va haqiqiy qoldiqni kiriting.
   Farq "Balans tuzatish" amali sifatida yoziladi.
-- Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO import yoki «+» → Kirim (qo'lda).
+- Oylik va avans Kartaga tushadi. Ularni uch xil yozish mumkin: Reja → «Tushdi», HUMO xabari yoki «+» → Kirim (qo'lda).
 - Ishga bormagan kunni (masalan, Ramazon hayiti) Reja'da "Dam olish" ga o'tkazing.
   O'sha kunning yo'lkirasi rejadan olib tashlanadi.
 - **Faqat egasi**: treker faqat Telegram ID si `CHAT_ID` ga teng akkauntda ochiladi. Boshqa odam botni topib
@@ -247,7 +248,7 @@ Telegram botlarga boshqa bot bilan bo'lgan chatni o'qishga ruxsat bermaydi. Shun
 xabarlari nusxalab joylanadi:
 
 1. @HUMOcardbot chatida xabarni bosib turing va kerakli xabarlarni belgilang, keyin **Nusxa olish** ni bosing.
-2. Trekerda **HUMO import** → matnni joylang (yoki **Buferdan joylash** ni bosing).
+2. Trekerda «+» → **HUMO** belgisi → matnni joylang (yoki **Buferdan joylash** ni bosing).
 3. Ilova har bir xabardan summa, joy, sana va qoldiqni ajratadi va quyidagilarni qiladi:
    - kategoriyani joy nomidan aniqlaydi (PAYNET → Aloqa, KORZINKA → Oziq-ovqat va h.k.);
    - reja bandiga mos kelsa (summa ±5%, sana ±3 kun), amalni o'sha bandga bog'laydi;
@@ -260,7 +261,7 @@ xabarlari nusxalab joylanadi:
 
 Matn faqat telefoningizda tahlil qilinadi va hech qayerga yuborilmaydi.
 
-Importdan keyin 5 soniya «Qaytarish» tugmasi turadi. Keyinroq ham HUMO oynasidagi «Oxirgi import → Bekor qilish»
+Importdan keyin 10 soniya «Qaytarish» tugmasi turadi. Keyinroq ham HUMO oynasidagi «Oxirgi import → Bekor qilish»
 bilan oxirgi importni to'liq qaytarish mumkin: qo'shilgan amallar, yangi qarzlar va balans tuzatishi o'chadi.
 
 ### Ma'lumotlar qayerda saqlanadi
@@ -283,17 +284,16 @@ bilan oxirgi importni to'liq qaytarish mumkin: qo'shilgan amallar, yangi qarzlar
 
 | Qachon | Xabar |
 |---|---|
-| Har ish kuni, 08:00 | "Bugun ish kuni — faqat yo'lkira, tushlik uydan" |
-| To'lov kuni, 08:00 | Bugungi reja: to'lovlar va kirimlar ro'yxati (dam olish kuni bo'lsa ham keladi) |
-| Oyning 1-sanasi, 08:00 | Oy rejasi: kirim, majburiy to'lovlar, yo'lkira, omonat, oy oxiridagi reja balansi |
-| To'lovdan bir kun oldin, 20:00 | Ertangi to'lov va kirimlar, har biri uchun «To'ladim» / «Tushdi» tugmasi |
-| Qulflash kuni, 20:00 | Pul omonatga o'tkazildimi? |
-| Yakshanba, 20:00 | Keyingi haftaning to'lovlari va yo'lkira summasi |
+| To'lovsiz kun | Xabar kelmaydi |
+| To'lov kuni, 08:00 | Bugungi to'lovlar, har biri uchun tugma (dam olish kuni bo'lsa ham keladi) |
+| Oyning 1-sanasi, 08:00 | Oy rejasi: kirim, to'lovlar, yo'lkira, omonat, oy oxiridagi reja balansi |
+| To'lovdan bir kun oldin, 20:00 | Ertangi to'lov va kirimlar, har biri uchun tugma |
+| Yakshanba, 20:00 | Keyingi haftaning to'lovlari, yo'lkira summasi va qoida |
 
-Dam olish va bayram kunlari to'lov bo'lmasa, ertalabki xabar kelmaydi.
+Trekerni ochish tugmasi chatda doim turadi (menyu tugmasi).
 
 Bot reja asosida ishlaydi. U trekerdagi ma'lumotlarni ko'rmaydi: haqiqiy xarajatlarni ham, qo'lda o'zgartirilgan
-dam olish kunlarini ham. Shaxsiy ogohlantirishlar treker ichida chiqadi: Asosiy ekrandagi **Diqqat** blokida.
+dam olish kunlarini ham. Shaxsiy ogohlantirishlar treker ichida chiqadi: Asosiy ekrandagi eslatmalarda.
 U yerda ko'rinadi:
 
 - muddati 3 kun ichida bo'lgan yoki o'tib ketgan qarzlar;
