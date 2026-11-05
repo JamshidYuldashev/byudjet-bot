@@ -4,13 +4,15 @@
 Muhit o'zgaruvchilari: BOT_TOKEN, CHAT_ID, WEBAPP_URL, PLAN_JSON (reja — GitHub Secret).
 Kompyuterda: PLAN_FILE=plan.local.json (git'ga kirmaydi). Reja kodda saqlanmaydi — repo ochiq.
 TODAY=YYYY-MM-DD bilan sanani almashtirish mumkin (sinov uchun).
---slot morning  — 08:00: bugungi kun (ish kuni / to'lovlar), oyning 1-sanasida oy rejasi.
---slot evening  — 20:00: ertangi to'lovlar, qulflash kuni, yakshanba — keyingi hafta.
+Bot faqat ish bo'lganda yozadi: to'lovsiz kunlarda xabar yo'q.
+--slot morning  — 08:00: bugungi to'lovlar, oyning 1-sanasida oy rejasi.
+--slot evening  — 20:00: ertangi to'lovlar, yakshanba — keyingi hafta va qoida.
 --slot plan     — rejani trekerga joylash uchun botga matn qilib yuboradi.
 --dry-run xabarlarni yubormasdan chop etadi (GitHub Actions'da matn chiqarilmaydi — loglar ochiq).
 
-Reja bandi bor xabarlarda har band uchun «✅ To'ladim» tugmasi bo'ladi: u trekerni
+Reja bandi bor xabarlarda har band uchun «To'ladim» tugmasi bo'ladi: u trekerni
 WEBAPP_URL?plan=YYYY-MM-DD:id bilan ochadi va shu to'lov tayyor holda chiqadi.
+Trekerni ochish tugmasi chatda doim turadi (menyu tugmasi).
 """
 import argparse
 import html
@@ -116,17 +118,21 @@ def set_plan(plan: dict) -> None:
 class Message:
     text: str
     plan: list[tuple[date, Event]] = field(default_factory=list)  # «To'ladim» tugmalari
-    html: bool = False
+    html: bool = True
+    button: str = ""  # reja bandi yo'q xabardagi tugma
 
 
-SIGNS = {"in": "+", "out": "−", "lock": "→ "}
-ACTIONS = {"in": "💰 Tushdi", "out": "✅ To'ladim", "lock": "🔒 Qulfladim"}
-WEEKDAYS = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"]
+SIGNS = {"in": "+", "out": "−", "lock": ""}
+ACTIONS = {"in": "Tushdi", "out": "To'ladim", "lock": "O'tkazdim"}
+# Telegram tugma rangi (Bot API 9.4); eski ilovada oddiy ko'rinadi
+STYLES = {"in": "success", "out": "success", "lock": "primary"}
 WD_SHORT = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"]
 MONTHS = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust",
           "Sentabr", "Oktabr", "Noyabr", "Dekabr"]
 BUTTON_TEXT = "Trekerni ochish"
+MENU_TEXT = "Treker"
 API_URL = "https://api.telegram.org/bot{token}/sendMessage"
+MENU_URL = "https://api.telegram.org/bot{token}/setChatMenuButton"
 
 
 def fmt(n: int) -> str:
@@ -145,8 +151,26 @@ def events_on(d: date) -> list[Event]:
     return PLAN["monthly"].get(d.day, []) + PLAN["once"].get(d, [])
 
 
+def esc(text: str) -> str:
+    return html.escape(text, quote=False)
+
+
+def amount(e: Event) -> str:
+    return f"<b>{SIGNS[e.kind]}{fmt(e.amount)}</b>"
+
+
 def event_line(e: Event) -> str:
-    return f"• {SIGNS[e.kind]}{fmt(e.amount)} — {e.title}"
+    return f"{amount(e)} {esc(e.title)}"
+
+
+def day_message(word: str, d: date, events: list[Event]) -> Message:
+    """Bitta band: sarlavhada nomi. Bir nechta: sarlavhada soni, pastda ro'yxat."""
+    if len(events) == 1:
+        e = events[0]
+        text = f"<b>{word}: {esc(e.title)}</b>\n{amount(e)} so'm"
+    else:
+        text = "\n".join([f"<b>{word}: {len(events)} ta band</b>"] + [event_line(e) for e in events])
+    return Message(text, [(d, e) for e in events])
 
 
 def is_workday(d: date) -> bool:
@@ -170,7 +194,7 @@ def plan_balance(d: date) -> int:
     return bal
 
 
-def month_summary(year: int, month: int) -> str:
+def month_summary(year: int, month: int) -> Message:
     day = date(year, month, 1)
     days = []
     while day.month == month:
@@ -187,91 +211,65 @@ def month_summary(year: int, month: int) -> str:
             else:
                 locks += e.amount
     work = sum(is_workday(d) for d in days)
-    return "\n".join([
-        f"📅 {MONTHS[month - 1]} rejasi:",
-        f"• Kirim: +{fmt(ins)}",
-        f"• Majburiy to'lovlar: −{fmt(outs)}",
-        f"• Yo'lkira: {work} ish kuni — −{fmt(work * PLAN['transport'])}",
-        f"• Omonatga: → {fmt(locks)}",
+    return Message("\n".join([
+        f"<b>{MONTHS[month - 1]} rejasi</b>",
+        f"<b>+{fmt(ins)}</b> Kirim",
+        f"<b>−{fmt(outs)}</b> To'lovlar",
+        f"<b>−{fmt(work * PLAN['transport'])}</b> Yo'lkira, {work} kun",
+        f"<b>{fmt(locks)}</b> Omonatga",
         "",
-        f"{days[-1]:%d.%m} holatiga reja bo'yicha balans: {fmt(plan_balance(days[-1]))} so'm.",
-    ])
+        f"Oy oxirida rejada: <b>{fmt(plan_balance(days[-1]))}</b> so'm",
+    ]), button="Oyni ochish")
 
 
-def week_digest(sunday: date) -> str | None:
+def week_digest(sunday: date) -> Message | None:
     days = [sunday + timedelta(days=i) for i in range(1, 8)]
     days = [d for d in days if in_period(d)]
     if not days:
         return None
-    lines = [f"🗓 Keyingi hafta, {days[0]:%d.%m}–{days[-1]:%d.%m}:"]
+    a, b = days[0], days[-1]
+    span = f"{a.day}–{b.day}-{MONTHS[b.month - 1].lower()}" if a.month == b.month else f"{a.day}-{MONTHS[a.month - 1].lower()} – {b.day}-{MONTHS[b.month - 1].lower()}"
+    lines = [f"<b>Keyingi hafta: {span}</b>"]
     items = [(d, e) for d in days for e in events_on(d)]
-    lines += [f"• {d:%d.%m} ({WD_SHORT[d.weekday()]}): {SIGNS[e.kind]}{fmt(e.amount)} — {e.title}" for d, e in items]
+    lines += [f"{WD_SHORT[d.weekday()]} {d.day}  {amount(e)}  {esc(e.title)}" for d, e in items]
     if not items:
-        lines.append("• Rejali to'lov yo'q")
+        lines.append("Rejali to'lov yo'q.")
     work = sum(is_workday(d) for d in days)
-    lines += ["", f"Yo'lkira: {work} ish kuni × {fmt(PLAN['transport'])} = {fmt(work * PLAN['transport'])} so'm."]
-    return "\n".join(lines)
+    lines += ["", f"Yo'lkira: {work} kun, {fmt(work * PLAN['transport'])} so'm.", "Qoida: ko'chada ovqat, kofe, taksi — 0 so'm."]
+    return Message("\n".join(lines), button="Haftani ochish")
 
 
 def build_morning(today: date) -> list[Message]:
-    """08:00 xabarlari: ish kuni eslatmasi va bugungi reja; 1-sanada oy rejasi."""
+    """08:00: faqat bugungi to'lovlar; oyning 1-sanasida oy rejasi. To'lov yo'q kuni — xabar yo'q."""
     if not in_period(today):
         return []
     messages: list[Message] = []
     events = events_on(today)
-    work = is_workday(today)
-    if work or events:
-        head = f"☀️ Bugun, {today:%d.%m} ({WEEKDAYS[today.weekday()]})"
-        if work:
-            lines = [
-                f"{head} — ish kuni.",
-                f"Faqat {fmt(PLAN['transport'])} so'm yo'lkira, tushlik uydan. "
-                "Ko'chada ovqat, kofe, shirinlik, taksi — 0 so'm.",
-            ]
-        else:
-            holiday = PLAN["holidays"].get(today)
-            lines = [f"{head} — dam olish kuni{f' ({holiday})' if holiday else ''}."]
-        if events:
-            lines += ["", "📌 Bugungi reja:"] + [event_line(e) for e in events]
-            lines.append("Bajarilgach, pastdagi tugmani bosing — treker shu to'lov bilan ochiladi.")
-        messages.append(Message("\n".join(lines), [(today, e) for e in events]))
+    if events:
+        messages.append(day_message("Bugun", today, events))
     if today.day == 1:
-        messages.append(Message(month_summary(today.year, today.month)))
+        messages.append(month_summary(today.year, today.month))
     return messages
 
 
 def build_messages(today: date) -> list[Message]:
+    """20:00: ertangi to'lovlar; yakshanba — keyingi hafta."""
     messages: list[Message] = []
     tomorrow = today + timedelta(days=1)
     events = events_on(tomorrow)
     if events:
-        lines = [f"⏰ Ertaga, {tomorrow:%d.%m}:"]
-        lines += [event_line(e) for e in events]
-        lines += [
-            "",
-            "Bu pul ertangi reja uchun ajratilgan — unga tegmang. "
-            "Ko'chada ovqat, kofe, shirinlik, taksi — 0 so'm.",
-        ]
-        messages.append(Message("\n".join(lines), [(tomorrow, e) for e in events]))
-    for lock in [e for e in events_on(today) if e.kind == "lock"]:
-        messages.append(Message(
-            f"🔒 Bugun {today.day}-sana. {fmt(lock.amount)} so'm omonatga "
-            "(yoki valyutaga) o'tkazildimi?\n\n"
-            "Hali bo'lmasa — hoziroq o'tkazing va tugmani bosib belgilang. "
-            "Qulflangan pulga umuman tegilmaydi.",
-            [(today, lock)],
-        ))
+        messages.append(day_message("Ertaga", tomorrow, events))
     if today.weekday() == 6:
         digest = week_digest(today)
         if digest:
-            messages.append(Message(digest))
+            messages.append(digest)
     return messages
 
 
 def build_plan_message() -> Message:
     """Rejani trekerga joylash uchun: matnni bosib nusxalab, trekerda «Buferdan joylash»."""
     return Message(
-        "📋 <b>Reja</b> — trekerga joylash uchun.\n"
+        "<b>Reja</b>, trekerga joylash uchun.\n"
         "Pastdagi matnni bosing (nusxalanadi), keyin trekerni oching va «Buferdan joylash» → «Saqlash».\n\n"
         f"<code>{html.escape(PLAN['raw'])}</code>",
         html=True,
@@ -284,9 +282,19 @@ def plan_url(webapp_url: str, d: date, e: Event) -> str:
     return f"{webapp_url}{sep}plan={quote(f'{d.isoformat()}:{e.id}', safe='')}"
 
 
+def button_text(e: Event, many: bool) -> str:
+    if not many:
+        return ACTIONS[e.kind]
+    if e.kind == "lock":
+        return "Omonatga o'tkazdim"
+    return f"{e.title} tushdi" if e.kind == "in" else f"{e.title} to'landi"
+
+
 def keyboard(msg: Message, webapp_url: str) -> dict:
-    rows = [[{"text": f"{ACTIONS[e.kind]}: {e.title}", "web_app": {"url": plan_url(webapp_url, d, e)}}] for d, e in msg.plan]
-    rows.append([{"text": BUTTON_TEXT, "web_app": {"url": webapp_url}}])
+    many = len(msg.plan) > 1
+    rows = [[{"text": button_text(e, many), "web_app": {"url": plan_url(webapp_url, d, e)}, "style": STYLES[e.kind]}] for d, e in msg.plan]
+    if not rows:
+        rows = [[{"text": msg.button or BUTTON_TEXT, "web_app": {"url": webapp_url}, "style": "primary"}]]
     return {"inline_keyboard": rows}
 
 
@@ -342,6 +350,21 @@ def send(token: str, chat_id: str, msg: Message, webapp_url: str) -> None:
         raise RuntimeError(f"Telegram API xatosi: {body.get('description', body)}")
 
 
+def set_menu(token: str, chat_id: str, webapp_url: str) -> None:
+    """Trekerni ochish tugmasi chatda doim tursin. Bu ixtiyoriy: xato xabar yuborishga xalaqit bermaydi."""
+    payload = {"chat_id": chat_id, "menu_button": {"type": "web_app", "text": MENU_TEXT, "web_app": {"url": webapp_url}}}
+    req = urllib.request.Request(
+        MENU_URL.format(token=token),
+        data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30):
+            pass
+    except (urllib.error.URLError, OSError):
+        pass
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Byudjet eslatmalari")
     parser.add_argument("--dry-run", action="store_true", help="yubormasdan chop etish")
@@ -386,6 +409,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{today:%d.%m.%Y}: bugun eslatma yo'q.")
         return 0
 
+    set_menu(env["BOT_TOKEN"], env["CHAT_ID"], env["WEBAPP_URL"])
     for msg in messages:
         try:
             send(env["BOT_TOKEN"], env["CHAT_ID"], msg, env["WEBAPP_URL"])
