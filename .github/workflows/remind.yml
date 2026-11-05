@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       slot:
-        description: "Qaysi eslatma: evening (20:00) yoki morning (08:00)"
+        description: "Qaysi eslatma: evening (20:00), morning (08:00) yoki plan (rejani trekerga joylash uchun yuborish)"
         type: choice
-        options: [evening, morning]
+        options: [evening, morning, plan]
         default: evening
       today:
         description: "Sinov sanasi (YYYY-MM-DD). Bo'sh qoldirilsa — bugun."
@@ -34,6 +34,7 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           WEBAPP_URL: ${{ secrets.WEBAPP_URL }}
+          PLAN_JSON: ${{ secrets.PLAN_JSON }}
           TODAY: ${{ inputs.today }}
           SLOT: ${{ github.event_name == 'schedule' && (github.event.schedule == '0 3 * * *' && 'morning' || 'evening') || inputs.slot }}
         run: python3 remind.py --slot "$SLOT" ${{ inputs.dry_run && '--dry-run' || '' }}
