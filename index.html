@@ -3098,7 +3098,7 @@ function viewSozlama() {
       ${setItem('jurnal', 'history', 'blue', "O'zgarishlar jurnali", "Har bir qo'shish, tahrir va o'chirish", String(db.log.length))}
       ${setItem('page', 'download', 'gray', 'Zaxira va eksport', 'CSV (Excel), JSON zaxira, tiklash', '', ' data-to="sz-backup"')}
     </section>
-    <p class="note" style="text-align:center">${store.label} Treker faqat sizning Telegram akkauntingizda ochiladi.</p>`;
+    <p class="note" style="text-align:center">${store.label} Treker faqat sizning Telegram akkauntingizda ochiladi.${/^[0-9a-f]{7,}$/.test(BUILD) ? ` Versiya ${BUILD.slice(0, 7)}.` : ''}</p>`;
 }
 function viewSzHome() {
   const list = homeList();
@@ -5071,6 +5071,21 @@ const VIEWS = {
 };
 
 // ===== Ishga tushirish =====
+// Telegram sahifani keshdan ochishi mumkin. Yangi versiya chiqqan bo'lsa — bir marta qayta yuklanadi.
+const BUILD = '__BUILD__'; // pages.yml: commit sha; testda almashtirilmaydi
+async function checkFresh() {
+  if (!/^[0-9a-f]{7,}$/.test(BUILD) || navigator.onLine === false) return;
+  try {
+    const res = await fetch(`${location.pathname}?fresh=${Date.now()}`, { cache: 'no-store' });
+    const live = /const BUILD = '([0-9a-f]{7,})'/.exec(await res.text())?.[1];
+    if (!live || live === BUILD || sessionStorage.getItem('byudjet:fresh') === live) return;
+    sessionStorage.setItem('byudjet:fresh', live);
+    await flush();
+    const url = new URL(location.href); // hash'da Telegram ma'lumoti: saqlanadi
+    url.searchParams.set('v', live.slice(0, 7));
+    location.replace(url);
+  } catch { /* tarmoq yo'q: joriy nusxa ishlayveradi */ }
+}
 async function start() {
   if (inTelegram) {
     WA.ready();
@@ -5091,6 +5106,7 @@ async function start() {
   applyTheme();
   // Begona akkauntda ma'lumot yuklanmaydi ham, yozilmaydi ham.
   if (!(await isOwner())) { showPrivate(); return; }
+  checkFresh();
   const bioP = bioInit();
   try {
     const ok = await load();

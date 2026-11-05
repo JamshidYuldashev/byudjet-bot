@@ -80,13 +80,15 @@ o'zgartirmaydi; foydalanuvchi istalgan kunni ish kuni / dam olishga almashtira o
   `meta.bio = { [deviceId]: sha256(token) }`. PIN bo'lmasa `bio` bo'sh. Zaxira eksportiga kirmaydi.
 - Saqlash: hujjatlar `plan`, `meta`, `debts`, `log`, `wish`, `due`, `t_YYYY-MM`. PIN unutilsa — hammasi o'chadi, `plan` qoladi. Ular 3 500 belgilik bo'laklarga bo'linadi
   (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
+- Kesh: GitHub Pages sahifani 10 daqiqa keshlaydi. Bot tugmalari `?v=<sha>` bilan ochiladi (`with_version`), sahifa esa `checkFresh` bilan
+  yangi `BUILD` ni tekshirib, sessiyada bir marta qayta yuklanadi (hash'dagi Telegram ma'lumoti saqlanadi).
 - Yozuv yo'qolmasligi: `flush` hujjatni avval navbatga (`pending`, `byudjet:queue` + DeviceStorage `byudjet_queue`, 9.0+), keyin bulutga
   yozadi (`sendPending`). Xato bo'lsa — `#netbar` banneri, 5/15/30/60 soniyada qayta urinish, `load` navbatdagini bulutdagidan yangi deb oladi.
   `saveUI.st`: `ok` | `offline` | `fail`.
 - HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
 - Egasi tekshiruvi: `OWNER_HASH` = PBKDF2-SHA256(CHAT_ID, tuz `byudjet-bot`, 300 000 marta) — ID ni tanlab topish
   qimmat. Qurilmada tasdiqlangani `byudjet:ui:owner` da eslab qolinadi (id:hash). Uni `.github/workflows/pages.yml` deploy paytida
-  `__OWNER_HASH__` o'rniga joylaydi (bu satr `index.html` da aynan bir marta bo'lishi shart). Pages manbasi — GitHub Actions.
+  `__OWNER_HASH__` o'rniga joylaydi (bu satr `index.html` da aynan bir marta bo'lishi shart; `__BUILD__` ham shunday — commit sha). Pages manbasi — GitHub Actions.
   Begona akkaunt yoki Telegram'siz brauzerda `load()` chaqirilmaydi, faqat «Bu shaxsiy ilova» chiqadi.
   `file:` va localhost — tekshiruvsiz (testlar uchun).
 

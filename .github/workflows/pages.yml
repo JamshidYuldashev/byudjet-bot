@@ -39,7 +39,10 @@ jobs:
           owner = hashlib.pbkdf2_hmac("sha256", chat_id.encode(), b"byudjet-bot", 300000).hex()
           site = pathlib.Path("_site")
           site.mkdir()
-          (site / "index.html").write_text(src.replace("__OWNER_HASH__", owner), encoding="utf-8")
+          if src.count("__BUILD__") != 1:
+              sys.exit("Xato: index.html da __BUILD__ bitta bo'lishi kerak")
+          page = src.replace("__OWNER_HASH__", owner).replace("__BUILD__", os.environ["GITHUB_SHA"])
+          (site / "index.html").write_text(page, encoding="utf-8")
           EOF
       - uses: actions/upload-pages-artifact@v3
         with:
