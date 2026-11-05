@@ -26,9 +26,9 @@ o'zgartirmaydi; foydalanuvchi istalgan kunni ish kuni / dam olishga almashtira o
 
 - Reja kodda emas (yuqoriga qarang). Kodga, testlarga va hujjatlarga haqiqiy summa, karta raqami, ism yozilmaydi;
   testlar to'qima reja bilan ishlaydi. Actions loglari ochiq — `remind.py` CI'da xabar matnini chop etmaydi.
-- `remind.py` ikki slotda ishlaydi: `--slot morning` (08:00 — bugungi kun, 1-sanada oy rejasi) va
-  `--slot evening` (20:00 — ertangi to'lovlar, qulflash kuni, yakshanba — keyingi hafta) va
-  `--slot plan` (reja matnini botga yuboradi — trekerga joylash uchun).
+- `remind.py` slotlari: `--slot morning` (08:00 — bugungi to'lovlar, 1-sanada oy rejasi), `--slot evening` (20:00 — ertangi
+  to'lovlar, yakshanba — keyingi hafta va qoida), `--slot plan` (reja matnini botga yuboradi — trekerga joylash uchun).
+  To'lovsiz kunda xabar yo'q. Xabarlar HTML (`<b>` summa), tugma rangi `style` (Bot API 9.4), menyu tugmasi `setChatMenuButton`.
   Bot CloudStorage'ni o'qiy olmaydi, shuning uchun faqat reja asosida yozadi.
   Reja bandi bor xabarlarda har band uchun tugma: `WEBAPP_URL?plan=YYYY-MM-DD:id` — kalit index.html dagi
   `${iso}:${e.id}` bilan bir xil (Event id lari ikkala faylda bir xil bo'lishi shart). Treker shu bandni ochadi.
@@ -59,26 +59,30 @@ o'zgartirmaydi; foydalanuvchi istalgan kunni ish kuni / dam olishga almashtira o
     trekerdagi o'sha karta qoldig'ini tekshiradi; tuzatish farqli xabardan bir daqiqa oldinga yoziladi. Tiyin tashlanadi.
 - Taqiqlangan kategoriyalar (`bad`): `kucha`, `kofe`, `taksi`. Ular yozilgan kun — "qoida buzilgan kun".
 - Rejadan farq = jami balans − (startBalance + bajarilgan reja bandlari). Prognoz (`C.prog`) = yakuniy reja + farq +
-  o'tib ketgan, yozilmagan yo'lkira (pulsiz borilgan kunlar) + o'zim qo'shgan to'lovlar. Erkin pul = `affordPath` minimumi (karta + naqd).
+  o'tib ketgan, yozilmagan yo'lkira (pulsiz borilgan kunlar) + o'zim qo'shgan to'lovlar. Foydalanuvchiga «Reja holati».
+  «Sarflasa bo'ladi» (`freeMoney`) = `affordPath` minimumi (karta + naqd). Asosiy blokda: karta + naqd = ajratilgan + erkin.
 - O'zim qo'shgan to'lovlar (`due` hujjati): `{ id: u…, n, a, k: out|in, d (keyingi sana), rp: ''|w|m|y, dd (oy kuni), acc, cd,
-  st: ''|d, ld, la }`. `dueDates` — `d` dan davr oxirigacha takrorlar; `C.dueByIso` orqali «Yaqin to'lovlar», Reja kalendari,
-  `affordPath` (Erkin pul), `forecast` va `C.prog` ga qo'shiladi. «To'ladim» → `openAdd({ due })` → saqlangach `advanceDue`.
+  st: ''|d, ld, la }`. `dueDates` — `d` dan davr oxirigacha takrorlar; `C.dueByIso` orqali `upcoming`, Reja taqvimi,
+  `affordPath`, `forecast` va `C.prog` ga qo'shiladi. «To'ladim» → `openAdd({ due })` → saqlangach `advanceDue`.
   Bildirishnoma yo'q. Zaxira eksportiga kiradi.
 - Xohishlar (`wish` hujjati): `{ id: w…, ts, a, c, n, acc, st: w|b|s, rd }` — «24 soat qoidasi». Zaxira eksportiga kiradi.
 - Jurnal (`log`): `{ t, k: add|edit|del|debt|plan|set|import|wish, m, r }`, oxirgi 500 ta yozuv. Har bir o'zgarish
   `addTx` / `updateTx` / `removeTx` / `logEv` orqali yoziladi — ma'lumotni to'g'ridan-to'g'ri o'zgartirmang.
 - PIN: `meta.pin = { s: salt, h: sha256(salt:pin) }` — ekran qulfi. Zaxira eksportiga kirmaydi.
-- `meta.home = { order, off, v: 2 }` — Asosiy ekran kartalari tartibi/yashirilganlari (`HOME_CARDS` id lari).
-  `v` bo'lmagan eski tartib bir marta standartga qaytadi.
+- `meta.home = { order, off, v: 3 }` — Asosiy ekran bo'limlari tartibi/yashirilganlari (`HOME_CARDS` id lari).
+  Boshqa `v` dagi eski tartib bir marta standartga qaytadi.
   `meta.imp = { t, tx, debts, h }` — oxirgi HUMO import, «Bekor qilish» uchun. Ikkalasi zaxira eksportiga kirmaydi.
 - Faqat qurilmada (localStorage): mavzu `byudjet:ui:theme`, summalarni yashirish `byudjet:ui:hide`,
-  tabriklangan nishonlar `byudjet:ui:badges`, ko'rilgan oy yakunlari `byudjet:ui:wrap`.
+  tabriklangan nishonlar `byudjet:ui:badges`, ko'rilgan oy yakunlari `byudjet:ui:wrap`, birinchi ochilish `byudjet:ui:hello`.
 - Animatsiyalar `prefers-reduced-motion` ga bo'ysunadi; rAF to'xtasa ham `setTimeout` yakuniy holatni ko'rsatadi.
-- «Balans tuzatish» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Tahlil), lekin qoldiqqa kiradi.
+- «Qoldiq tuzatildi» (`c: 'tuz'`) kirim/chiqim yig'indilariga kirmaydi (Tarix, Tahlil), lekin qoldiqqa kiradi.
 - Biometrik ochish (BiometricManager, 7.2+): tasodifiy token qurilmaning xavfsiz xotirasida, bulutda faqat
   `meta.bio = { [deviceId]: sha256(token) }`. PIN bo'lmasa `bio` bo'sh. Zaxira eksportiga kirmaydi.
 - Saqlash: hujjatlar `plan`, `meta`, `debts`, `log`, `wish`, `due`, `t_YYYY-MM`. PIN unutilsa — hammasi o'chadi, `plan` qoladi. Ular 3 500 belgilik bo'laklarga bo'linadi
   (`<doc>_<n>`, birinchi bo'lak `soni|` bilan boshlanadi). v1 shardlari (`m_YYYY-MM`) bir marta ko'chiriladi.
+- Yozuv yo'qolmasligi: `flush` hujjatni avval navbatga (`pending`, `byudjet:queue` + DeviceStorage `byudjet_queue`, 9.0+), keyin bulutga
+  yozadi (`sendPending`). Xato bo'lsa — `#netbar` banneri, 5/15/30/60 soniyada qayta urinish, `load` navbatdagini bulutdagidan yangi deb oladi.
+  `saveUI.st`: `ok` | `offline` | `fail`.
 - HUMO import faqat nusxalab joylangan matnni qurilmada tahlil qiladi — tarmoqqa hech narsa yuborilmaydi.
 - Egasi tekshiruvi: `OWNER_HASH` = PBKDF2-SHA256(CHAT_ID, tuz `byudjet-bot`, 300 000 marta) — ID ni tanlab topish
   qimmat. Qurilmada tasdiqlangani `byudjet:ui:owner` da eslab qolinadi (id:hash). Uni `.github/workflows/pages.yml` deploy paytida
@@ -88,10 +92,23 @@ o'zgartirmaydi; foydalanuvchi istalgan kunni ish kuni / dam olishga almashtira o
 
 ## Tuzilma (UI)
 
-- Pastki menyu: `main` · `tarix` · «+» (`add`) · `reja` · `tahlil` (`TABS`). Boshqa sahifalar `push()` bilan ustiga ochiladi:
-  `add`, `humo`, `jurnal`, `sozlama`, `sz-home`, `sz-lim`, `sz-open`, `sz-backup` (`VIEWS`). Telegram BackButton — `stack` bo'yicha.
-- Reja ichida `reja.tab`: `cal` | `qarz` | `wish`. Asosiy kartalar: `HOME_CARDS` (wrap, pay, alerts, kpi, wish, goal, debts, recent).
-- «+» oynasida raqamlar paneli `#f-pad` `position: fixed` — telefonda matn yozilayotganda (`body.typing`) yashiriladi.
+- Suzuvchi menyu: `main` · `tarix` · `reja` · `tahlil` (`TABS`, `#nav`, skrollda kichrayadi). «+» — bo'lim emas, amal: alohida `#fab`, `add` oynasini ochadi.
+  Boshqa sahifalar `push()` bilan ustiga ochiladi: `add`, `hisob`, `hello`, `humo`, `jurnal`, `sozlama`, `sz-plan`, `sz-home`, `sz-lim`, `sz-open`, `sz-backup` (`VIEWS`).
+  Ichki sahifada menyu yo'q, kerak bo'lsa suzuvchi asboblar paneli `.tbar`. Telegram BackButton — `stack` bo'yicha.
+- Asosiy: `heroHTML` («Sarflasa bo'ladi»), `.accs` → `hisob`, `bentoHTML` (Reja, Qarzlar), `HOME_CARDS` (wrap, notes, pay, today). Reja tugagach — `viewPlanDone`.
+- `upcoming(C)` — reja bandlari, o'zim qo'shganlar va muddatli qarzlar bitta ro'yxatda. `payRow`: «To'ladim» faqat bugun, ertaga va kechikkanda.
+- Reja: `reja.tab` `tolov` | `cal` | `qarz` | `wish`. Tahlil: `rep.tab` `xulosa` | `xarajat` | `prognoz`.
+- «+» (`viewAdd`): `form.k` `out` | `in` | `tr` | `debt`. Hisob `pickHTML`, sana `dateHTML` oynasida. Raqamlar paneli `#f-pad` `position: fixed` — telefonda matn yozilayotganda (`body.typing`) yashiriladi.
+  Telegram'da «Saqlash» — `WA.MainButton` (`syncMainButton`, faqat `#RRGGBB`), Telegram'dan tashqarida `#f-save`. `saveState(form)` ikkalasiga yozuv beradi.
+- Oynalar: `openModal` (`.grab` + `.sheet-b`), fokus ichida aylanadi, pastga surib yopiladi. O'chirish: oqibatini ko'rsatadi, keyin 10 soniya «Qaytarish».
+
+## Dizayn qoidalari
+
+- WCAG 2.2 AA: matn 4,5:1, chegara va holat 3:1, nishon kamida 44 px (`.act`, `.chip` — 40 px + `::after`), shrift `rem`, ma'no faqat rangda emas (`.mk` belgilari shakl bilan).
+- Rang: bitta asosiy `--accent`; `--amber` va `--coral` faqat muammoda. `.msg` foni aniq token (`--amber-t` …), shaffof qatlam emas.
+- Telegram mavzusi: `applyTgColors` `themeParams` ni oladi, kontrasti 4,5:1 dan past bo'lsa o'z ranglarimiz qoladi.
+- Shisha effekti faqat navigatsiyada (`#nav`, `.tbar`), summalarga tegmaydi; `prefers-reduced-transparency` va zaif Android (`.low-end`) da o'chadi. Harakat `prefers-reduced-motion` ga bo'ysunadi.
+- Atamalar: «Sarflasa bo'ladi», «Reja holati», «To'ladim / Tushdi / O'tkazdim», «Intizom bahosi», «Qoldiq tuzatildi». Ilovada va botda bir xil.
 
 ## Tekshirish
 
